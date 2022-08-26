@@ -34,29 +34,29 @@ NULL as tech_dateInsertion  ,
 concat(concat('P', A.Id), A.Introduced) as itemDirectoryVehicleRef , 
 NULL as versionState   ,
 A.Introduced as validityStartDate   ,
-A.Discontinued as validityEndDate , --- mapping : Il peut y avoir plusieurs dates pour une même donnée, dans ce cas : Si endValidityDate = blank, alors on prend la donnée la plus récente,Sinon on prend la donnée pour laquelle EffectiveTo = endValidityDate
+A.Discontinued as validityEndDate , 
 NULL  as corporateGroupCode  ,
 (select parent from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE)  ) as corporateGroupLabel ,
 (select code from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE) ) as brandCode   ,
 (select description_label from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE) ) as brandLabel  ,
 (select code from  MKTREF.MKTQT_transco where Entity = 'model' and crossref_code = concat('C',A.RANCODE) ) as familyCode  ,
 (select description_label from  MKTREF.MKTQT_transco where Entity = 'model' and crossref_code = concat('C',A.RANCODE) ) as familyLabel ,
-471 as generation  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 471 ) as generation  , ----------------------- 471
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 ( select code from   MKTREF.MKTQT_transco where Entity = 'segment' and crossref_code = A.VEHICLESECTOR ) as segmentMarketingCode    ,
 NULL as faceLiftGeneration  ,
 (case when substr(A.CAPCODE,20,1) is null then 'P' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   -- OK
 ( select code from  MKTREF.MKTQT_transco where Entity = 'body' and crossref_code = concat('C',substr(A.capcode, 11,1)) ) as bodyCode    ,
-34 as height  ,
-4  as length  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 34 ) as height  ,  ----------------------- 34
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 4 )  as length  , ----------------------- 4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-173 as co2EmissionWLTP ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 173 ) as co2EmissionWLTP , ----------------------- 173
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
-21 as maximumPowerDin ,
-48 as maximumPowerKW  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 21 ) as maximumPowerDin , ----------------------- 21
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 48 ) as maximumPowerKW  , ----------------------- 48
 substr(A.capcode, 12, 1) as energy1Code ,
 NULL as energy1DetailCode   ,
 NULL as energy2Code ,
@@ -64,27 +64,27 @@ NULL as energy2DetailCode   ,
 ( select distinct code from  MKTREF.MKTQT_transco where entity = 'energyComb' and crossref_code = substr(A.capcode, 12, 1) ) as energyCombCode  , --
 NULL as motorisation    ,
 NULL as motorisationComb    ,
-20 as cubicCapacity   ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 20 ) as cubicCapacity   , ----------------------- 20
 ( select code from  MKTREF.MKTQT_transco where entity = 'transmission' and crossref_code = A.drivetrain ) as transmissionTypeCode    ,
 ( select code from  MKTREF.MKTQT_transco where entity = 'gearbox' and crossref_code = A.transmission ) as gearBoxTypeCode ,
-(select substr(t.valuestring, 1, 2) from MKTREF.MKTQT_NVDTechnical_VP t where B.id = t.id and t.techcode=66) as nbRapports  , -- OK : (select * from (select substr(t.valuestring, 1, 2) from MKTREF.MKTQT_NVDTechnical_VP t where  t.id=B.id  and t.techcode=66 order by t.effectivefrom desc) where ROWNUM  <=1) as nbRapports  , 
+( select case  when substr(t.valuestring, 2,1) ='S' then  substr(t.valuestring, 1,1) else substr(t.valuestring, 1,2) end  from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode=66) as nbRapports  , ----------------------- 66 
 NULL as typeVariantVersion  ,
 ( select distinct Name from MKTQT_CapTrim_VP where Code = A.TrimCode ) as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
-47 as seatNumber  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 47 ) as seatNumber  , ----------------------- 47
 A.doors as doorNumber  ,
 NULL as nedcCombineFuelConsumption  ,
 NULL as nedcExtraUrbanFuelConsumption   ,
 NULL as nedcUrbanFuelConsumption    ,
-184 as wltpLowFuelConsumption  ,
-185 as wltpMediumFuelConsumption   ,
-186 as wltpHighFuelConsumption ,
-187 as wltpExtraHighConsumption    ,
-188 as wltpCombinedFuelConsumption ,
-164 as wltpElectricConsumption ,
-165 as wltpElectricRange   ,
-163 as batteryCapacity ,
-14 as maxLadenWeight  ,
-3 as kerbWeight  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 184 ) as wltpLowFuelConsumption  ,  ----------------------- 184
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 185 ) as wltpMediumFuelConsumption   , ----------------------- 185
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 186 ) as wltpHighFuelConsumption , ----------------------- 186
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 187 ) as wltpExtraHighConsumption    , -----------------------187
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 188 ) as wltpCombinedFuelConsumption ,-----------------------188
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 164 ) as wltpElectricConsumption ,-----------------------164
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 165 ) as wltpElectricRange   ,-----------------------165
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 163 ) as batteryCapacity ,-----------------------163
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 14 ) as maxLadenWeight  ,-----------------------14
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 3 ) as kerbWeight  ,-----------------------3
 NULL as payLoad ,
 (case when C.status = 'S' and C.genericcode =9 then 'True' else 'False' end  ) as hasTelematicBox ,
 NULL as catalogueDetail ,
@@ -138,15 +138,15 @@ substr(B.refe, 0,4)  as versionYear ,
 NULL as faceLiftGeneration  ,
 (case when substr(CAPCODE,20,1) is null then 'P' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   --OK
 ( select code from  MKTREF.MKTQT_transco where Entity = 'body' and crossref_code = concat('C',substr(A.capcode, 11,1)) ) as bodyCode    ,
-34 as height  ,
-4  as length  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 34 ) as height, --34 as height  , ---34
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 4 ) as length, --4  as length  , ---4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-239 as co2EmissionWLTP ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 239 ) as co2EmissionWLTP, -- 239 as co2EmissionWLTP , --239
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
-21 as maximumPowerDin ,
-48 as maximumPowerKW  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 21 ) as maximumPowerDin, -- 21 as maximumPowerDin ,  --21
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 48 ) as maximumPowerKW, --48 as maximumPowerKW  , --48
 substr(A.capcode, 12, 1) as energy1Code ,
 NULL as energy1DetailCode   ,
 NULL as energy2Code ,
@@ -154,28 +154,28 @@ NULL as energy2DetailCode   ,
 ( select distinct code from  MKTREF.MKTQT_transco where entity = 'energyComb' and crossref_code = substr(A.capcode, 12, 1) ) as energyCombCode  , --
 NULL as motorisation    ,
 NULL as motorisationComb    ,
-20 as cubicCapacity   ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 20 ) as cubicCapacity, --20 as cubicCapacity   , --20
 ( select code from  MKTREF.MKTQT_transco where entity = 'transmission' and crossref_code = A.drivetrain ) as transmissionTypeCode    ,
 ( select code from  MKTREF.MKTQT_transco where entity = 'gearbox' and crossref_code = A.transmission ) as gearBoxTypeCode ,
-(select substr(t.valuestring, 1, 2) from MKTREF.MKTQT_NVDTechnical_VP t where B.id = t.id and B.effectivefrom = t.effectivefrom and  B.effectiveTo = t.effectiveTo and t.techcode=66) as nbRapports  , -----OK
+(select* from ( select case  when substr(t.valuestring, 2,1) ='S' then  substr(t.valuestring, 1,1) else substr(t.valuestring, 1,2) end  from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.techcode=66 and t.valuestring not in ('AUTOMATIC','N') order by effectivefrom desc ) where ROWNUM  <=1) as nbRapports  , -----OK
 NULL as typeVariantVersion  ,
 ( select distinct Name from MKTQT_CapTrim_VU where Code = A.TrimCode ) as trimLevel,  --select distinct Name from Lights_CapTrim where Lights_CapTrim.Code = Lights_CapDer.TrimCode 
-47 as seatNumber  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 47 ) as seatNumber, --47 as seatNumber  ,  ---47
 A.doors as doorNumber  , -- doors en  VP, null en vu
 NULL as nedcCombineFuelConsumption  ,
 NULL as nedcExtraUrbanFuelConsumption   ,
 NULL as nedcUrbanFuelConsumption    ,
-299 as wltpLowFuelConsumption  ,
-302 as wltpMediumFuelConsumption   ,
-296 as wltpHighFuelConsumption ,
-293 as wltpExtraHighConsumption    ,
-290 as wltpCombinedFuelConsumption ,
-166 as wltpElectricConsumption ,
-167 as wltpElectricRange   ,
-152 as batteryCapacity ,
-14 as maxLadenWeight  ,
-3 as kerbWeight  ,
-32 as payLoad , -- NOUVEAU
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 299 ) as wltpLowFuelConsumption, --299 as wltpLowFuelConsumption  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 302 ) as wltpMediumFuelConsumption,--302 as wltpMediumFuelConsumption   ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 296 ) as wltpHighFuelConsumption, --296 as wltpHighFuelConsumption ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 293 ) as wltpExtraHighConsumption,--293 as wltpExtraHighConsumption    ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 290 ) as wltpCombinedFuelConsumption,--290 as wltpCombinedFuelConsumption ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 166 ) as wltpElectricConsumption,--166 as wltpElectricConsumption ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 167 ) as wltpElectricRange,--167 as wltpElectricRange   ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 152 ) as batteryCapacity,--152 as batteryCapacity ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 14 ) as maxLadenWeight,--14 as maxLadenWeight  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 3 ) as kerbWeight,--3 as kerbWeight  ,
+(select valuestring from MKTREF.MKTQT_NVDTechnical_VU t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 32 ) as payLoad,--32 as payLoad , -- VU : DIFFERENCE
 (case when C.status = 'S' and C.genericcode =9 then 'True' else 'False' end  ) as hasTelematicBox ,
 NULL as catalogueDetail ,
 NULL as tsnNumber   ,
@@ -272,7 +272,7 @@ motorisationComb    ,
 cubicCapacity   ,
 transmissionTypeCode    ,
 gearBoxTypeCode ,
-nbRapports  /*,
+nbRapports  ,
 typeVariantVersion  ,
 trimLevel   ,
 seatNumber  ,
@@ -306,7 +306,7 @@ designCustomerShip  ,
 versionLabelGlobalShort ,
 versionLabeGlobalLong   ,
 versionLabelLocalShort  ,
-versionLabelLocalLong      */
+versionLabelLocalLong      
               )
         VALUES
               (  
@@ -350,7 +350,7 @@ REC_veh_VP.motorisationComb    ,
 REC_veh_VP.cubicCapacity   ,
 REC_veh_VP.transmissionTypeCode    ,
 REC_veh_VP.gearBoxTypeCode ,
-REC_veh_VP.nbRapports  /*,
+REC_veh_VP.nbRapports  ,
 REC_veh_VP.typeVariantVersion  ,
 REC_veh_VP.trimLevel   ,
 REC_veh_VP.seatNumber  ,
@@ -384,7 +384,7 @@ REC_veh_VP.designCustomerShip  ,
 REC_veh_VP.versionLabelGlobalShort ,
 REC_veh_VP.versionLabeGlobalLong   ,
 REC_veh_VP.versionLabelLocalShort  ,
-REC_veh_VP.versionLabelLocalLong    */
+REC_veh_VP.versionLabelLocalLong    
               );
          
         V_INS := V_INS + 1;
@@ -408,8 +408,8 @@ brandLabel   = REC_veh_VP.brandLabel  ,
 familyCode   = REC_veh_VP.familyCode  ,
 familyLabel  = REC_veh_VP.familyLabel ,
 generation   = REC_veh_VP.generation  ,
---versionYear  = REC_veh_VP.versionYear ,
---versionTrimester     = REC_veh_VP.versionTrimester    ,
+versionYear  = REC_veh_VP.versionYear ,
+versionTrimester     = REC_veh_VP.versionTrimester    ,
 segmentMarketingCode    = REC_veh_VP.segmentMarketingCode   ,
 faceLiftGeneration   = REC_veh_VP.faceLiftGeneration  ,
 kindCode     = REC_veh_VP.kindCode    ,
@@ -433,7 +433,7 @@ motorisationComb     = REC_veh_VP.motorisationComb    ,
 cubicCapacity    = REC_veh_VP.cubicCapacity   ,
 transmissionTypeCode     = REC_veh_VP.transmissionTypeCode    ,
 gearBoxTypeCode  = REC_veh_VP.gearBoxTypeCode ,
-nbRapports   = REC_veh_VP.nbRapports  /*,
+nbRapports   = REC_veh_VP.nbRapports  ,
 typeVariantVersion   = REC_veh_VP.typeVariantVersion  ,
 trimLevel    = REC_veh_VP.trimLevel   ,
 seatNumber   = REC_veh_VP.seatNumber  ,
@@ -467,12 +467,13 @@ designCustomerShip   = REC_veh_VP.designCustomerShip  ,
 versionLabelGlobalShort  = REC_veh_VP.versionLabelGlobalShort ,
 versionLabeGlobalLong    = REC_veh_VP.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VP.versionLabelLocalShort  ,
-versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong   */
+versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong   
 
         where  tech_id          =   REC_veh_VP.tech_id
-        and itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef 
-        and versionYear  = REC_veh_VP.versionYear 
-        and  versionTrimester     = REC_veh_VP.versionTrimester    ;  
+        and itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef  ;
+        --and versionYear  = REC_veh_VP.versionYear 
+        --and  versionTrimester     = REC_veh_VP.versionTrimester    ;  
+        
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
        -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -817,20 +818,90 @@ BEGIN
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
 
+
   Cursor C_veh_crossRefs_VP Is
-  Select 
-Id as tech_id, --AJOUT POUR LIAISON
-'CAP code' as identifierType,
-capcode as identifier
-from MKTREF.MKTQT_CapDer_VP;
+
+select  
+--(select distinct parent_details_code from mktqt_transco t where t.entity = 'model_gen' and t.description_label = description_label ),
+brand.parent_details_code as brand,
+brand.code as model_gen, 
+'P' as vehicle_kind,
+dimensions.code as dimensions,
+NULL as door_seat,  ---------------- COMPLETER
+trim_trim.code as trim,
+NULL as fuel_type, ---------------- COMPLETER
+motorisation.code as motorisation,
+NULL as year_trimester, ----------------- COMPLETER
+
+
+CAPDER.ID as tech_id,
+CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,  --model_gen
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
+mktqt_transco brand, mktqt_transco dimensions, mktqt_transco trim_trim, mktqt_transco motorisation
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471
+
+and brand.entity = 'model_gen'
+and brand.description_label  = concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat)
+
+and dimensions.entity = 'dimensions'
+and dimensions.parent_details_code  = brand.code 
+
+and trim_trim.entity = 'trim'
+and trim_trim.parent_details_code =  brand.code 
+
+and motorisation.entity ='motorisationBLVD'
+and motorisation.parent_details_code = brand.code
+
+;
 
           
   Cursor C_veh_crossRefs_VU Is
-  Select 
-Id as tech_id, --AJOUT POUR LIAISON
-'CAP code' as identifierType,
-capcode as identifier
-from MKTREF.MKTQT_CapDer_VU;
+
+select  
+--(select distinct parent_details_code from mktqt_transco t where t.entity = 'model_gen' and t.description_label = description_label ),
+brand.parent_details_code as brand,
+brand.code as model_gen, 
+'C' as vehicle_kind,
+dimensions.code as dimensions,
+NULL as door_seat,  ---------------- COMPLETER
+trim_trim.code as trim,
+NULL as fuel_type, ---------------- COMPLETER
+motorisation.code as motorisation,
+NULL as year_trimester, ----------------- COMPLETER
+
+
+
+CAPDER.ID as tech_id,
+CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,  --model_gen
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
+mktqt_transco brand, mktqt_transco dimensions, mktqt_transco trim_trim, mktqt_transco motorisation
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477
+
+and brand.entity = 'model_gen'
+and brand.description_label  = concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat)
+
+and dimensions.entity = 'dimensions'
+and dimensions.parent_details_code  = brand.code 
+
+and trim_trim.entity = 'trim'
+and trim_trim.parent_details_code =  brand.code 
+
+and motorisation.entity ='motorisationBLVD'
+and motorisation.parent_details_code = brand.code
+
+
+
+;
 
 
 
@@ -865,14 +936,12 @@ from MKTREF.MKTQT_CapDer_VU;
         INSERT INTO MKTREF.MKTQT_veh_crossRefs
               (   
 tech_id, 
-identifierType,
-identifier
+BLDV
               )
         VALUES
               (  
 REC_veh_crossRefs_VP.tech_id,
-REC_veh_crossRefs_VP.identifierType,
-REC_veh_crossRefs_VP.identifier
+(REC_veh_crossRefs_VP.brand|| REC_veh_crossRefs_VP.model_gen|| REC_veh_crossRefs_VP.vehicle_kind|| REC_veh_crossRefs_VP.dimensions|| REC_veh_crossRefs_VP.door_seat|| REC_veh_crossRefs_VP.trim|| REC_veh_crossRefs_VP.fuel_type|| REC_veh_crossRefs_VP.motorisation|| REC_veh_crossRefs_VP.year_trimester)
               );
 
         V_INS := V_INS + 1;
@@ -882,10 +951,9 @@ REC_veh_crossRefs_VP.identifier
 				Update  MKTREF.MKTQT_veh_crossRefs
         Set       
 
-identifierType  = REC_veh_crossRefs_VP.identifierType
+BLDV  = (REC_veh_crossRefs_VP.brand|| REC_veh_crossRefs_VP.model_gen|| REC_veh_crossRefs_VP.vehicle_kind|| REC_veh_crossRefs_VP.dimensions|| REC_veh_crossRefs_VP.door_seat|| REC_veh_crossRefs_VP.trim|| REC_veh_crossRefs_VP.fuel_type|| REC_veh_crossRefs_VP.motorisation|| REC_veh_crossRefs_VP.year_trimester)
 
-        where tech_id = REC_veh_crossRefs_VP.tech_id
-        and identifier= REC_veh_crossRefs_VP.identifier;
+        where tech_id = REC_veh_crossRefs_VP.tech_id ;
         
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -933,14 +1001,12 @@ identifierType  = REC_veh_crossRefs_VP.identifierType
         INSERT INTO MKTREF.MKTQT_veh_crossRefs
               (   
 tech_id,
-identifierType,
-identifier
+BLDV
               )
         VALUES
               (  
 REC_veh_crossRefs_VU.tech_id,
-REC_veh_crossRefs_VU.identifierType,
-REC_veh_crossRefs_VU.identifier
+(REC_veh_crossRefs_VU.brand|| REC_veh_crossRefs_VU.model_gen|| REC_veh_crossRefs_VU.vehicle_kind|| REC_veh_crossRefs_VU.dimensions|| REC_veh_crossRefs_VU.door_seat|| REC_veh_crossRefs_VU.trim|| REC_veh_crossRefs_VU.fuel_type|| REC_veh_crossRefs_VU.motorisation|| REC_veh_crossRefs_VU.year_trimester)
               );
 
         V_INS := V_INS + 1;
@@ -950,10 +1016,10 @@ REC_veh_crossRefs_VU.identifier
 				Update  MKTREF.MKTQT_veh_crossRefs
         Set       
 
-identifierType  = REC_veh_crossRefs_VU.identifierType
+BLDV  = (REC_veh_crossRefs_VU.brand|| REC_veh_crossRefs_VU.model_gen|| REC_veh_crossRefs_VU.vehicle_kind|| REC_veh_crossRefs_VU.dimensions|| REC_veh_crossRefs_VU.door_seat|| REC_veh_crossRefs_VU.trim|| REC_veh_crossRefs_VU.fuel_type|| REC_veh_crossRefs_VU.motorisation|| REC_veh_crossRefs_VU.year_trimester)
 
-        where tech_id = REC_veh_crossRefs_VU.tech_id
-        and identifier= REC_veh_crossRefs_VU.identifier ;
+
+        where tech_id = REC_veh_crossRefs_VU.tech_id ;
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -1007,6 +1073,8 @@ BEGIN
 
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
+
+---- poas de doublons
 
   Cursor C_veh_pricings_VP Is
   Select 
@@ -1335,6 +1403,9 @@ BEGIN
 
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
+  
+  
+------------------------------------------------------------ A REVOIR LA REQUETE :  TROP DE LIGNES (DOUBLONS) ==>>  132140858  
 
   Cursor C_veh_options_VP Is
   Select 
@@ -1342,7 +1413,7 @@ A.Id as tech_id,
 A.optioncode as code,
 NULL as constructorCode,
 (case when B.catcode in (44, 45, 73, 74, 75, 76, 81, 82, 86, 90, 97) then 'C' else 'O' end) as typeCode,
-(case when exists( select 1 from  mktldr.MKTQTT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
+(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
 NULL as startDate,
 NULL as endDate
@@ -1352,13 +1423,14 @@ where A.optioncode = B.optioncode
 and A.optioncode = C.optioncode (+) ; 
           
 
+------------------------------------------------------------ A REVOIR LA REQUETE :  TROP DE LIGNES (DOUBLONS) ==>>  57598775
   Cursor C_veh_options_VU Is
   Select 
 A.Id as tech_id,
 A.optioncode as code,
 NULL as constructorCode,
 (case when B.catcode in (103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113) then 'C' else 'O' end) as typeCode,
-(case when exists( select 1 from  mktldr.MKTQTT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
+(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
 NULL as startDate,
 NULL as endDate
@@ -1580,8 +1652,10 @@ BEGIN
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
 
+
+
   Cursor C_veh_optionslabels_VP Is
-  Select 
+  Select  distinct
 A.ID as tech_id, --ADD
 A.optioncode as code, --ADD
 'en_GB' as language,
@@ -1594,7 +1668,7 @@ where A.optioncode = B.optioncode;
 
 
   Cursor C_veh_optionslabels_VU Is
-  Select 
+  Select distinct
 A.ID as tech_id, --ADD
 A.optioncode as code, --ADD
 'en_GB' as language,
@@ -1799,7 +1873,7 @@ BEGIN
   RES     NUMBER := 0;
 
   Cursor C_veh_optionspricings_VP Is
-  Select 
+  Select distinct
 A.id as tech_id,
 A.optioncode as code,
 NULL as territorialityCode,
@@ -1821,7 +1895,7 @@ from MKTREF.MKTQT_NVDOption_VP A ;
 
 
   Cursor C_veh_optionspricings_VU Is
-  Select 
+  Select distinct
 A.id as tech_id,
 A.optioncode as code,
 NULL as territorialityCode,
@@ -2095,7 +2169,7 @@ BEGIN
   RES     NUMBER := 0;
 
   Cursor C_veh_baseEquipments_VP Is
-  Select 
+  Select distinct
 A.Id as tech_id,
 A.optioncode as externalRef, 
 NULL as typeCategoryCode,
@@ -2107,7 +2181,7 @@ where A.optioncode = B.optioncode   ;
       
       
   Cursor C_veh_baseEquipments_VU Is
-  Select 
+  Select distinct
 A.Id as tech_id,
 A.optioncode as externalRef, 
 NULL as typeCategoryCode,
@@ -2289,10 +2363,978 @@ label= REC_veh_baseEquipments_VU.label
   END ALIM_veh_baseEquipments;
 
 
+-----------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+  FUNCTION ALIM_transco_model_gen (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_transco_model_gen Is
+ 
+  select AB.incremen_lib as code, AA.* 
+  
+from (
+select  marque,
+(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = marque ) as parent,
+(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = marque ) as parent_details_code,
+description_label as description_label,
+crossref_code as crossref_code
+
+from ( --------------VP
+(select distinct CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471) 
+union ----------------VU
+(select distinct CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477)
+) ) AA 
+-- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label
+,( 
+select  description_label, ROWNUM as incremen_lib  -- description label unique 
+from (
+(select distinct
+--(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = CAPMAN.NAME )  as parent
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471) 
+union
+(select distinct
+--(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = CAPMAN.NAME ) as parent
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477)
+) 
+) AB where AA.description_label = AB.description_label
+
+; 
+  
+  
+  
+  
+  
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+    Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_model_gen','--------------------------BEGIN----------------------------');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_model_gen','## Alimentation de la table MKTREF.MKTQT_transco ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_transco_model_gen','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+    
+
+
+  FOR REC_transco IN C_transco_model_gen
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_transco
+              (   
+Entity			,
+code			,
+startValidityDate	,
+endValidityDate		,
+parent			,
+parent_details_entity		,
+parent_details_code		,
+description_language		,
+description_label		,
+crossref_typecode		,
+crossref_country		,
+crossref_code			,
+translation_language	,
+translation_label	,
+bomAttribut		,
+countryScope		
+              )
+        VALUES
+              (  
+'model_gen'			, --Entity
+REC_transco.code			, --code
+to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
+REC_transco.parent	, --- MAPPING : parent_details_code = parent
+'brandCode'	, --parent_details_entity
+REC_transco.parent, -- parent_details_code		
+'en_GB', --description_language		,
+REC_transco.description_label   , --description_label
+'CAP',  -- crossref_typecode		,
+'GB', --crossref_country		,
+REC_transco.crossref_code	,  --crossref_code
+'en_GB',  --translation_language	,
+REC_transco.description_label	, --- MAPPING : translation_label = description_label
+'model_gen', --bomAttribut		,
+'UK'    --countryScope	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_transco
+        Set        
+        
+      parent =   REC_transco.parent,
+      parent_details_code = REC_transco.parent, --- mapping  parent_details_code = parent
+      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      description_label = REC_transco.description_label
+        
+      where  entity = 'model_gen'
+      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
+      and parent_details_entity = 'brandCode'
+      and description_language = 'en_GB'
+      and crossref_typecode = 'CAP'
+      and crossref_country = 'GB'
+      and translation_language = 'en_GB'
+      and bomAttribut = 'model_gen'
+      and countryScope = 'UK' 
+       and code = REC_transco.code
+       --and description_label = REC_transco.description_label  --NOUVEAU 
+       and crossref_code = REC_transco.crossref_code ;
+         
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_model_gen','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_model_gen','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_transco_model_gen;
 
 
 
 
+
+  FUNCTION ALIM_transco_trim (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_transco_trim_model_gen Is
+        
+
+select AB.incremen_lib as code, AA.* 
+from (
+select  distinct
+(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code, --- code du model_gen qui va etre stocker dans parent_details_code de trim. parent = parent_details_code
+--(select distinct t.parent from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label) as parent_details_code,  -- 
+description_label,
+crossref_code
+from ( --------VP
+(select distinct CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as lien_crossref_code,
+(select distinct Name from MKTQT_CapTrim_VP where Code = CAPDER.TrimCode) as description_label, --REQUETE
+concat('C', CAPDER.TrimCode) as crossref_code  --REQUETE
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471) 
+union --------VU
+(select distinct CAPMAN.NAME as marque,
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as lien_crossref_code,
+(select distinct Name from MKTQT_CapTrim_VU where Code = CAPDER.TrimCode) as description_label, --REQUETE
+concat('L', CAPDER.TrimCode) as crossref_code  --REQUETE
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477)
+) where description_label is not null
+) --group by description_label,crossref_code having count(*)>1
+AA, (
+-- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label
+select description_label,  ROWNUM as incremen_lib  -- description label unique 
+from (
+select  distinct
+description_label --REQUETE
+from ( --VP
+(select 
+(select distinct Name from MKTQT_CapTrim_VP where Code = CAPDER.TrimCode) as description_label --REQUETE
+--concat('C', CAPDER.TrimCode) as crossref_code  --REQUETE
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471) 
+union --VU
+(select
+(select distinct Name from MKTQT_CapTrim_VU where Code = CAPDER.TrimCode) as description_label --REQUETE
+--concat('L', CAPDER.TrimCode) as crossref_code  --REQUETE
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477)
+) where description_label is not null )
+) AB where AA.description_label = AB.description_label 
+      
+;
+      
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_trim','## Alimentation de la table MKTREF.MKTQT_transco ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_transco_trim','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+    
+
+
+  FOR REC_transco IN C_transco_trim_model_gen
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_transco
+              (   
+Entity			,
+code			,
+startValidityDate	,
+endValidityDate		,
+parent			,
+parent_details_entity		,
+parent_details_code		,
+description_language		,
+description_label		,
+crossref_typecode		,
+crossref_country		,
+crossref_code			,
+translation_language	,
+translation_label	,
+bomAttribut		,
+countryScope		
+              )
+        VALUES
+              (  
+'trim'			, --Entity
+REC_transco.code			, --code
+to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
+REC_transco.parent_details_code, --REC_transco.parent	, --- MAPPING : parent_details_code = parent
+'model_gen'	, --parent_details_entity
+REC_transco.parent_details_code, -- parent_details_code		
+'en_GB', --description_language		,
+REC_transco.description_label   , --description_label
+'CAP',  -- crossref_typecode		,
+'GB', --crossref_country		,
+REC_transco.crossref_code	,  --crossref_code
+'en_GB',  --translation_language	,
+REC_transco.description_label	, --- MAPPING : translation_label = description_label
+'trimlevel', --bomAttribut		,
+'UK'    --countryScope	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_transco
+        Set        
+        
+      parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
+      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      parent = REC_transco.parent_details_code, --- mapping  parent_details_code = parent
+      description_label = REC_transco.description_label
+
+      where  entity = 'trim'
+      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
+      and parent_details_entity = 'model_gen'
+      and description_language = 'en_GB'
+      and crossref_typecode = 'CAP'
+      and crossref_country = 'GB'
+      and translation_language = 'en_GB'
+      and bomAttribut = 'trimlevel'
+      and countryScope = 'UK' 
+       and code = REC_transco.code
+       --and description_label = REC_transco.description_label  --NOUVEAU 
+       and crossref_code = REC_transco.crossref_code ;
+         
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_trim','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_trim','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_transco_trim;
+
+
+
+
+
+
+  FUNCTION ALIM_transco_motorisationBLVD (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_transco_motor_model_gen Is
+
+
+select AB.incremen_lib as code, AA.parent_details_code, AA.description_label  
+from (  --count(*) 15749
+select distinct
+(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code ,
+description_label
+from (  ------------VP
+(select distinct 
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
+--- nbRapports.valuestring effecer leSPEED ?
+from  MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,  
+MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471 --VP
+
+AND   maximumPowerDin.ID(+) = CAPDER.ID
+AND   maximumPowerDin.TECHCODE(+) = 21
+
+AND   nbRapports.ID(+) = CAPDER.ID
+AND   nbRapports.TECHCODE(+) = 66
+
+AND   batteryCapacity.ID(+) = CAPDER.ID
+AND   batteryCapacity.TECHCODE(+) = 163) 
+union ------------VU
+(select distinct 
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,  
+MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477 --VU
+
+AND   maximumPowerDin.ID(+) = CAPDER.ID
+AND   maximumPowerDin.TECHCODE(+) = 21
+
+AND   nbRapports.ID(+) = CAPDER.ID
+AND   nbRapports.TECHCODE(+) = 66
+
+AND   batteryCapacity.ID(+) = CAPDER.ID
+AND   batteryCapacity.TECHCODE(+) = 152) 
+)
+)
+AA,
+(
+-- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label   (-----------------PAS BESOIN NORMALEMENT SI LA REQUETE DE LA COLONNE CROSSREF_CODE NE CHANGE PAS----------------)
+select description_label,   ROWNUM as incremen_lib from (
+(select distinct (maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
+--- nbRapports.valuestring effecer leSPEED ?
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,  
+MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471 --VP
+
+AND   maximumPowerDin.ID(+) = CAPDER.ID
+AND   maximumPowerDin.TECHCODE(+) = 21
+
+AND   nbRapports.ID(+) = CAPDER.ID
+AND   nbRapports.TECHCODE(+) = 66
+
+AND   batteryCapacity.ID(+) = CAPDER.ID
+AND   batteryCapacity.TECHCODE(+) = 163 )  
+union 
+(select distinct (maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,  
+MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477 --VU
+
+AND   maximumPowerDin.ID(+) = CAPDER.ID
+AND   maximumPowerDin.TECHCODE(+) = 21
+
+AND   nbRapports.ID(+) = CAPDER.ID
+AND   nbRapports.TECHCODE(+) = 66
+
+AND   batteryCapacity.ID(+) = CAPDER.ID
+AND   batteryCapacity.TECHCODE(+) = 152 )
+)
+)AB where AA.description_label = AB.description_label  
+
+;
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_motorisationBLVD','## Alimentation de la table MKTREF.MKTQT_transco ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_transco_motorisationBLVD','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+    
+
+
+  FOR REC_transco IN C_transco_motor_model_gen
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_transco
+              (   
+Entity			,
+code			,
+startValidityDate	,
+endValidityDate		,
+parent			,
+parent_details_entity		,
+parent_details_code		,
+description_language		,
+description_label		,
+crossref_typecode		,
+crossref_country		,
+crossref_code			,
+translation_language	,
+translation_label	,
+bomAttribut		,
+countryScope		
+              )
+        VALUES
+              (  
+'motorisationBLVD'			, --Entity
+REC_transco.code			, --code
+to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
+REC_transco.parent_details_code, --REC_transco.parent	, --- MAPPING : parent_details_code = parent
+'model_gen'	, --parent_details_entity
+REC_transco.parent_details_code, -- parent_details_code		
+'en_GB', --description_language		,
+REC_transco.description_label   , --description_label
+'CAP',  -- crossref_typecode		,
+'GB', --crossref_country		,
+REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
+'en_GB',  --translation_language	,
+REC_transco.description_label	, --- MAPPING : translation_label = description_label
+' ', --bomAttribut		,
+'UK'    --countryScope	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_transco
+        Set        
+        
+      parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
+      parent = REC_transco.parent_details_code, --- mapping  parent_details_code = parent
+      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      description_label = REC_transco.description_label  
+        
+      where  entity = 'motorisationBLVD'
+      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
+      and parent_details_entity = 'model_gen'
+      and description_language = 'en_GB'
+      and crossref_typecode = 'CAP'
+      and crossref_country = 'GB'
+      and translation_language = 'en_GB'
+      and bomAttribut = ' '
+      and countryScope = 'UK' 
+       and code = REC_transco.code
+       --and description_label = REC_transco.description_label  --NOUVEAU 
+       and crossref_code = REC_transco.description_label ;
+         
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_motorisationBLVD','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_motorisationBLVD','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_transco_motorisationBLVD;
+
+
+
+
+
+
+  FUNCTION ALIM_transco_dimensions (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_transco_dimensions_model_gen Is
+
+select AB.incremen_lib as code, AA.*
+from (
+select distinct 
+(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code ,
+description_label,
+lien_description_label --
+from (
+(select distinct
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || charge.valuefloat  ) as description_label --||  poids.valuefloat
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
+MKTQT_NVDTECHNICAL_VP hauteur, MKTQT_NVDTECHNICAL_VP longueur,MKTQT_NVDTECHNICAL_VP  charge--, MKTQT_NVDTECHNICAL_VP poids
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471  --VP
+
+AND   hauteur.ID = CAPDER.ID
+AND   hauteur.TECHCODE = 34 
+
+AND   longueur.ID = CAPDER.ID
+AND   longueur.TECHCODE = 3 
+
+AND   charge.ID = CAPDER.ID
+AND   charge.TECHCODE = 14 )
+
+--AND   poids.ID = CAPDER.ID
+--AND   poids.TECHCODE = 32 )
+union
+(
+select distinct
+concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
+(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || charge.valuefloat ||  poids.valuefloat ) as description_label 
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
+MKTQT_NVDTECHNICAL_VU hauteur, MKTQT_NVDTECHNICAL_VU longueur,MKTQT_NVDTECHNICAL_VU  charge, MKTQT_NVDTECHNICAL_VU poids
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477  --VU
+
+AND   hauteur.ID = CAPDER.ID
+AND   hauteur.TECHCODE = 34 
+
+AND   longueur.ID = CAPDER.ID
+AND   longueur.TECHCODE = 3 
+
+AND   charge.ID = CAPDER.ID
+AND   charge.TECHCODE = 14 
+
+AND   poids.ID = CAPDER.ID
+AND   poids.TECHCODE = 32 )
+)
+)
+AA,
+(
+-- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label  (-----------------PAS BESOIN NORMALEMENT SI LA REQUETE DE LA COLONNE CROSSREF_CODE NE CHANGE PAS----------------)
+select description_label,   ROWNUM as incremen_lib from (
+select distinct description_label  from (
+(
+select distinct
+(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || charge.valuefloat  ) as description_label --||  poids.valuefloat
+from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
+MKTQT_NVDTECHNICAL_VP hauteur, MKTQT_NVDTECHNICAL_VP longueur,MKTQT_NVDTECHNICAL_VP  charge--, MKTQT_NVDTECHNICAL_VP poids
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 471  --VP
+
+AND   hauteur.ID = CAPDER.ID
+AND   hauteur.TECHCODE = 34 
+
+AND   longueur.ID = CAPDER.ID
+AND   longueur.TECHCODE = 3 
+
+AND   charge.ID = CAPDER.ID
+AND   charge.TECHCODE = 14 )
+
+--AND   poids.ID = CAPDER.ID
+--AND   poids.TECHCODE = 32 )
+union
+(
+select distinct
+(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || charge.valuefloat ||  poids.valuefloat ) as description_label 
+from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
+MKTQT_NVDTECHNICAL_VU hauteur, MKTQT_NVDTECHNICAL_VU longueur,MKTQT_NVDTECHNICAL_VU  charge, MKTQT_NVDTECHNICAL_VU poids
+where CAPDER.MANCODE = CAPMAN.CODE
+AND   CAPRAN.CODE = CAPDER.RANCODE
+AND   NVDTECH.ID = CAPDER.ID
+AND   NVDTECH.TECHCODE = 477  --VU
+
+AND   hauteur.ID = CAPDER.ID
+AND   hauteur.TECHCODE = 34 
+
+AND   longueur.ID = CAPDER.ID
+AND   longueur.TECHCODE = 3 
+
+AND   charge.ID = CAPDER.ID
+AND   charge.TECHCODE = 14 
+
+AND   poids.ID = CAPDER.ID
+AND   poids.TECHCODE = 32 )
+)
+)
+)AB where AA.description_label = AB.description_label -- and AA.description_label = 'BMX530MX75EDTA4 5174522853170885'
+;
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_dimensions','## Alimentation de la table MKTREF.MKTQT_transco ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_transco_dimensions','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+
+
+  FOR REC_transco IN C_transco_dimensions_model_gen
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_transco
+              (   
+Entity			,
+code			,
+startValidityDate	,
+endValidityDate		,
+parent			,
+parent_details_entity		,
+parent_details_code		,
+description_language		,
+description_label		,
+crossref_typecode		,
+crossref_country		,
+crossref_code			,
+translation_language	,
+translation_label	,
+bomAttribut		,
+countryScope		
+              )
+        VALUES
+              (  
+'dimensions'			, --Entity
+REC_transco.code			, --code
+to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
+REC_transco.parent_details_code, --REC_transco.parent	, --- MAPPING : parent_details_code = parent
+'model_gen'	, --parent_details_entity
+REC_transco.parent_details_code, -- parent_details_code		
+'en_GB', --description_language		,
+REC_transco.description_label   , --description_label
+'CAP',  -- crossref_typecode		,
+'GB', --crossref_country		,
+REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
+'en_GB',  --translation_language	,
+REC_transco.description_label	, --- MAPPING : translation_label = description_label
+' ', --bomAttribut		,
+'UK'    --countryScope	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_transco
+        Set        
+        
+      parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
+      parent = REC_transco.parent_details_code, --- mapping  parent_details_code = parent
+      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      description_label = REC_transco.description_label
+      
+      where  entity = 'dimensions'
+      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
+      and parent_details_entity = 'model_gen'
+      and description_language = 'en_GB'
+      and crossref_typecode = 'CAP'
+      and crossref_country = 'GB'
+      and translation_language = 'en_GB'
+      and bomAttribut = ' '
+      and countryScope = 'UK' 
+       and code = REC_transco.code
+       --and description_label = REC_transco.description_label  --NOUVEAU 
+       and crossref_code = REC_transco.description_label ;
+         
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_dimensions','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_dimensions','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_transco_dimensions;
+
+
+
+	FUNCTION MAIN_ALIM_transco (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+
+		---------------01			
+			V_ERR     := ALIM_transco_model_gen( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+		---------------02			
+			V_ERR     := ALIM_transco_trim( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------03			
+			V_ERR     := ALIM_transco_motorisationBLVD( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        -------------------04
+			V_ERR     := ALIM_transco_dimensions( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+            
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_ALIM_transco;
 
 
 
