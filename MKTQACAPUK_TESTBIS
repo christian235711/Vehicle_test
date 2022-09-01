@@ -1,6 +1,578 @@
 create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
 
+  function int_to_seq2(n in integer ) return varchar2    as
+       ret       varchar2(30);
+       quotient  integer;
+       digit     char(1);
+       chars varchar2(100) := '123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+       chars2 varchar2(100) := 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+       len int := length(chars)+1;
+    begin
+      quotient := n;
+      ret := substr(chars,mod(quotient,len),1) || ret;
+      quotient := floor(quotient/len);
+      len := length(chars2)+1;
+      while quotient > 0
+      loop
+          ret := substr(chars2,mod(quotient,len),1) || ret;
+          quotient := floor(quotient/len);
+      end loop ;
+      return lpad(ret, 2, '0');
+   end ;
+   
+   
+   
+  FUNCTION ALIM_MODEL_GEN (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
 
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_NUM   NUMBER(10);
+  V_NUM_2 NUMBER(10);
+  V_SEQ   VARCHAR2(2);
+  
+        
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+ Cursor C_veh_VP Is
+     select  brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VP' AS VEHICULE_TYPE
+     from    MKTREF.MKTQT_CapDer_VP CAPDER,
+             MKTQT_CAPMAN_VP   CAPMAN,
+             MKTQT_CAPRANGE_VP CAPRAN,
+             MKTQT_NVDTechnical_VP NVD,
+             MKTREF.MKTQT_transco brand
+     where   CAPDER.MANCODE = CAPMAN.CODE
+     AND     CAPDER.RANCODE = CAPRAN.CODE
+     AND     NVD.ID(+) = CAPDER.ID
+     AND     NVD.techcode(+) = 477
+     and     brand.Entity(+) = 'brand'
+     and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE);
+
+
+    ----------------------------------------------------------------------
+    ----------------------------- VU -------------------------------------
+    ----------------------------------------------------------------------
+    
+ Cursor C_veh_VU Is
+     select  brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VU' AS VEHICULE_TYPE
+     from    MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTQT_CAPMAN_VU   CAPMAN,
+             MKTQT_CAPRANGE_VU CAPRAN,
+             MKTQT_NVDTechnical_VU NVD,
+             MKTREF.MKTQT_transco brand
+     where   CAPDER.MANCODE = CAPMAN.CODE
+     AND     CAPDER.RANCODE = CAPRAN.CODE
+     AND     NVD.ID(+) = CAPDER.ID
+     AND     NVD.techcode(+) = 477
+     and     brand.Entity(+) = 'brand'
+     and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE);
+
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','------------------------- BEGIN  -----------------------------');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','## Alimentation de la table MKTREF.MKTQT_MODEL_GEN ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+        
+
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');
+  
+
+  FOR REC_veh_VP IN C_veh_VP
+  LOOP
+        
+       /*************************************************************************/
+        BEGIN
+        
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+        BEGIN 
+         SELECT model_gen_num into V_NUM_2
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VP.brandCode
+         AND    VEHICULE_NAME = REC_veh_VP.VEHICULE_NAME
+         and    VEHICULE_TYPE = REC_veh_VP.VEHICULE_TYPE;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM_2 := NULL;
+        END;
+        
+        IF V_NUM_2 is not null then 
+          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+        else 
+           BEGIN 
+         SELECT NVL(max(model_gen_num), 0) into V_NUM
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VP.brandCode;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM := 0;
+        END;
+        
+        V_NUM := V_NUM +1;
+        
+           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+        END IF ;
+        
+        INSERT INTO MKTREF.MKTQT_MODEL_GEN
+              (  
+                BRAND_CODE,
+                VEHICULE_NAME,
+                VEHICULE_TYPE,
+                model_gen_num,
+                MODEL_GEN_ID  
+              )
+        VALUES
+              (  
+REC_veh_VP.brandCode ,
+REC_veh_VP.VEHICULE_NAME ,
+REC_veh_VP.VEHICULE_TYPE  ,
+NVL(V_NUM_2, V_NUM),
+V_SEQ
+              );
+         
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_MODEL_GEN
+        Set     model_gen_num =   NVL(V_NUM_2, V_NUM),
+                MODEL_GEN_ID = V_SEQ
+        where  BRAND_CODE          =   REC_veh_VP.brandCode
+        and    VEHICULE_NAME  = REC_veh_VP.VEHICULE_NAME
+        and    VEHICULE_TYPE  = REC_veh_VP.VEHICULE_TYPE ;
+
+        V_UPD := V_UPD + 1;
+     
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
+        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        RETURN V_ERR;
+      
+        END;     
+   END LOOP;
+
+   COMMIT;
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   -------------------------------VU  
+   
+   
+   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
+   
+   
+    FOR REC_veh_VU IN C_veh_VU
+  LOOP
+        
+       /*************************************************************************/
+        BEGIN
+        
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+        BEGIN 
+         SELECT model_gen_num into V_NUM_2
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VU.brandCode
+         AND    VEHICULE_NAME = REC_veh_VU.VEHICULE_NAME
+         and    VEHICULE_TYPE = REC_veh_VU.VEHICULE_TYPE;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM_2 := NULL;
+        END;
+        
+        IF V_NUM_2 is not null then 
+          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+        else 
+          BEGIN 
+         SELECT NVL(max(model_gen_num), 0) into V_NUM
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VU.brandCode;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM := 0;
+        END;
+        
+        V_NUM := V_NUM +1;
+           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+        END IF;
+        
+        INSERT INTO MKTREF.MKTQT_MODEL_GEN
+              (  
+                BRAND_CODE,
+                VEHICULE_NAME,
+                VEHICULE_TYPE,
+                model_gen_num,
+                MODEL_GEN_ID  
+              )
+        VALUES
+              (  
+REC_veh_VU.brandCode ,
+REC_veh_VU.VEHICULE_NAME ,
+REC_veh_VU.VEHICULE_TYPE  ,
+NVL(V_NUM_2, V_NUM),
+V_SEQ
+              );
+         
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_MODEL_GEN
+        Set    model_gen_num =   NVL(V_NUM_2, V_NUM) ,
+                MODEL_GEN_ID = V_SEQ
+        where  BRAND_CODE          =   REC_veh_VU.brandCode
+        and    VEHICULE_NAME  = REC_veh_VU.VEHICULE_NAME
+        and    VEHICULE_TYPE  = REC_veh_VU.VEHICULE_TYPE ;
+
+        V_UPD := V_UPD + 1;
+     
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
+        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        RETURN V_ERR;
+      
+        END;     
+   END LOOP;
+
+   COMMIT;
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_MODEL_GEN;
+  
+  
+  
+  
+  
+  
+  
+  
+  ----TRIM
+  
+  
+  FUNCTION ALIM_TRIM (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_NUM   NUMBER(10);
+  V_NUM_2 NUMBER(10);
+  V_SEQ   VARCHAR2(2);
+  
+        
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+ Cursor C_veh_VP Is
+     select  brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VP' AS VEHICULE_TYPE
+     from    MKTREF.MKTQT_CapDer_VP CAPDER,
+             MKTQT_CAPMAN_VP   CAPMAN,
+             MKTQT_CAPRANGE_VP CAPRAN,
+             MKTQT_NVDTechnical_VP NVD,
+             MKTREF.MKTQT_transco brand
+     where   CAPDER.MANCODE = CAPMAN.CODE
+     AND     CAPDER.RANCODE = CAPRAN.CODE
+     AND     NVD.ID(+) = CAPDER.ID
+     AND     NVD.techcode(+) = 477
+     and     brand.Entity(+) = 'brand'
+     and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE);
+
+
+    ----------------------------------------------------------------------
+    ----------------------------- VU -------------------------------------
+    ----------------------------------------------------------------------
+    
+ Cursor C_veh_VU Is
+     select  brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VU' AS VEHICULE_TYPE
+     from    MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTQT_CAPMAN_VU   CAPMAN,
+             MKTQT_CAPRANGE_VU CAPRAN,
+             MKTQT_NVDTechnical_VU NVD,
+             MKTREF.MKTQT_transco brand
+     where   CAPDER.MANCODE = CAPMAN.CODE
+     AND     CAPDER.RANCODE = CAPRAN.CODE
+     AND     NVD.ID(+) = CAPDER.ID
+     AND     NVD.techcode(+) = 477
+     and     brand.Entity(+) = 'brand'
+     and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE);
+
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','------------------------- BEGIN  -----------------------------');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','## Alimentation de la table MKTREF.MKTQT_MODEL_GEN ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+        
+
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');
+  
+
+  FOR REC_veh_VP IN C_veh_VP
+  LOOP
+        
+       /*************************************************************************/
+        BEGIN
+        
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+        BEGIN 
+         SELECT model_gen_num into V_NUM_2
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VP.brandCode
+         AND    VEHICULE_NAME = REC_veh_VP.VEHICULE_NAME
+         and    VEHICULE_TYPE = REC_veh_VP.VEHICULE_TYPE;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM_2 := NULL;
+        END;
+        
+        IF V_NUM_2 is not null then 
+          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+        else 
+           BEGIN 
+         SELECT NVL(max(model_gen_num), 0) into V_NUM
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VP.brandCode;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM := 0;
+        END;
+        
+        V_NUM := V_NUM +1;
+        
+           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+        END IF ;
+        
+        INSERT INTO MKTREF.MKTQT_MODEL_GEN
+              (  
+                BRAND_CODE,
+                VEHICULE_NAME,
+                VEHICULE_TYPE,
+                model_gen_num,
+                MODEL_GEN_ID  
+              )
+        VALUES
+              (  
+REC_veh_VP.brandCode ,
+REC_veh_VP.VEHICULE_NAME ,
+REC_veh_VP.VEHICULE_TYPE  ,
+NVL(V_NUM_2, V_NUM),
+V_SEQ
+              );
+         
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_MODEL_GEN
+        Set     model_gen_num =   NVL(V_NUM_2, V_NUM),
+                MODEL_GEN_ID = V_SEQ
+        where  BRAND_CODE          =   REC_veh_VP.brandCode
+        and    VEHICULE_NAME  = REC_veh_VP.VEHICULE_NAME
+        and    VEHICULE_TYPE  = REC_veh_VP.VEHICULE_TYPE ;
+
+        V_UPD := V_UPD + 1;
+     
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
+        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        RETURN V_ERR;
+      
+        END;     
+   END LOOP;
+
+   COMMIT;
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   -------------------------------VU  
+   
+   
+   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
+   
+   
+    FOR REC_veh_VU IN C_veh_VU
+  LOOP
+        
+       /*************************************************************************/
+        BEGIN
+        
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+        BEGIN 
+         SELECT model_gen_num into V_NUM_2
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VU.brandCode
+         AND    VEHICULE_NAME = REC_veh_VU.VEHICULE_NAME
+         and    VEHICULE_TYPE = REC_veh_VU.VEHICULE_TYPE;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM_2 := NULL;
+        END;
+        
+        IF V_NUM_2 is not null then 
+          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+        else 
+          BEGIN 
+         SELECT NVL(max(model_gen_num), 0) into V_NUM
+         from   MKTREF.MKTQT_MODEL_GEN
+         where  BRAND_CODE = REC_veh_VU.brandCode;
+        EXCEPTION WHEN OTHERS THEN
+         V_NUM := 0;
+        END;
+        
+        V_NUM := V_NUM +1;
+           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+        END IF;
+        
+        INSERT INTO MKTREF.MKTQT_MODEL_GEN
+              (  
+                BRAND_CODE,
+                VEHICULE_NAME,
+                VEHICULE_TYPE,
+                model_gen_num,
+                MODEL_GEN_ID  
+              )
+        VALUES
+              (  
+REC_veh_VU.brandCode ,
+REC_veh_VU.VEHICULE_NAME ,
+REC_veh_VU.VEHICULE_TYPE  ,
+NVL(V_NUM_2, V_NUM),
+V_SEQ
+              );
+         
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_MODEL_GEN
+        Set    model_gen_num =   NVL(V_NUM_2, V_NUM) ,
+                MODEL_GEN_ID = V_SEQ
+        where  BRAND_CODE          =   REC_veh_VU.brandCode
+        and    VEHICULE_NAME  = REC_veh_VU.VEHICULE_NAME
+        and    VEHICULE_TYPE  = REC_veh_VU.VEHICULE_TYPE ;
+
+        V_UPD := V_UPD + 1;
+     
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
+        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        RETURN V_ERR;
+      
+        END;     
+   END LOOP;
+
+   COMMIT;
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_TRIM;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   FUNCTION ALIM_veh (  NOMLOG      VARCHAR2,
                                 P_DATE_TRAI DATE DEFAULT SYSDATE,
                                 V_INSERTS   OUT NUMBER,
@@ -25,7 +597,7 @@ BEGIN
 
 
  Cursor C_veh_VP Is
-    select 
+     select 
 
 A.Id as tech_id,
 NULL as tech_dateExtraction ,
@@ -36,37 +608,37 @@ NULL as versionState   ,
 A.Introduced as validityStartDate   ,
 A.Discontinued as validityEndDate , 
 NULL  as corporateGroupCode  ,
-(select parent from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE)  ) as corporateGroupLabel ,
-(select code from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE) ) as brandCode   ,
-(select description_label from MKTREF.MKTQT_transco where Entity = 'brand' and crossref_code = concat('C',A.MANCODE) ) as brandLabel  ,
-(select code from  MKTREF.MKTQT_transco where Entity = 'model' and crossref_code = concat('C',A.RANCODE) ) as familyCode  ,
-(select description_label from  MKTREF.MKTQT_transco where Entity = 'model' and crossref_code = concat('C',A.RANCODE) ) as familyLabel ,
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 471 ) as generation  , ----------------------- 471
+brand.parent as corporateGroupLabel ,
+brand.code as brandCode   ,
+brand.description_label  as brandLabel  ,
+model.code as familyCode  ,
+model.description_label as familyLabel ,
+generation.valuestring  as generation  , ----------------------- 471
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
-( select code from   MKTREF.MKTQT_transco where Entity = 'segment' and crossref_code = A.VEHICLESECTOR ) as segmentMarketingCode    ,
+segment.code segmentMarketingCode    ,
 NULL as faceLiftGeneration  ,
 (case when substr(A.CAPCODE,20,1) is null then 'P' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   -- OK
-( select code from  MKTREF.MKTQT_transco where Entity = 'body' and crossref_code = concat('C',substr(A.capcode, 11,1)) ) as bodyCode    ,
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 34 ) as height  ,  ----------------------- 34
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 4 )  as length  , ----------------------- 4
+body.code as bodyCode    ,
+height.valuestring as height  ,  ----------------------- 34
+length.valuestring as length  , ----------------------- 4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 173 ) as co2EmissionWLTP , ----------------------- 173
+co2EmissionWLTP.valuestring as co2EmissionWLTP , ----------------------- 173
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 21 ) as maximumPowerDin , ----------------------- 21
-(select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 48 ) as maximumPowerKW  , ----------------------- 48
+maximumPowerDin.valuestring as maximumPowerDin , ----------------------- 21
+maximumPowerKW.valuestring  as maximumPowerKW  , ----------------------- 48
 substr(A.capcode, 12, 1) as energy1Code ,
 NULL as energy1DetailCode   ,
 NULL as energy2Code ,
 NULL as energy2DetailCode   ,
-( select distinct code from  MKTREF.MKTQT_transco where crossref_typecode = 'CAP' and entity = 'energyComb' and crossref_code = substr(A.capcode, 12, 1) ) as energyCombCode  , --
+energyComb.code as energyCombCode  , --
 NULL as motorisation    ,
 NULL as motorisationComb    ,
 (select valuestring from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode = 20 ) as cubicCapacity   , ----------------------- 20
-( select code from  MKTREF.MKTQT_transco where entity = 'transmission' and crossref_code = A.drivetrain ) as transmissionTypeCode    ,
-( select code from  MKTREF.MKTQT_transco where entity = 'gearbox' and crossref_code = A.transmission ) as gearBoxTypeCode ,
+transmission.code as transmissionTypeCode    ,
+gearbox.code as gearBoxTypeCode ,
 ( select case  when substr(t.valuestring, 2,1) ='S' then  substr(t.valuestring, 1,1) else substr(t.valuestring, 1,2) end  from MKTREF.MKTQT_NVDTechnical_VP t where t.id = A.id and t.effectivefrom = B.effectivefrom and t.techcode=66) as nbRapports  , ----------------------- 66 
 NULL as typeVariantVersion  ,
 ( select distinct Name from MKTQT_CapTrim_VP where Code = A.TrimCode ) as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
@@ -100,15 +672,89 @@ NULL as designBases ,
 NULL as designCustomerShip  ,
 NULL as versionLabelGlobalShort ,
 NULL as versionLabeGlobalLong   ,
-(select description_label from MKTREF.MKTQT_transco where entity = 'model' and crossref_code = concat('C', A.rancode)  ) as versionLabelLocalShort  ,
-(select concat(description_label, name) from MKTREF.MKTQT_transco where entity = 'model' and crossref_code = concat('C', A.rancode) ) as versionLabelLocalLong  
+model.description_label as versionLabelLocalShort  ,
+concat(model.description_label, A.name) as versionLabelLocalLong,
+MG.MODEL_GEN_ID
 
-
-from MKTREF.MKTQT_CapDer_VP A , MKTREF.MKTQT_NVDModelYear_VP B  , MKTREF.MKTQT_NVDGenericStatus_VP C
+from MKTREF.MKTQT_CapDer_VP A,
+     MKTREF.MKTQT_NVDModelYear_VP B,
+     MKTREF.MKTQT_NVDGenericStatus_VP C,
+     MKTREF.MKTQT_transco brand,
+     MKTREF.MKTQT_transco model,
+     MKTREF.MKTQT_transco segment,
+     MKTREF.MKTQT_transco body,
+     MKTREF.MKTQT_transco energyComb,
+     MKTREF.MKTQT_transco transmission,
+     MKTREF.MKTQT_transco gearbox,
+     MKTREF.MKTQT_NVDTechnical_VP generation,
+     MKTREF.MKTQT_NVDTechnical_VP height,
+     MKTREF.MKTQT_NVDTechnical_VP length,
+     MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP,
+     MKTREF.MKTQT_NVDTechnical_VP maximumPowerDin,
+     MKTREF.MKTQT_NVDTechnical_VP maximumPowerKW,
+     MKTREF.MKTQT_MODEL_GEN MG,
+     MKTQT_CAPMAN_VP   CAPMAN,
+     MKTQT_CAPRANGE_VP CAPRAN,
+     MKTQT_NVDTechnical_VP NVD
 where A.id = B.id 
 and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
-and B.effectiveto = C.effectiveto (+) ;
+and B.effectiveto = C.effectiveto (+)
+and c.status(+) = 'S'
+and c.genericcode(+) = '9'
+and brand.Entity(+) = 'brand'
+and brand.crossref_code(+) = concat('C',A.MANCODE)
+and model.Entity(+) = 'model'
+and model.crossref_code(+) = concat('C',A.RANCODE)
+and segment.Entity(+) = 'segment'
+and segment.crossref_code(+) = A.VEHICLESECTOR
+and body.Entity(+) = 'body'
+and body.crossref_code(+) = concat('C',substr(A.capcode, 11,1))
+and energyComb.crossref_typecode (+)= 'CAP'
+and energyComb.entity (+)= 'energyComb'
+and energyComb.crossref_code(+) = substr(A.capcode, 12, 1)
+and transmission.entity (+)= 'transmission'
+and transmission.crossref_code(+) = A.drivetrain
+and gearbox.entity (+) = 'gearbox'
+and gearbox.crossref_code(+) = A.transmission
+and generation.id(+) = B.id
+and generation.effectivefrom(+) = B.effectivefrom
+and generation.techcode(+) = 471
+and height.id(+) = B.id
+and height.effectivefrom(+) = B.effectivefrom
+and height.techcode (+) = 34
+and length.id(+) = B.id
+and length.effectivefrom(+) = B.effectivefrom
+and length.techcode(+) = 4
+and co2EmissionWLTP.id(+) = B.id
+and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
+and co2EmissionWLTP.techcode(+) = 173
+and maximumPowerDin.id (+) = B.id
+and maximumPowerDin.effectivefrom(+) = B.effectivefrom
+and maximumPowerDin.techcode(+) = 21 
+and maximumPowerKW.id(+) = B.id
+and maximumPowerKW.effectivefrom(+) = B.effectivefrom
+and maximumPowerKW.techcode(+) = 48
+-- MODEL GEN
+AND MG.BRAND_CODE (+) = brand.code
+and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
+AND MG.VEHICULE_TYPE (+) = 'VP'
+AND A.MANCODE = CAPMAN.CODE
+AND     A.RANCODE = CAPRAN.CODE
+AND     NVD.ID(+) = A.ID
+AND     NVD.techcode(+) = 477
+-- MODEL GEN
+-- TRIM
+-- TON CODE
+-- TRIM
+-- MOTORISATION
+-- TON CODE
+-- MOTORISATION
+-- DIMENSION
+-- TON CODE
+-- DIMENSION
+
+; 
 
 
     ----------------------------------------------------------------------
@@ -307,7 +953,8 @@ designCustomerShip  ,
 versionLabelGlobalShort ,
 versionLabeGlobalLong   ,
 versionLabelLocalShort  ,
-versionLabelLocalLong      
+versionLabelLocalLong   ,
+model_gen
               )
         VALUES
               (  
@@ -385,7 +1032,8 @@ REC_veh_VP.designCustomerShip  ,
 REC_veh_VP.versionLabelGlobalShort ,
 REC_veh_VP.versionLabeGlobalLong   ,
 REC_veh_VP.versionLabelLocalShort  ,
-REC_veh_VP.versionLabelLocalLong    
+REC_veh_VP.versionLabelLocalLong   ,
+rec_veh_vp.MODEL_GEN_ID
               );
          
         V_INS := V_INS + 1;
@@ -468,7 +1116,8 @@ designCustomerShip   = REC_veh_VP.designCustomerShip  ,
 versionLabelGlobalShort  = REC_veh_VP.versionLabelGlobalShort ,
 versionLabeGlobalLong    = REC_veh_VP.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VP.versionLabelLocalShort  ,
-versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong   
+versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong,
+model_gen                = REC_veh_vp.MODEL_GEN_ID
 
         where  tech_id          =   REC_veh_VP.tech_id
         and itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef  ;
@@ -823,121 +1472,8 @@ BEGIN
   Cursor C_veh_crossRefs_VP Is
   
 select  
-model_gen.parent_details_code as brand,
-model_gen.code as model_gen, 
-'P' as vehicle_kind,
-dimensions.code as dimensions,
-door_seat.code as door_seat,  ---------------- COMPLETER 
-trim_trim.code as trim,
-energyComb.code as fuel_type, ---------------- COMPLETER ok
-motorisation.code as motorisation,
-year_trimester.code as year_trimester, ----------------- COMPLETER ok
-
-CAPDER.ID as tech_id,
---CAPMAN.NAME as marque,
-concat(concat('P', CAPDER.Id), CAPDER.Introduced) as itemDirectoryVehicleRef,
-modelyear.refe as yeartrimester,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label  --model_gen
---concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
-mktqt_transco model_gen, mktqt_transco dimensions, mktqt_transco trim_trim, mktqt_transco motorisation,
-mktqt_transco energyComb, mktqt_NVDModelYear_VP modelyear, mktqt_transco year_trimester,
-mktqt_transco door_seat, MKTQT_NVDTECHNICAL_VP NVDTECH_seat
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471
-
-and model_gen.entity = 'model_gen'
-and model_gen.description_label  = concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat)
-
-and dimensions.entity = 'dimensions' and dimensions.parent_details_entity = 'brandCode'
-and dimensions.parent_details_code  = model_gen.parent_details_code 
-
-and trim_trim.entity = 'trim' and trim_trim.parent_details_entity = 'brandCode'
-and trim_trim.parent_details_code =  model_gen.parent_details_code 
-
-and motorisation.entity ='motorisationBLVD' and motorisation.parent_details_entity = 'brandCode'
-and motorisation.parent_details_code = model_gen.parent_details_code
-
-and energyComb.entity ='energyComb' and energyComb.crossref_typecode='CAP'
-and energyComb.crossref_code = substr(CAPDER.fueltype,1,1 )
-
-and modelyear.ID = CAPDER.ID 
-and modelyear.effectivefrom = NVDTECH.effectivefrom --and modelyear.effectiveto = NVDTECH.effectiveto
-
-and year_trimester.entity ='year_trimester'  
-and year_trimester.description_label = replace(substr(modelyear.refe, 0,4)+ ( replace(modelyear.refe, '.', ',')-floor(replace(modelyear.refe, '.', ',')) ), ',', '.' )
-
-AND   NVDTECH_seat.ID = CAPDER.ID
-AND   NVDTECH_seat.TECHCODE = 47
-and   NVDTECH_seat.effectivefrom = modelyear.effectivefrom --and modelyear.effectiveto = NVDTECH.effectiveto
-
-and door_seat.entity ='door_seat' and door_seat.crossref_typecode='CAP'
---and door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3')
-and door_seat.crossref_code = concat(concat(CAPDER.doors,'-'),NVDTECH_seat.valuefloat)
-
-;
-
-          
-  Cursor C_veh_crossRefs_VU Is
-
-select  
-model_gen.parent_details_code as brand,
-model_gen.code as model_gen, 
-'C' as vehicle_kind,
-dimensions.code as dimensions,
-door_seat.code as door_seat,  ---------------- COMPLETER 
-trim_trim.code as trim,
-energyComb.code as fuel_type, ---------------- COMPLETER ok
-motorisation.code as motorisation,
-year_trimester.code as year_trimester, ----------------- COMPLETER ok
-
-CAPDER.ID as tech_id,
---CAPMAN.NAME as marque,
-concat(concat('C', CAPDER.Id), CAPDER.Introduced) as itemDirectoryVehicleRef,
-modelyear.refe as yeartrimester,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label  --model_gen
---concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
-mktqt_transco model_gen, mktqt_transco dimensions, mktqt_transco trim_trim, mktqt_transco motorisation,
-mktqt_transco energyComb, mktqt_NVDModelYear_VU modelyear, mktqt_transco year_trimester,
-mktqt_transco door_seat, MKTQT_NVDTECHNICAL_VU NVDTECH_seat
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477
-
-and model_gen.entity = 'model_gen'
-and model_gen.description_label  = concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat)
-
-and dimensions.entity = 'dimensions' and dimensions.parent_details_entity = 'brandCode'
-and dimensions.parent_details_code  = model_gen.parent_details_code 
-
-and trim_trim.entity = 'trim' and trim_trim.parent_details_entity = 'brandCode'
-and trim_trim.parent_details_code =  model_gen.parent_details_code 
-
-and motorisation.entity ='motorisationBLVD' and motorisation.parent_details_entity = 'brandCode'
-and motorisation.parent_details_code = model_gen.parent_details_code
-
-and energyComb.entity ='energyComb' and energyComb.crossref_typecode='CAP'
-and energyComb.crossref_code = substr(CAPDER.fueltype,1,1 )
-
-and modelyear.ID = CAPDER.ID 
-and modelyear.effectivefrom = NVDTECH.effectivefrom --and modelyear.effectiveto = NVDTECH.effectiveto
-
-and year_trimester.entity ='year_trimester'  
-and year_trimester.description_label = replace(substr(modelyear.refe, 0,4)+ ( replace(modelyear.refe, '.', ',')-floor(replace(modelyear.refe, '.', ',')) ), ',', '.' )
-
-AND   NVDTECH_seat.ID = CAPDER.ID
-AND   NVDTECH_seat.TECHCODE = 47
-and   NVDTECH_seat.effectivefrom = modelyear.effectivefrom --and modelyear.effectiveto = NVDTECH.effectiveto
-
-and door_seat.entity ='door_seat' and door_seat.crossref_typecode='CAP'
---and door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17')
-and door_seat.crossref_code = concat('-',NVDTECH_seat.valuefloat)
-
-
+TECH_ID, BRANDCODE || MODEL_GEN || KINDCODE || DIMENSION || DOORNUMBER || TRIM || energyCombCode ||MOTORISATIONBLVD || versionTrimester AS BLVD
+from MKTQT_VEH
 ;
 
 
@@ -955,7 +1491,7 @@ and door_seat.crossref_code = concat('-',NVDTECH_seat.valuefloat)
         SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
         SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
 
   FOR REC_veh_crossRefs_VP IN C_veh_crossRefs_VP
   LOOP
@@ -978,7 +1514,7 @@ BLDV
         VALUES
               (  
 REC_veh_crossRefs_VP.tech_id,
-(REC_veh_crossRefs_VP.brand|| REC_veh_crossRefs_VP.model_gen|| REC_veh_crossRefs_VP.vehicle_kind|| REC_veh_crossRefs_VP.dimensions|| REC_veh_crossRefs_VP.door_seat|| REC_veh_crossRefs_VP.trim|| REC_veh_crossRefs_VP.fuel_type|| REC_veh_crossRefs_VP.motorisation|| REC_veh_crossRefs_VP.year_trimester)
+(REC_veh_crossRefs_VP.BLVD)
               );
 
         V_INS := V_INS + 1;
@@ -988,16 +1524,10 @@ REC_veh_crossRefs_VP.tech_id,
 				Update  MKTREF.MKTQT_veh_crossRefs
         Set       
 
-BLDV  = (REC_veh_crossRefs_VP.brand|| REC_veh_crossRefs_VP.model_gen|| REC_veh_crossRefs_VP.vehicle_kind|| REC_veh_crossRefs_VP.dimensions|| REC_veh_crossRefs_VP.door_seat|| REC_veh_crossRefs_VP.trim|| REC_veh_crossRefs_VP.fuel_type|| REC_veh_crossRefs_VP.motorisation|| REC_veh_crossRefs_VP.year_trimester)
+        BLDV  = REC_veh_crossRefs_VP.BLVD
 
         where tech_id = REC_veh_crossRefs_VP.tech_id ;
         
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
 
         V_UPD := V_UPD + 1;
         
@@ -1017,70 +1547,7 @@ BLDV  = (REC_veh_crossRefs_VP.brand|| REC_veh_crossRefs_VP.model_gen|| REC_veh_c
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
-   ---------------------------VU
-   
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
-
-  FOR REC_veh_crossRefs_VU IN C_veh_crossRefs_VU
-  LOOP
-
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_crossRefs
-              (   
-tech_id,
-BLDV
-              )
-        VALUES
-              (  
-REC_veh_crossRefs_VU.tech_id,
-(REC_veh_crossRefs_VU.brand|| REC_veh_crossRefs_VU.model_gen|| REC_veh_crossRefs_VU.vehicle_kind|| REC_veh_crossRefs_VU.dimensions|| REC_veh_crossRefs_VU.door_seat|| REC_veh_crossRefs_VU.trim|| REC_veh_crossRefs_VU.fuel_type|| REC_veh_crossRefs_VU.motorisation|| REC_veh_crossRefs_VU.year_trimester)
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_crossRefs
-        Set       
-
-BLDV  = (REC_veh_crossRefs_VU.brand|| REC_veh_crossRefs_VU.model_gen|| REC_veh_crossRefs_VU.vehicle_kind|| REC_veh_crossRefs_VU.dimensions|| REC_veh_crossRefs_VU.door_seat|| REC_veh_crossRefs_VU.trim|| REC_veh_crossRefs_VU.fuel_type|| REC_veh_crossRefs_VU.motorisation|| REC_veh_crossRefs_VU.year_trimester)
-
-
-        where tech_id = REC_veh_crossRefs_VU.tech_id ;
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_crossRefs','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
           
    
    UTL_FILE.FCLOSE(FILE_ID);
