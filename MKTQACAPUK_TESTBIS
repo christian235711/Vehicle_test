@@ -4,18 +4,47 @@ create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
        ret       varchar2(30);
        quotient  integer;
        digit     char(1);
-       chars varchar2(100) := '123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-       chars2 varchar2(100) := 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-       len int := length(chars)+1;
+       chars varchar2(100) := '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+       chars2 varchar2(100) := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ';
+       len int := length(chars);
+       len2 int := length(chars2);
     begin
       quotient := n;
-      ret := substr(chars,mod(quotient,len),1) || ret;
+      ret := substr(chars,mod(quotient,len)+1,1) || ret;
       quotient := floor(quotient/len);
       len := length(chars2)+1;
       while quotient > 0
       loop
-          ret := substr(chars2,mod(quotient,len),1) || ret;
-          quotient := floor(quotient/len);
+          ret := substr(chars2,mod(quotient,len2),1) || ret;
+          quotient := floor(quotient/len2);
+      end loop ;
+      return lpad(ret, 2, '0');
+   end ;
+   
+    function int_to_seq3(n in integer, NOMLOG      VARCHAR2) return varchar2    as
+       FILE_ID UTL_FILE.FILE_TYPE;
+       RES     NUMBER := 0;
+       ret       varchar2(30);
+       quotient  integer;
+       digit     char(1);
+       chars varchar2(100) := '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+       chars2 varchar2(100) := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ';
+       len int := length(chars);
+       len2 int := length(chars2);
+    begin
+      File_Id := mkt.mktqaut.F_Open(Nomlog);
+      quotient := n;
+      RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','quotient : ' || quotient);
+      ret := substr(chars,mod(quotient,len)+1,1) || ret;
+      RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','mod(quotient,len) : ' || mod(quotient,len));
+      RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','ret : ' || ret);
+      quotient := floor(quotient/len);
+      RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh','quotient : ' || quotient);
+      len := length(chars2)+1;
+      while quotient > 0
+      loop
+          ret := substr(chars2,mod(quotient,len2),1) || ret;
+          quotient := floor(quotient/len2);
       end loop ;
       return lpad(ret, 2, '0');
    end ;
@@ -175,7 +204,7 @@ V_SEQ
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
-        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        
         RETURN V_ERR;
       
         END;     
@@ -266,7 +295,7 @@ V_SEQ
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
-        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        
         RETURN V_ERR;
       
         END;     
@@ -1387,8 +1416,8 @@ where A.id = B.id
 and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
-and c.status(+) = 'S'
-and c.genericcode(+) = '9'
+and c.status(+) = 'S'            --- 
+and c.genericcode(+) = '9'        ---
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('C',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -1609,9 +1638,8 @@ and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
 
 
-
-and c.status(+) = 'S'
-and c.genericcode(+) = '9'
+and c.status(+) = 'S'   ----
+and c.genericcode(+) = '9'  ----
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('L',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -5287,56 +5315,79 @@ REC_transco.countryScope
 
 
         BEGIN	
-
-		---------------01			
+     ---------------01			
+      V_ERR     := ALIM_MODEL_GEN( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------02
+      V_ERR     := ALIM_TRIM( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------03
+      V_ERR     := ALIM_MOTORISATIONBLVD( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------04
+      V_ERR     := ALIM_DIMENSIONS( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+		---------------05	
 			V_ERR     := ALIM_veh( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
 
-		---------------02			
-		/*	V_ERR     := ALIM_veh_crossRefs( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+		---------------06		
+			V_ERR     := ALIM_veh_crossRefs( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
-            */
-        ---------------03			
-			V_ERR     := ALIM_veh_pricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      
+        ---------------07	
+			/*V_ERR     := ALIM_veh_pricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
-        -------------------04
-		/*	V_ERR     := ALIM_veh_options( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+        -------------------08
+  	V_ERR     := ALIM_veh_options( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
-            */
+        
             
-         -------------------05
+         -------------------09
 			V_ERR     := ALIM_veh_optionslabels( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
-        -------------------06
+        -------------------10
 			V_ERR     := ALIM_veh_optionspricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;            
             
-         -------------------07
+         -------------------11
 			V_ERR     := ALIM_veh_baseEquipments( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
-			END IF;           
+			END IF;       */    
  
             
 			
