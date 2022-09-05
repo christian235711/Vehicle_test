@@ -78,7 +78,11 @@ BEGIN
 
 
  Cursor C_veh_VP Is
-     select distinct brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VP' AS VEHICULE_TYPE
+     select distinct brand.code as brandCode   ,
+                    CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+                    'VP' AS VEHICULE_TYPE,
+                    CAPDER.RANCODE || ' gen ' || NVD.valuefloat AS crossref_code    ---- AJOUT VENDREDI 
+     
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
              MKTQT_CAPRANGE_VP CAPRAN,
@@ -97,7 +101,10 @@ BEGIN
     ----------------------------------------------------------------------
     
  Cursor C_veh_VU Is
-     select distinct brand.code as brandCode   , CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 'VU' AS VEHICULE_TYPE
+     select distinct brand.code as brandCode   ,
+                     CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 
+                     'VU' AS VEHICULE_TYPE,
+                     CAPDER.RANCODE || ' gen ' || NVD.valuefloat AS crossref_code    ---- AJOUT VENDREDI 
      from    MKTREF.MKTQT_CapDer_VU CAPDER,
              MKTQT_CAPMAN_VU   CAPMAN,
              MKTQT_CAPRANGE_VU CAPRAN,
@@ -174,7 +181,8 @@ BEGIN
                 VEHICULE_NAME,
                 VEHICULE_TYPE,
                 model_gen_num,
-                MODEL_GEN_ID  
+                MODEL_GEN_ID,
+                CROSSREF_CODE   -- AJOUT VENDREDI
               )
         VALUES
               (  
@@ -182,7 +190,8 @@ REC_veh_VP.brandCode ,
 REC_veh_VP.VEHICULE_NAME ,
 REC_veh_VP.VEHICULE_TYPE  ,
 NVL(V_NUM_2, V_NUM),
-V_SEQ
+V_SEQ,
+REC_veh_VP.CROSSREF_CODE     -- AJOUT VENDREDI
               );
          
         V_INS := V_INS + 1;
@@ -194,7 +203,9 @@ V_SEQ
                 MODEL_GEN_ID = V_SEQ
         where  BRAND_CODE          =   REC_veh_VP.brandCode
         and    VEHICULE_NAME  = REC_veh_VP.VEHICULE_NAME
-        and    VEHICULE_TYPE  = REC_veh_VP.VEHICULE_TYPE ;
+        and    VEHICULE_TYPE  = REC_veh_VP.VEHICULE_TYPE 
+        AND    CROSSREF_CODE  = REC_veh_VP.CROSSREF_CODE     -- AJOUT VENDREDI 
+        ;
 
         V_UPD := V_UPD + 1;
      
@@ -265,7 +276,8 @@ V_SEQ
                 VEHICULE_NAME,
                 VEHICULE_TYPE,
                 model_gen_num,
-                MODEL_GEN_ID  
+                MODEL_GEN_ID,
+                CROSSREF_CODE   -- AJOUT VENDREDI
               )
         VALUES
               (  
@@ -273,7 +285,8 @@ REC_veh_VU.brandCode ,
 REC_veh_VU.VEHICULE_NAME ,
 REC_veh_VU.VEHICULE_TYPE  ,
 NVL(V_NUM_2, V_NUM),
-V_SEQ
+V_SEQ,
+REC_veh_VU.CROSSREF_CODE     -- AJOUT VENDREDI
               );
          
         V_INS := V_INS + 1;
@@ -285,7 +298,9 @@ V_SEQ
                 MODEL_GEN_ID = V_SEQ
         where  BRAND_CODE          =   REC_veh_VU.brandCode
         and    VEHICULE_NAME  = REC_veh_VU.VEHICULE_NAME
-        and    VEHICULE_TYPE  = REC_veh_VU.VEHICULE_TYPE ;
+        and    VEHICULE_TYPE  = REC_veh_VU.VEHICULE_TYPE
+        AND    CROSSREF_CODE  = REC_veh_VU.CROSSREF_CODE     -- AJOUT VENDREDI 
+        ;
 
         V_UPD := V_UPD + 1;
      
@@ -355,8 +370,8 @@ BEGIN
      select distinct  brand.code as brandCode,
             CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM   -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
-            ---concat('C', CAPDER.TrimCode) as crossref_code  
+            (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
+            concat('C', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
      
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
@@ -382,8 +397,8 @@ BEGIN
      select distinct brand.code as brandCode   ,
             CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM   -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
-            ---concat('L', CAPDER.TrimCode) as crossref_code  
+            (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
+            concat('L', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
      
      from    MKTREF.MKTQT_CapDer_VU CAPDER,
              MKTQT_CAPMAN_VU   CAPMAN,
@@ -470,7 +485,8 @@ BEGIN
                 VEHICULE_TYPE,
                 VEHICULE_TRIM, ---
                 trim_num, 
-                TRIM_ID   ---
+                TRIM_ID ,  ---
+                CROSSREF_CODE   -- AJOUT VENDREDI
               )
         VALUES
               (  
@@ -479,7 +495,8 @@ REC_veh_VP.VEHICULE_NAME ,
 REC_veh_VP.VEHICULE_TYPE  ,
 REC_veh_VP.VEHICULE_TRIM, -- 
 NVL(V_NUM_2, V_NUM),
-V_SEQ
+V_SEQ,
+REC_veh_VP.CROSSREF_CODE   -- AJOUT VENDREDI
               );
          
         V_INS := V_INS + 1;
@@ -493,6 +510,7 @@ V_SEQ
         and    VEHICULE_NAME  = REC_veh_VP.VEHICULE_NAME
         and    VEHICULE_TYPE  = REC_veh_VP.VEHICULE_TYPE 
         and  VEHICULE_TRIM = REC_veh_VP.VEHICULE_TRIM  -- add
+        AND  CROSSREF_CODE = REC_veh_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         ;
 
         V_UPD := V_UPD + 1;
@@ -570,7 +588,8 @@ V_SEQ
                 VEHICULE_TYPE,
                 VEHICULE_TRIM,
                 trim_num,
-                TRIM_ID  
+                TRIM_ID  ,
+                CROSSREF_CODE   -- AJOUT VENDREDI
               )
         VALUES
               (  
@@ -579,7 +598,8 @@ REC_veh_VU.VEHICULE_NAME ,
 REC_veh_VU.VEHICULE_TYPE  ,
 REC_veh_VU.VEHICULE_TRIM  ,
 NVL(V_NUM_2, V_NUM),
-V_SEQ
+V_SEQ,
+REC_veh_VU.CROSSREF_CODE   -- AJOUT VENDREDI
               );
          
         V_INS := V_INS + 1;
@@ -593,6 +613,7 @@ V_SEQ
         and    VEHICULE_NAME  = REC_veh_VU.VEHICULE_NAME
         and    VEHICULE_TYPE  = REC_veh_VU.VEHICULE_TYPE 
         and    VEHICULE_TRIM = REC_veh_VU.VEHICULE_TRIM  -- add
+        AND  CROSSREF_CODE = REC_veh_VU.CROSSREF_CODE   -- AJOUT VENDREDI
         ;
 
         V_UPD := V_UPD + 1;
@@ -603,7 +624,7 @@ V_SEQ
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_TRIM','Message Erreur pl/sql :'||Sqlerrm,'E');
-        --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_TRIM',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+        
         RETURN V_ERR;
       
         END;     
@@ -1416,8 +1437,8 @@ where A.id = B.id
 and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
-and c.status(+) = 'S'            --- 
-and c.genericcode(+) = '9'        ---
+--and c.status(+) = 'S'            --- 
+--and c.genericcode(+) = '9'        ---
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('C',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -1470,16 +1491,18 @@ and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom a
 AND MG.BRAND_CODE (+) = brand.code
 and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
 AND MG.VEHICULE_TYPE (+) = 'VP'
-AND A.MANCODE = CAPMAN.CODE
-AND A.RANCODE = CAPRAN.CODE
-AND     NVD.ID(+) = A.ID
-AND     NVD.techcode(+) = 471
+AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VENDREDI
+    AND A.MANCODE = CAPMAN.CODE
+    AND A.RANCODE = CAPRAN.CODE
+    AND     NVD.ID(+) = A.ID
+    AND     NVD.techcode(+) = 471
 -- MODEL GEN
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
 AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
 AND TRIM.VEHICULE_TYPE (+) = 'VP'
 AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
+AND TRIM.CROSSREF_CODE (+) = concat('C', A.TrimCode)   -- AJOUT VENDREDI
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
 -- TRIM
@@ -1637,9 +1660,8 @@ and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
 
-
-and c.status(+) = 'S'   ----
-and c.genericcode(+) = '9'  ----
+--and c.status(+) = 'S'   ----
+--and c.genericcode(+) = '9'  ----
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('L',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -1692,24 +1714,26 @@ and  payLoad.ID(+) = B.ID and payLoad.effectivefrom(+) = B.effectivefrom and pay
 -- MODEL GEN
 AND MG.BRAND_CODE (+) = brand.code
 and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
-AND MG.VEHICULE_TYPE (+) = 'VP'
-AND A.MANCODE = CAPMAN.CODE
-AND A.RANCODE = CAPRAN.CODE
-AND     NVD.ID(+) = A.ID
-AND     NVD.techcode(+) = 477
+AND MG.VEHICULE_TYPE (+) = 'VU'
+AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VENDREDI
+    AND A.MANCODE = CAPMAN.CODE
+    AND A.RANCODE = CAPRAN.CODE
+    AND     NVD.ID(+) = A.ID
+    AND     NVD.techcode(+) = 477
 -- MODEL GEN
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
 AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
-AND TRIM.VEHICULE_TYPE (+) = 'VP'
+AND TRIM.VEHICULE_TYPE (+) = 'VU'
 AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
+AND TRIM.CROSSREF_CODE (+) = concat('L', A.TrimCode)   -- AJOUT VENDREDI
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
 -- TRIM
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE(+) = brand.code
 AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
-AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VP'
+AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VU'
 AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
@@ -1722,7 +1746,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
 AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
-AND DIMENSIONS.VEHICULE_TYPE (+) = 'VP'
+AND DIMENSIONS.VEHICULE_TYPE (+) = 'VU'
 AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (substr(A.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat ||  payLoad.valuefloat || maxLadenWeight.valuefloat  ) 
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
@@ -3807,6 +3831,26 @@ BEGIN
 
   Cursor C_transco_model_gen Is
  
+ 
+  
+ select  distinct
+ 
+                 BRAND_CODE     as  parent,  -- brandCode
+                VEHICULE_NAME   as  description_label,
+                --VEHICULE_TYPE,
+                --model_gen_num,
+                MODEL_GEN_ID    as code,
+                CROSSREF_CODE   as CROSSREF_CODE
+
+ from  MKTREF.MKTQT_MODEL_GEN   MODEL_GEN
+; 
+ 
+ 
+ 
+ 
+ 
+ 
+ /*
   select AB.incremen_lib as code, AA.* 
   
 from (
@@ -3860,7 +3904,7 @@ AND   NVDTECH.TECHCODE = 477)
 ) AB where AA.parent = AB.parent
 
 ; 
-  
+  */
   
   
   
@@ -3981,7 +4025,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_model_gen','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
    
    
    
@@ -4017,7 +4061,25 @@ BEGIN
 
   Cursor C_transco_trim_model_gen Is
         
+  
+ select  distinct
+                TRIM.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                TRIM.VEHICULE_TRIM   as  description_label,
+                --VEHICULE_TYPE,
+                --model_gen_num,
+                TRIM.TRIM_ID    as code,
+                TRIM.CROSSREF_CODE   as CROSSREF_CODE,
+                TRIM.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
+                model_gen.code as parent_details_code    -- 2 loop
 
+ from  MKTREF.MKTQT_TRIM  TRIM, MKTREF.MKTQT_transco model_gen
+ where TRIM.BRAND_CODE = model_gen.parent_details_code
+ and   model_gen.entity='model_gen'
+; 
+ 
+         
+        
+/*
 select AB.incremen_lib as code, AA.* 
 from (
 select  distinct
@@ -4080,7 +4142,7 @@ AND   NVDTECH.TECHCODE = 477)
 ) AB where AA.lien_description_label = AB.description_label 
       
 ;
-      
+      */
 
 
  /*******************************************************************************/
@@ -4149,7 +4211,7 @@ REC_transco.description_label   , --description_label
 REC_transco.crossref_code	,  --crossref_code
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-'trimlevel', --bomAttribut		,
+'trimLevel', --bomAttribut		,
 'UK'    --countryScope	
               );
 
@@ -4197,7 +4259,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_trim','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
   
   
   ------------ model_gen
@@ -4253,7 +4315,7 @@ REC_transco.description_label   , --description_label
 REC_transco.crossref_code	,  --crossref_code
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-'trimlevel', --bomAttribut		,
+'trimLevel', --bomAttribut		,
 'UK'    --countryScope	
               );
 
@@ -4301,7 +4363,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_trim','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-     
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' '); 
   
   
   
@@ -4344,7 +4406,24 @@ BEGIN
 
   Cursor C_transco_motor_model_gen Is
 
+ select  distinct
+                motorisationBLVD.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                motorisationBLVD.VEHICULE_motorisationBLVD   as  description_label,
+                --VEHICULE_TYPE,
+                --model_gen_num,
+                motorisationBLVD.motorisationBLVD_ID    as code,
+               -- motorisationBLVD.CROSSREF_CODE   as CROSSREF_CODE,
+                motorisationBLVD.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
+                model_gen.code as parent_details_code    -- 2 loop
 
+ from  MKTREF.MKTQT_motorisationBLVD  motorisationBLVD, MKTREF.MKTQT_transco model_gen
+ where motorisationBLVD.BRAND_CODE = model_gen.parent_details_code
+ and   model_gen.entity='model_gen'
+; 
+ 
+
+
+/*
 select AB.incremen_lib as code, AA.*  
 from (  --count(*) 15749
 select distinct
@@ -4440,7 +4519,7 @@ AND   batteryCapacity.TECHCODE(+) = 152 )
 )AB where AA.lien_description_label = AB.description_label  
 
 ;
-
+*/
 
  /*******************************************************************************/
   BEGIN
@@ -4556,7 +4635,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_motorisationBLVD','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
    
    
   ------------ model_gen
@@ -4661,7 +4740,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_motorisationBLVD','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
       
    
    
@@ -4705,6 +4784,24 @@ BEGIN
 
   Cursor C_transco_dimensions_model_gen Is
 
+ select  distinct
+                dimensions.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                dimensions.VEHICULE_dimensions   as  description_label,
+                --VEHICULE_TYPE,
+                --model_gen_num,
+                dimensions.dimensions_ID    as code,
+               -- motorisationBLVD.CROSSREF_CODE   as CROSSREF_CODE,
+                dimensions.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
+                model_gen.code as parent_details_code    -- 2 loop
+
+ from  MKTREF.MKTQT_dimensions  dimensions, MKTREF.MKTQT_transco model_gen
+ where dimensions.BRAND_CODE = model_gen.parent_details_code
+ and   model_gen.entity='model_gen'
+; 
+ 
+
+
+/*
 select AB.incremen_lib as code, AA.*
 from (
 select distinct 
@@ -4814,7 +4911,7 @@ AND   payLoad.TECHCODE = 32 )
 )
 )AB where AA.lien_description_label = AB.description_label -- and AA.description_label = 'BMX530MX75EDTA4 5174522853170885'
 ;
-
+*/
 
  /*******************************************************************************/
   BEGIN
@@ -4929,7 +5026,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_dimensions','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
    
    
    
@@ -5037,7 +5134,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_transco_dimensions','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
       
    
    
@@ -5224,7 +5321,7 @@ REC_transco.countryScope
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'UPDATE_transco_model','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'I',' ',' ');
    
    
    
