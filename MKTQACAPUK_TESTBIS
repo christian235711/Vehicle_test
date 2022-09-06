@@ -2515,7 +2515,7 @@ BEGIN
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
 
----- poas de doublons
+---- pas de doublons
 
   Cursor C_veh_pricings_VP Is
   Select 
@@ -3847,68 +3847,6 @@ BEGIN
  
  
  
- 
- 
- 
- /*
-  select AB.incremen_lib as code, AA.* 
-  
-from (
-select  marque,
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = marque ) as parent,
---(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = marque ) as parent_details_code,
-description_label as description_label,
-crossref_code as crossref_code
-
-from ( --------------VP
-(select distinct CAPMAN.NAME as marque,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,
-concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471) 
-union ----------------VU
-(select distinct CAPMAN.NAME as marque,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label,
-concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as crossref_code
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477)
-) ) AA 
--- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label
-,( 
-select  parent, ROWNUM as incremen_lib  -- parent unique 
-from (
-(select distinct
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = CAPMAN.NAME )  as parent
---concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471) 
-union
-(select distinct
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = CAPMAN.NAME ) as parent
---concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477)
-) 
-) AB where AA.parent = AB.parent
-
-; 
-  */
-  
-  
-  
-  
 
 
  /*******************************************************************************/
@@ -4079,70 +4017,6 @@ BEGIN
  
          
         
-/*
-select AB.incremen_lib as code, AA.* 
-from (
-select  distinct
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code, --- code du model_gen qui va etre stocker dans parent_details_code de trim. parent = parent_details_code
-(select distinct concat(t.parent, t.code) from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label) as parent,  -- 
-(select distinct t.parent from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code_brandcode, -- pour la seconde boucle 
-lien_description_label,
-description_label,
-crossref_code
-from ( --------VP
-(select distinct CAPMAN.NAME as marque,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as lien_crossref_code,
-(select distinct Name from MKTQT_CapTrim_VP where Code = CAPDER.TrimCode) as description_label, --REQUETE
-concat('C', CAPDER.TrimCode) as crossref_code  --REQUETE
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471) 
-union --------VU
-(select distinct CAPMAN.NAME as marque,
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-concat(concat(CAPDER.RANCODE,' gen '),NVDTECH.valuefloat) as lien_crossref_code,
-(select distinct Name from MKTQT_CapTrim_VU where Code = CAPDER.TrimCode) as description_label, --REQUETE
-concat('L', CAPDER.TrimCode) as crossref_code  --REQUETE
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477)
-) --where description_label is not null
-) 
-AA, (
--- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label
-select description_label,  ROWNUM as incremen_lib  -- description label unique 
-from (
-select  distinct
-description_label --REQUETE
-from ( --VP
-(select 
---(select distinct Name from MKTQT_CapTrim_VP where Code = CAPDER.TrimCode) as description_label --REQUETE
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471) 
-union --VU
-(select
---(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'brand' and t.description_label = CAPMAN.NAME )  as parent
---(select distinct Name from MKTQT_CapTrim_VU where Code = CAPDER.TrimCode) as description_label --REQUETE
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH 
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477)
-) )--where description_label is not null )
-) AB where AA.lien_description_label = AB.description_label 
-      
-;
-      */
 
 
  /*******************************************************************************/
@@ -4423,103 +4297,6 @@ BEGIN
  
 
 
-/*
-select AB.incremen_lib as code, AA.*  
-from (  --count(*) 15749
-select distinct
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code ,
-(select distinct concat(t.parent, t.code) from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label) as parent,  -- 
-(select distinct t.parent from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code_brandcode, -- pour la seconde boucle 
-lien_description_label,
-description_label
-from (  ------------VP
-(select distinct 
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
---- nbRapports.valuestring effecer leSPEED ?
-from  MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,  
-MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471 --VP
-
-AND   maximumPowerDin.ID(+) = CAPDER.ID
-AND   maximumPowerDin.TECHCODE(+) = 21
-
-AND   nbRapports.ID(+) = CAPDER.ID
-AND   nbRapports.TECHCODE(+) = 66
-
-AND   batteryCapacity.ID(+) = CAPDER.ID
-AND   batteryCapacity.TECHCODE(+) = 163) 
-union ------------VU
-(select distinct 
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,  
-MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477 --VU
-
-AND   maximumPowerDin.ID(+) = CAPDER.ID
-AND   maximumPowerDin.TECHCODE(+) = 21
-
-AND   nbRapports.ID(+) = CAPDER.ID
-AND   nbRapports.TECHCODE(+) = 66
-
-AND   batteryCapacity.ID(+) = CAPDER.ID
-AND   batteryCapacity.TECHCODE(+) = 152) 
-)
-)
-AA,
-(
--- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label   
-select description_label,   ROWNUM as incremen_lib from (
-(select distinct
---(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,  
-MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471 --VP
-
-AND   maximumPowerDin.ID(+) = CAPDER.ID
-AND   maximumPowerDin.TECHCODE(+) = 21
-
-AND   nbRapports.ID(+) = CAPDER.ID
-AND   nbRapports.TECHCODE(+) = 66
-
-AND   batteryCapacity.ID(+) = CAPDER.ID
-AND   batteryCapacity.TECHCODE(+) = 163 )  
-union 
-(
-select distinct 
---(maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as description_label
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,  
-MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477 --VU
-
-AND   maximumPowerDin.ID(+) = CAPDER.ID
-AND   maximumPowerDin.TECHCODE(+) = 21
-
-AND   nbRapports.ID(+) = CAPDER.ID
-AND   nbRapports.TECHCODE(+) = 66
-
-AND   batteryCapacity.ID(+) = CAPDER.ID
-AND   batteryCapacity.TECHCODE(+) = 152 )
-)
-)AB where AA.lien_description_label = AB.description_label  
-
-;
-*/
 
  /*******************************************************************************/
   BEGIN
@@ -4600,7 +4377,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         
       parent_details_code =   REC_transco.parent_details_code_brandcode,   -- parent = parent_details_code 
       parent = REC_transco.parent, --- mapping  parent_details_code = parent
-      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label  
         
       where  entity = 'motorisationBLVD'
@@ -4705,7 +4482,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         
       parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
       parent = REC_transco.parent, --- mapping  parent_details_code = parent
-      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label  
         
       where  entity = 'motorisationBLVD'
@@ -4801,117 +4578,7 @@ BEGIN
  
 
 
-/*
-select AB.incremen_lib as code, AA.*
-from (
-select distinct 
-(select distinct t.code from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code ,
-(select distinct concat(t.parent, t.code) from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label) as parent,  -- 
-(select distinct t.parent from MKTREF.MKTQT_transco t where t.entity = 'model_gen' and t.description_label = lien_description_label  ) as parent_details_code_brandcode, -- pour la seconde boucle 
-description_label,
-lien_description_label --
-from (
-(select distinct
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat  ) as description_label --||  payLoad.valuefloat
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
-MKTQT_NVDTECHNICAL_VP hauteur, MKTQT_NVDTECHNICAL_VP longueur,MKTQT_NVDTECHNICAL_VP  maxLadenWeight--, MKTQT_NVDTECHNICAL_VP payLoad
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471  --VP
 
-AND   hauteur.ID = CAPDER.ID
-AND   hauteur.TECHCODE = 34 
-
-AND   longueur.ID = CAPDER.ID
-AND   longueur.TECHCODE = 4    
-
-AND   maxLadenWeight.ID = CAPDER.ID
-AND   maxLadenWeight.TECHCODE = 14 )
-
---AND   payLoad.ID = CAPDER.ID -- CAR MAPPING
---AND   payLoad.TECHCODE = 32 )
-union
-(
-select distinct
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as lien_description_label,
-(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat ||  payLoad.valuefloat ) as description_label 
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
-MKTQT_NVDTECHNICAL_VU hauteur, MKTQT_NVDTECHNICAL_VU longueur,MKTQT_NVDTECHNICAL_VU  maxLadenWeight, MKTQT_NVDTECHNICAL_VU payLoad
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477  --VU
-
-AND   hauteur.ID = CAPDER.ID
-AND   hauteur.TECHCODE = 34 
-
-AND   longueur.ID = CAPDER.ID
-AND   longueur.TECHCODE = 4    
-
-AND   maxLadenWeight.ID = CAPDER.ID
-AND   maxLadenWeight.TECHCODE = 14 
-
-AND   payLoad.ID = CAPDER.ID
-AND   payLoad.TECHCODE = 32 )
-)
-)
-AA,
-(
--- AJOUT INCREMENT PAR RAPPORT PAR CHACQUE COMBINAISON DU LIBELLE description_label  (description_label (1)--->(*) parent_details_code )
-select description_label,   ROWNUM as incremen_lib from (
-select distinct description_label  from (
-(
-select distinct
---(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat  ) as description_label --||  payLoad.valuefloat
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VP CAPDER, MKTQT_CAPMAN_VP CAPMAN, MKTQT_CAPRANGE_VP CAPRAN, MKTQT_NVDTECHNICAL_VP NVDTECH,
-MKTQT_NVDTECHNICAL_VP hauteur, MKTQT_NVDTECHNICAL_VP longueur,MKTQT_NVDTECHNICAL_VP  maxLadenWeight--, MKTQT_NVDTECHNICAL_VP payLoad
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 471  --VP
-
-AND   hauteur.ID = CAPDER.ID
-AND   hauteur.TECHCODE = 34 
-
-AND   longueur.ID = CAPDER.ID
-AND   longueur.TECHCODE = 4   
-
-AND   maxLadenWeight.ID = CAPDER.ID
-AND   maxLadenWeight.TECHCODE = 14 )
-
---AND   payLoad.ID = CAPDER.ID
---AND   payLoad.TECHCODE = 32 )
-union
-(
-select distinct
---(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat ||  payLoad.valuefloat ) as description_label
-concat(concat(concat(concat(CAPMAN.NAME, ' : '),CAPRAN.NAME),' gen '), NVDTECH.valuefloat) as description_label
-from MKTQT_CAPDER_VU CAPDER, MKTQT_CAPMAN_VU CAPMAN, MKTQT_CAPRANGE_VU CAPRAN, MKTQT_NVDTECHNICAL_VU NVDTECH,
-MKTQT_NVDTECHNICAL_VU hauteur, MKTQT_NVDTECHNICAL_VU longueur,MKTQT_NVDTECHNICAL_VU  maxLadenWeight, MKTQT_NVDTECHNICAL_VU payLoad
-where CAPDER.MANCODE = CAPMAN.CODE
-AND   CAPRAN.CODE = CAPDER.RANCODE
-AND   NVDTECH.ID = CAPDER.ID
-AND   NVDTECH.TECHCODE = 477  --VU
-
-AND   hauteur.ID = CAPDER.ID
-AND   hauteur.TECHCODE = 34 
-
-AND   longueur.ID = CAPDER.ID
-AND   longueur.TECHCODE = 4    
-
-AND   maxLadenWeight.ID = CAPDER.ID
-AND   maxLadenWeight.TECHCODE = 14 
-
-AND   payLoad.ID = CAPDER.ID
-AND   payLoad.TECHCODE = 32 )
-)
-)
-)AB where AA.lien_description_label = AB.description_label -- and AA.description_label = 'BMX530MX75EDTA4 5174522853170885'
-;
-*/
 
  /*******************************************************************************/
   BEGIN
@@ -5099,7 +4766,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         
       parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
       parent = REC_transco.parent, --- mapping  parent_details_code = parent
-      translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
+      translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label
       
       where  entity = 'dimensions'
