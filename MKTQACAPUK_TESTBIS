@@ -5,7 +5,7 @@ create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
        quotient  integer;
        digit     char(1);
        chars varchar2(100) := '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-       chars2 varchar2(100) := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ ';
+       chars2 varchar2(100) := '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ ';
        len int := length(chars);
        len2 int := length(chars2);
     begin
@@ -79,9 +79,9 @@ BEGIN
 
  Cursor C_veh_VP Is
      select distinct brand.code as brandCode   ,
-                    CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+                    CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
                     'VP' AS VEHICULE_TYPE,
-                    CAPDER.RANCODE || ' gen ' || NVD.valuefloat AS crossref_code    ---- AJOUT VENDREDI 
+                    CAPDER.RANCODE || 'GEN' || NVD.valuestring AS crossref_code    ---- AJOUT VENDREDI 
      
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
@@ -102,9 +102,9 @@ BEGIN
     
  Cursor C_veh_VU Is
      select distinct brand.code as brandCode   ,
-                     CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME, 
+                     CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME, 
                      'VU' AS VEHICULE_TYPE,
-                     CAPDER.RANCODE || ' gen ' || NVD.valuefloat AS crossref_code    ---- AJOUT VENDREDI 
+                     CAPDER.RANCODE || 'GEN' || NVD.valuestring AS crossref_code    ---- AJOUT VENDREDI 
      from    MKTREF.MKTQT_CapDer_VU CAPDER,
              MKTQT_CAPMAN_VU   CAPMAN,
              MKTQT_CAPRANGE_VU CAPRAN,
@@ -368,7 +368,7 @@ BEGIN
 
  Cursor C_veh_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
             concat('C', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
@@ -395,7 +395,7 @@ BEGIN
     
  Cursor C_veh_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
             concat('L', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
@@ -682,9 +682,9 @@ BEGIN
 
  Cursor C_veh_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
+            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
  
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
@@ -716,9 +716,9 @@ BEGIN
     
  Cursor C_veh_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (maximumPowerDin.valuefloat || ' ' || CAPDER.DriveTrain || ' ' || CAPDER.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
+            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
      
      from    MKTREF.MKTQT_CapDer_VU CAPDER,
              MKTQT_CAPMAN_VU   CAPMAN,
@@ -1000,15 +1000,17 @@ BEGIN
 
  Cursor C_veh_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat  ) as  VEHICULE_DIMENSIONS
+            (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   as  VEHICULE_DIMENSIONS --mercredi
+            --(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat || maxLadenWeight.valuefloat  ) as  VEHICULE_DIMENSIONS -- avant
  
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
              MKTQT_CAPRANGE_VP CAPRAN,
              MKTQT_NVDTechnical_VP NVD,
              MKTREF.MKTQT_transco brand,
+             MKTREF.MKTQT_transco body , --mercredi
              MKTQT_NVDTECHNICAL_VP hauteur, MKTQT_NVDTECHNICAL_VP longueur,MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
              
      where   CAPDER.MANCODE = CAPMAN.CODE
@@ -1017,6 +1019,9 @@ BEGIN
      AND     NVD.techcode(+) = 471
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE)
+     
+     and     body.entity (+) = 'body'    --mercredi
+     and     body.crossref_code(+) = 'C' || substr(CAPDER.capcode,11,1)   --mercredi
           
     AND   hauteur.ID(+) = CAPDER.ID
     AND   hauteur.TECHCODE(+) = 34 
@@ -1033,16 +1038,17 @@ BEGIN
     
  Cursor C_veh_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat  ||  payLoad.valuefloat || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS     
-            
+            (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS  --mercredi
+            --(substr(CAPDER.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat  ||  payLoad.valuefloat || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS --avant     
             
      from    MKTREF.MKTQT_CapDer_VU CAPDER,
              MKTQT_CAPMAN_VU   CAPMAN,
              MKTQT_CAPRANGE_VU CAPRAN,
              MKTQT_NVDTechnical_VU NVD,
              MKTREF.MKTQT_transco brand,
+             MKTREF.MKTQT_transco body , --mercredi 
             MKTQT_NVDTECHNICAL_VU hauteur, MKTQT_NVDTECHNICAL_VU longueur,MKTQT_NVDTECHNICAL_VU  maxLadenWeight, MKTQT_NVDTECHNICAL_VU payLoad
              
      where   CAPDER.MANCODE = CAPMAN.CODE
@@ -1051,6 +1057,9 @@ BEGIN
      AND     NVD.techcode(+) = 477
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE)
+     
+     and     body.entity (+) = 'body'    --mercredi
+     and     body.crossref_code(+) = 'L' || substr(CAPDER.capcode,11,1)   --mercredi     
      
     AND   hauteur.ID(+) = CAPDER.ID
     AND   hauteur.TECHCODE(+) = 34 
@@ -1358,7 +1367,7 @@ NULL as motorisationComb    ,
 cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
 transmission.code as transmissionTypeCode    ,
 gearbox.code as gearBoxTypeCode ,
-( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end) as nbRapports  , ----------------------- 66 
+( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , ----------------------- 66 
 NULL as typeVariantVersion  ,
 CAPTRIM.Name   as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
 seatNumber.valuefloat as seatNumber  , ----------------------- 47
@@ -1489,9 +1498,9 @@ and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom a
 
 -- MODEL GEN
 AND MG.BRAND_CODE (+) = brand.code
-and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
+and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND MG.VEHICULE_TYPE (+) = 'VP'
-AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VENDREDI
+AND MG.CROSSREF_CODE (+) =  A.RANCODE || 'GEN' || NVD.valuestring -- AJOUT VENDREDI
     AND A.MANCODE = CAPMAN.CODE
     AND A.RANCODE = CAPRAN.CODE
     AND     NVD.ID(+) = A.ID
@@ -1499,7 +1508,7 @@ AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VEND
 -- MODEL GEN
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
-AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
+AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND TRIM.VEHICULE_TYPE (+) = 'VP'
 AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
 AND TRIM.CROSSREF_CODE (+) = concat('C', A.TrimCode)   -- AJOUT VENDREDI
@@ -1508,9 +1517,10 @@ AND TRIM.CROSSREF_CODE (+) = concat('C', A.TrimCode)   -- AJOUT VENDREDI
 -- TRIM
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE(+) = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
+AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VP'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+--AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat)
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
    -- AND   nbRapports.ID(+) = A.ID
@@ -1521,7 +1531,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 -- DIMENSION
 
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
-AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuefloat
+AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VP'
 AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (substr(A.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat  || maxLadenWeight.valuefloat  ) 
     AND   hauteur.ID(+) = A.ID
@@ -1580,7 +1590,7 @@ NULL as motorisationComb    ,
 cubicCapacity.valuefloat as cubicCapacity, --20 as cubicCapacity   , --20
 transmission.code as transmissionTypeCode    ,
 gearbox.code as gearBoxTypeCode ,
-( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end) as nbRapports  , -----OK
+( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , -----OK
 NULL as typeVariantVersion  ,
 CAPTRIM.Name as trimLevel,  --select distinct Name from Lights_CapTrim where Lights_CapTrim.Code = Lights_CapDer.TrimCode 
 seatNumber.valuefloat as seatNumber, --47 as seatNumber  ,  ---47
@@ -1713,9 +1723,9 @@ and  payLoad.ID(+) = B.ID and payLoad.effectivefrom(+) = B.effectivefrom and pay
 
 -- MODEL GEN
 AND MG.BRAND_CODE (+) = brand.code
-and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
+and MG.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND MG.VEHICULE_TYPE (+) = 'VU'
-AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VENDREDI
+AND MG.CROSSREF_CODE (+) =  A.RANCODE || 'GEN' || NVD.valuestring -- AJOUT VENDREDI
     AND A.MANCODE = CAPMAN.CODE
     AND A.RANCODE = CAPRAN.CODE
     AND     NVD.ID(+) = A.ID
@@ -1723,7 +1733,7 @@ AND MG.CROSSREF_CODE (+) =  A.RANCODE || ' gen ' || NVD.valuefloat -- AJOUT VEND
 -- MODEL GEN
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
-AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
+AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND TRIM.VEHICULE_TYPE (+) = 'VU'
 AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
 AND TRIM.CROSSREF_CODE (+) = concat('L', A.TrimCode)   -- AJOUT VENDREDI
@@ -1732,9 +1742,10 @@ AND TRIM.CROSSREF_CODE (+) = concat('L', A.TrimCode)   -- AJOUT VENDREDI
 -- TRIM
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE(+) = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
+AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VU'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+--AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
    -- AND   nbRapports.ID(+) = A.ID
@@ -1745,7 +1756,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 -- DIMENSION
 
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
-AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ' : ' || CAPRAN.NAME || ' gen ' || NVD.valuestring
+AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VU'
 AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (substr(A.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat ||  payLoad.valuefloat || maxLadenWeight.valuefloat  ) 
     AND   hauteur.ID(+) = A.ID
@@ -4997,6 +5008,235 @@ REC_transco.countryScope
    End;
     
   END UPDATE_transco_model;
+
+
+
+
+	
+	FUNCTION EXPORT_VEH(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+        
+
+		Cursor C_mktqt_veh Is 
+		SELECT  *   FROM MKTREF.MKTQT_VEH
+        order by tech_id
+        ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_VEH', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'TECH_ID|TECH_DATEEXTRACTION|TECH_DATEINSERTION|COUNTRYCODE|ITEMDIRECTORYVEHICLEREF|VERSIONSTATE|VALIDITYSTARTDATE|VALIDITYENDDATE|CORPORATEGROUPCODE|CORPORATEGROUPLABEL|BRANDCODE|BRANDLABEL|FAMILYCODE|FAMILYLABEL|GENERATION|VERSIONYEAR|VERSIONTRIMESTER|SEGMENTMARKETINGCODE|FACELIFTGENERATION|KINDCODE|BODYCODE|HEIGHT|LENGTH|SPORTINESSFLAG|CO2EMISSIONNEDC|CO2EMISSIONWLTP|CO2CLASSCODE|FISCALHORSEPOWER|MAXIMUMPOWERDIN|MAXIMUMPOWERKW|ENERGY1CODE|ENERGY1DETAILCODE|ENERGY2CODE|ENERGY2DETAILCODE|ENERGYCOMBCODE|MOTORISATION|MOTORISATIONCOMB|CUBICCAPACITY|TRANSMISSIONTYPECODE|GEARBOXTYPECODE|NBRAPPORTS|TYPEVARIANTVERSION|TRIMLEVEL|SEATNUMBER|DOORNUMBER|NEDCCOMBINEFUELCONSUMPTION|NEDCEXTRAURBANFUELCONSUMPTION|NEDCURBANFUELCONSUMPTION|WLTPLOWFUELCONSUMPTION|WLTPMEDIUMFUELCONSUMPTION|WLTPHIGHFUELCONSUMPTION|WLTPEXTRAHIGHCONSUMPTION|WLTPCOMBINEDFUELCONSUMPTION|WLTPELECTRICCONSUMPTION|WLTPELECTRICRANGE|BATTERYCAPACITY|MAXLADENWEIGHT|KERBWEIGHT|PAYLOAD|HASTELEMATICBOX|CATALOGUEDETAIL|TSNNUMBER|WLTPFLAG|COMPLETENESSFLAG|VALIDATIONUSER|VALIDATIONDATE|UPDATEUSER|UPDATEDATE|PURCHASECONDITION|DESIGNBASES|DESIGNCUSTOMERSHIP|VERSIONLABELGLOBALSHORT|VERSIONLABEGLOBALLONG|VERSIONLABELLOCALSHORT|VERSIONLABELLOCALLONG'; --|MODEL_GEN|TRIM|MOTORISATIONBLVD|DIMENSIONS'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh IN C_mktqt_veh LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+						S_mktqt_veh.tech_id || '|' ||
+S_mktqt_veh.tech_dateExtraction || '|' ||
+S_mktqt_veh.tech_dateInsertion || '|' ||
+S_mktqt_veh.countryCode || '|' ||
+S_mktqt_veh.itemDirectoryVehicleRef || '|' ||
+S_mktqt_veh.versionState || '|' ||
+S_mktqt_veh.validityStartDate || '|' ||
+S_mktqt_veh.validityEndDate || '|' ||
+S_mktqt_veh.corporateGroupCode || '|' ||
+S_mktqt_veh.corporateGroupLabel || '|' ||
+S_mktqt_veh.brandCode || '|' ||
+S_mktqt_veh.brandLabel || '|' ||
+S_mktqt_veh.familyCode || '|' ||
+S_mktqt_veh.familyLabel || '|' ||
+S_mktqt_veh.generation || '|' ||
+S_mktqt_veh.versionYear || '|' ||
+S_mktqt_veh.versionTrimester || '|' ||
+S_mktqt_veh.segmentMarketingCode || '|' ||
+S_mktqt_veh.faceLiftGeneration || '|' ||
+S_mktqt_veh.kindCode || '|' ||
+S_mktqt_veh.bodyCode || '|' ||
+S_mktqt_veh.height || '|' ||
+S_mktqt_veh.length || '|' ||
+S_mktqt_veh.sportinessFlag || '|' ||
+S_mktqt_veh.co2EmissionNEDC || '|' ||
+S_mktqt_veh.co2EmissionWLTP || '|' ||
+S_mktqt_veh.co2ClassCode || '|' ||
+S_mktqt_veh.fiscalHorsePower || '|' ||
+S_mktqt_veh.maximumPowerDin || '|' ||
+S_mktqt_veh.maximumPowerKW || '|' ||
+S_mktqt_veh.energy1Code || '|' ||
+S_mktqt_veh.energy1DetailCode || '|' ||
+S_mktqt_veh.energy2Code || '|' ||
+S_mktqt_veh.energy2DetailCode || '|' ||
+S_mktqt_veh.energyCombCode || '|' ||
+S_mktqt_veh.motorisation || '|' ||
+S_mktqt_veh.motorisationComb || '|' ||
+S_mktqt_veh.cubicCapacity || '|' ||
+S_mktqt_veh.transmissionTypeCode || '|' ||
+S_mktqt_veh.gearBoxTypeCode || '|' ||
+S_mktqt_veh.nbRapports || '|' ||
+S_mktqt_veh.typeVariantVersion || '|' ||
+S_mktqt_veh.trimLevel || '|' ||
+S_mktqt_veh.seatNumber || '|' ||
+S_mktqt_veh.doorNumber || '|' ||
+S_mktqt_veh.nedcCombineFuelConsumption || '|' ||
+S_mktqt_veh.nedcExtraUrbanFuelConsumption || '|' ||
+S_mktqt_veh.nedcUrbanFuelConsumption || '|' ||
+S_mktqt_veh.wltpLowFuelConsumption || '|' ||
+S_mktqt_veh.wltpMediumFuelConsumption || '|' ||
+S_mktqt_veh.wltpHighFuelConsumption || '|' ||
+S_mktqt_veh.wltpExtraHighConsumption || '|' ||
+S_mktqt_veh.wltpCombinedFuelConsumption || '|' ||
+S_mktqt_veh.wltpElectricConsumption || '|' ||
+S_mktqt_veh.wltpElectricRange || '|' ||
+S_mktqt_veh.batteryCapacity || '|' ||
+S_mktqt_veh.maxLadenWeight || '|' ||
+S_mktqt_veh.kerbWeight || '|' ||
+S_mktqt_veh.payLoad || '|' ||
+S_mktqt_veh.hasTelematicBox || '|' ||
+S_mktqt_veh.catalogueDetail || '|' ||
+S_mktqt_veh.tsnNumber || '|' ||
+S_mktqt_veh.wltpFlag || '|' ||
+S_mktqt_veh.completenessFlag || '|' ||
+S_mktqt_veh.validationUser || '|' ||
+S_mktqt_veh.validationDate || '|' ||
+S_mktqt_veh.updateUser || '|' ||
+S_mktqt_veh.updateDate || '|' ||
+S_mktqt_veh.purchaseCondition || '|' ||
+S_mktqt_veh.designBases || '|' ||
+S_mktqt_veh.designCustomerShip || '|' ||
+S_mktqt_veh.versionLabelGlobalShort || '|' ||
+S_mktqt_veh.versionLabeGlobalLong || '|' ||
+S_mktqt_veh.versionLabelLocalShort || '|' ||
+S_mktqt_veh.versionLabelLocalLong || '|' ;
+--S_mktqt_veh.MODEL_GEN || '|' ||
+--S_mktqt_veh.TRIM || '|' ||
+--S_mktqt_veh.MOTORISATIONBLVD || '|' ||
+--S_mktqt_veh.DIMENSIONS || '|' ;
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_VEH ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_VEH', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_VEH','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_VEH;
+
+
+
+	
+	FUNCTION EXPORT_crossRefs(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh Is 
+		SELECT  *   FROM MKTREF.MKTQT_veh_crossRefs
+        order by tech_id
+        ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_crossRefs', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'TECH_ID|BLDV'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh IN C_mktqt_veh LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+                    S_mktqt_veh.tech_id  || '|' ||
+                    S_mktqt_veh.BLDV || '|' ;
+						
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_crossRefs ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_crossRefs', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_crossRefs','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_crossRefs;
+
 
 
 
