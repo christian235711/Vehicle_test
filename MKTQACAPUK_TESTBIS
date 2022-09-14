@@ -1341,7 +1341,7 @@ brand.code as brandCode   ,
 brand.description_label  as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-generation.valuefloat  as generation  , ----------------------- 471
+generation.valuestring  as generation  , ----------------------- 471
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code segmentMarketingCode    ,
@@ -1533,7 +1533,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
 AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VP'
-AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (substr(A.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat  || maxLadenWeight.valuefloat  ) 
+AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
     AND   longueur.ID(+) = A.ID
@@ -1564,7 +1564,7 @@ brand.code as brandCode   ,
 brand.description_label as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-generation.valuefloat as generation  ,
+generation.valuestring as generation  ,   ---------477
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code as segmentMarketingCode    ,
@@ -1758,7 +1758,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
 AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VU'
-AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (substr(A.capcode,11,1) || hauteur.valuefloat || longueur.valuefloat ||  payLoad.valuefloat || maxLadenWeight.valuefloat  ) 
+AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat)
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
     AND   longueur.ID(+) = A.ID
