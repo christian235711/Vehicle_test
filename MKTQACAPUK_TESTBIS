@@ -1341,7 +1341,7 @@ brand.code as brandCode   ,
 brand.description_label  as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-generation.valuestring  as generation  , ----------------------- 471
+(case when generation.valuestring is null  then ' ' else generation.valuestring  end)  as generation  , ----------------------- 471
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code segmentMarketingCode    ,
@@ -1521,10 +1521,10 @@ AND TRIM.CROSSREF_CODE (+) = concat('C', A.TrimCode)   -- AJOUT VENDREDI
 
 -- TRIM
 -- MOTORISATION
-AND MOTORISATIONBLVD.BRAND_CODE(+) = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
-AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VP'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+AND MOTORISATIONBLVD.BRAND_CODE = brand.code
+AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
+AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VP'
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat)
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
@@ -1535,9 +1535,9 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 -- MOTORISATION
 -- DIMENSION
 
-AND DIMENSIONS.BRAND_CODE(+) = brand.code
-AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
-AND DIMENSIONS.VEHICULE_TYPE (+) = 'VP'
+AND DIMENSIONS.BRAND_CODE = brand.code
+AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
+AND DIMENSIONS.VEHICULE_TYPE  = 'VP'
 AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   ---  interne
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
@@ -1577,7 +1577,7 @@ brand.code as brandCode   ,
 brand.description_label as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-generation.valuestring as generation  ,   ---------477
+(case when generation.valuestring is null  then ' ' else generation.valuestring  end) as generation  ,   ---------477
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code as segmentMarketingCode    ,
@@ -1760,10 +1760,10 @@ AND TRIM.CROSSREF_CODE (+) = concat('L', A.TrimCode)   -- AJOUT VENDREDI
 
 -- TRIM
 -- MOTORISATION
-AND MOTORISATIONBLVD.BRAND_CODE(+) = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
-AND MOTORISATIONBLVD.VEHICULE_TYPE (+) = 'VU'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+AND MOTORISATIONBLVD.BRAND_CODE = brand.code
+AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
+AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VU'
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
@@ -1774,9 +1774,9 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 -- MOTORISATION
 -- DIMENSION
 
-AND DIMENSIONS.BRAND_CODE(+) = brand.code
-AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
-AND DIMENSIONS.VEHICULE_TYPE (+) = 'VU'
+AND DIMENSIONS.BRAND_CODE = brand.code
+AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
+AND DIMENSIONS.VEHICULE_TYPE  = 'VU'
 AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat)  --interne
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
@@ -2023,7 +2023,7 @@ brandCode    = REC_veh_VP.brandCode   ,
 brandLabel   = REC_veh_VP.brandLabel  ,
 familyCode   = REC_veh_VP.familyCode  ,
 familyLabel  = REC_veh_VP.familyLabel ,
-generation   = REC_veh_VP.generation  ,
+--generation   = REC_veh_VP.generation  ,
 --versionYear  = REC_veh_VP.versionYear ,
 --versionTrimester     = REC_veh_VP.versionTrimester    ,
 segmentMarketingCode    = REC_veh_VP.segmentMarketingCode   ,
@@ -2085,17 +2085,20 @@ versionLabeGlobalLong    = REC_veh_VP.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VP.versionLabelLocalShort  ,
 versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong,
 VEHICULE_TYPE           =       REC_veh_VP.VEHICULE_TYPE,
-model_gen                = REC_veh_vp.MODEL_GEN_ID,
+--model_gen                = REC_veh_vp.MODEL_GEN_ID,
 TRIM                 =  REC_veh_VP.TRIM_ID,
 MOTORISATIONBLVD    = REC_veh_VP.MOTORISATIONBLVD_ID,
-DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID,
+--DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID,
 door_seat = REC_veh_VP.door_seat,
 year_trimester = REC_veh_VP.year_trimester
 
 
         where  itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef  
         and versionYear  = REC_veh_VP.versionYear 
-        and  versionTrimester     = REC_veh_VP.versionTrimester    ;  
+        and  versionTrimester     = REC_veh_VP.versionTrimester   
+        and generation   = REC_veh_VP.generation  
+        and DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID
+        and model_gen                = REC_veh_vp.MODEL_GEN_ID ;
         
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
        -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -2105,14 +2108,15 @@ year_trimester = REC_veh_VP.year_trimester
 
 
         V_UPD := V_UPD + 1;
-     
+        --RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh',to_char(REC_veh_VP.itemDirectoryVehicleRef)|| '-' || to_char(REC_veh_VP.versionYear) || '-' || to_char(REC_veh_VP.versionTrimester) || '-' ||to_char(REC_veh_VP.generation) || '-' ||  to_char(REC_veh_VP.MODEL_GEN_ID) );
+
         WHEN OTHERS THEN
 				COMMIT;
 				V_ERR := 1;
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh','Message Erreur pl/sql :'||Sqlerrm,'E');
-                Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
+                --Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh',to_char(REC_veh_VP.tech_id|| '-' || REC_veh_VP.itemDirectoryVehicleRef) );
         RETURN V_ERR;
       
         END;     
@@ -2122,7 +2126,7 @@ year_trimester = REC_veh_VP.year_trimester
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
+
    
    -------------------------------VU  
    
@@ -2335,7 +2339,7 @@ familyCode   = REC_veh_VU.familyCode  ,
 familyLabel  = REC_veh_VU.familyLabel ,
 --generation   = REC_veh_VU.generation  ,
 --versionYear  = REC_veh_VU.versionYear ,
-versionTrimester     = REC_veh_VU.versionTrimester    ,
+--versionTrimester     = REC_veh_VU.versionTrimester    ,
 segmentMarketingCode    = REC_veh_VU.segmentMarketingCode   ,
 faceLiftGeneration   = REC_veh_VU.faceLiftGeneration  ,
 kindCode     = REC_veh_VU.kindCode    ,
@@ -2395,17 +2399,20 @@ versionLabeGlobalLong    = REC_veh_VU.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VU.versionLabelLocalShort  ,
 versionLabelLocalLong                       = REC_veh_VU.versionLabelLocalLong   ,
 VEHICULE_TYPE       =       REC_veh_VU.VEHICULE_TYPE,
-MODEL_GEN = REC_veh_Vu.MODEL_GEN_ID,
+--MODEL_GEN = REC_veh_Vu.MODEL_GEN_ID,
 TRIM = REC_veh_Vu.TRIM_ID,
 MOTORISATIONBLVD = REC_veh_Vu.MOTORISATIONBLVD_ID,
-DIMENSIONS = REC_veh_Vu.DIMENSIONS_ID,
+--DIMENSIONS = REC_veh_Vu.DIMENSIONS_ID,
 door_seat = REC_veh_Vu.door_seat,
 year_trimester = REC_veh_Vu.year_trimester
 
 
         where itemDirectoryVehicleRef  = REC_veh_VU.itemDirectoryVehicleRef 
         and versionYear  = REC_veh_VU.versionYear 
-        and  versionTrimester     = REC_veh_VU.versionTrimester    ;  
+        and  versionTrimester     = REC_veh_VU.versionTrimester    
+        and generation   = REC_veh_VU.generation  
+        and DIMENSIONS       = REC_veh_VU.DIMENSIONS_ID
+        and model_gen                = REC_veh_vu.MODEL_GEN_ID ;
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
        -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -2470,6 +2477,9 @@ TECH_ID as TECH_ID,
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,
 versionYear	as versionYear,
 versionTrimester as versionTrimester,
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 VEHICULE_TYPE as VEHICULE_TYPE,
 BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester AS BLVD
 --BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || DOORNUMBER || TRIM || energyCombCode ||MOTORISATIONBLVD || versionTrimester AS BLVD
@@ -2522,6 +2532,9 @@ tech_id,
 itemDirectoryVehicleRef,
 versionYear,
 versionTrimester,
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 VEHICULE_TYPE,
 BLVD
               )
@@ -2531,6 +2544,9 @@ REC_veh_crossRefs.tech_id,
 REC_veh_crossRefs.itemDirectoryVehicleRef,
 REC_veh_crossRefs.versionYear,
 REC_veh_crossRefs.versionTrimester,
+REC_veh_crossRefs.generation,-- add
+REC_veh_crossRefs.DIMENSIONS,-- add
+REC_veh_crossRefs.MODEL_GEN,-- add
 REC_veh_crossRefs.VEHICULE_TYPE,
 REC_veh_crossRefs.BLVD
               );
@@ -2547,6 +2563,9 @@ REC_veh_crossRefs.BLVD
         where   itemDirectoryVehicleRef = REC_veh_crossRefs.itemDirectoryVehicleRef
         and     versionYear = REC_veh_crossRefs.versionYear
         and     versionTrimester = REC_veh_crossRefs.versionTrimester 
+        and     generation = REC_veh_crossRefs.generation
+        and     DIMENSIONS = REC_veh_crossRefs.DIMENSIONS
+        and     MODEL_GEN = REC_veh_crossRefs.MODEL_GEN
         and     BLVD = REC_veh_crossRefs.BLVD ;
         
 
@@ -2607,6 +2626,9 @@ veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
 versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
 versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 'VP' as VEHICULE_TYPE,
 NULL AS tariffAreaCode,
 NULL AS priceCode,
@@ -2630,12 +2652,17 @@ NULL AS priceWithoutOtrCostIncludeVAT
     FROM MKTREF.MKTQT_veh veh, MKTREF.MKTQT_NVDPrices_VP B
  where  veh.tech_id = B.Id and veh.VEHICULE_TYPE = 'VP'
  and veh.validityStartDate <= b.effectivefrom and (veh.validityEndDate >= b.effectiveto or b.effectiveto is null )  -- validityStartDate <= NVDPrices.EffectiveFrom and (validityEndDate >= NVDPrices.EffectiveTo or NVDPrices.EffectiveTo == blank)     
+
 union
+
   Select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH  
 versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
 versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 'VU' as VEHICULE_TYPE,
 NULL AS tariffAreaCode,
 NULL AS priceCode,
@@ -2696,6 +2723,9 @@ tech_id,    ------ AJOUT POUR JOINTURE
 itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 versionYear,------ AJOUT POUR JOINTURE  
 versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 tariffAreaCode,
 priceCode,
@@ -2722,6 +2752,9 @@ REC_veh_pricings.tech_id,    ------ AJOUT POUR JOINTURE
 REC_veh_pricings.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 REC_veh_pricings.versionYear,------ AJOUT POUR JOINTURE  
 REC_veh_pricings.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_pricings.generation,-- add
+REC_veh_pricings.DIMENSIONS,  -- add
+REC_veh_pricings.MODEL_GEN,-- add
 REC_veh_pricings.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 REC_veh_pricings.tariffAreaCode,
 REC_veh_pricings.priceCode,
@@ -2754,7 +2787,7 @@ tariffAreaCode = REC_veh_pricings.tariffAreaCode,
 priceCode = REC_veh_pricings.priceCode,
 priceType = REC_veh_pricings.priceType,
 priceTypeCustomer = REC_veh_pricings.priceTypeCustomer,
-priceStartDate = REC_veh_pricings.priceStartDate,
+--priceStartDate = REC_veh_pricings.priceStartDate,
 priceEndDate = REC_veh_pricings.priceEndDate,
 vatAmount = REC_veh_pricings.vatAmount,
 priceET = REC_veh_pricings.priceET,
@@ -2772,17 +2805,22 @@ VEHICULE_TYPE = REC_veh_pricings.VEHICULE_TYPE
 
         where  itemDirectoryVehicleRef = REC_veh_pricings.itemDirectoryVehicleRef 
         and versionYear = REC_veh_pricings.versionYear
-        and versionTrimester = REC_veh_pricings.versionTrimester ;
+        and versionTrimester = REC_veh_pricings.versionTrimester 
+        and generation = REC_veh_pricings.generation -- add
+        and DIMENSIONS = REC_veh_pricings.DIMENSIONS  -- add
+        and MODEL_GEN = REC_veh_pricings.MODEL_GEN  -- add
+        and priceStartDate = REC_veh_pricings.priceStartDate
+        ;
 
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM')) 
     --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
      --   and V_DATE_SITU  =  Date_situ 
       --  and Code_pays = 'UK';
 
 
         V_UPD := V_UPD + 1;
-        
+        Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_pricings',to_char(REC_veh_pricings.itemDirectoryVehicleRef)|| '-' || to_char(REC_veh_pricings.priceStartDate) || '-' || to_char(REC_veh_pricings.MODEL_GEN) );
         WHEN OTHERS THEN
 				COMMIT;
 				V_ERR := 1;
@@ -2833,11 +2871,14 @@ BEGIN
 
   Cursor C_veh_options Is
   
-    Select 
+    Select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
 versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
 versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
@@ -2856,11 +2897,14 @@ and C.periodcode = D.periodcode (+)
 
 union   
 
-select
+select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
 versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
 versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
