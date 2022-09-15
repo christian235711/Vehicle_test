@@ -1402,10 +1402,13 @@ NULL as versionLabelGlobalShort ,
 NULL as versionLabeGlobalLong   ,
 model.description_label as versionLabelLocalShort  ,
 concat(model.description_label, A.name) as versionLabelLocalLong,
+'VP' as VEHICULE_TYPE,
 MG.MODEL_GEN_ID as MODEL_GEN_ID,
 TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
-DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID
+DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
+(case when door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3') then door_seat.code else 'Z' end) as door_seat,
+year_trimester.code as year_trimester
 
 from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_NVDModelYear_VP B,
@@ -1417,6 +1420,8 @@ from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_transco energyComb,
      MKTREF.MKTQT_transco transmission,
      MKTREF.MKTQT_transco gearbox,
+     MKTREF.MKTQT_transco door_seat, --add
+     MKTREF.MKTQT_transco year_trimester, --add
      MKTREF.MKTQT_NVDTechnical_VP generation,
      MKTREF.MKTQT_NVDTechnical_VP height,
      MKTREF.MKTQT_NVDTechnical_VP length,
@@ -1533,14 +1538,21 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
 AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VP'
-AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)
+AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   ---  interne
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
     AND   longueur.ID(+) = A.ID
     AND   longueur.TECHCODE(+) = 4    
   --  AND   maxLadenWeight.ID(+) = A.ID
    -- AND   maxLadenWeight.TECHCODE(+) = 14;
-     
+   
+and door_seat.entity(+) ='door_seat' and door_seat.crossref_typecode(+) ='CAP'
+--and door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3')
+and door_seat.crossref_code(+) = concat(concat(A.doors,'-'),seatNumber.valuefloat)
+
+and year_trimester.entity(+) ='year_trimester'  
+and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
+
 ;
 
   
@@ -1549,6 +1561,7 @@ AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat
     ----------------------------------------------------------------------
     
  Cursor C_veh_VU Is
+
     select distinct
 A.Id as tech_id,
 NULL as tech_dateExtraction ,
@@ -1625,10 +1638,14 @@ NULL as versionLabelGlobalShort ,
 NULL as versionLabeGlobalLong   ,
 model.description_label as versionLabelLocalShort  ,
 concat(model.description_label, A.name) as versionLabelLocalLong,
+'VU' as VEHICULE_TYPE,
 MG.MODEL_GEN_ID as MODEL_GEN_ID,
 TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
-DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID
+DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
+(case when door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17') then door_seat.code else 'Z' end) as door_seat,
+year_trimester.code as year_trimester
+
 
 from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_NVDGenericStatus_VU C,
      MKTREF.MKTQT_transco brand,
@@ -1638,6 +1655,8 @@ from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_N
      MKTREF.MKTQT_transco energyComb,
      MKTREF.MKTQT_transco transmission,
      MKTREF.MKTQT_transco gearbox,
+     MKTREF.MKTQT_transco door_seat, --add
+     MKTREF.MKTQT_transco year_trimester, --add
      MKTREF.MKTQT_NVDTechnical_VU generation,
      MKTREF.MKTQT_NVDTechnical_VU height,
      MKTREF.MKTQT_NVDTechnical_VU length,
@@ -1758,7 +1777,7 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat
 AND DIMENSIONS.BRAND_CODE(+) = brand.code
 AND DIMENSIONS.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE (+) = 'VU'
-AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat)
+AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || hauteur.valuefloat || ':' || longueur.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat)  --interne
     AND   hauteur.ID(+) = A.ID
     AND   hauteur.TECHCODE(+) = 34 
     AND   longueur.ID(+) = A.ID
@@ -1768,6 +1787,14 @@ AND DIMENSIONS.VEHICULE_DIMENSIONS(+) =  (body.code || ':' || hauteur.valuefloat
 
   --  AND   payLoad.ID(+) = CAPDER.ID
   --  AND   payLoad.TECHCODE(+) = 32 ;
+  
+and door_seat.entity(+) ='door_seat' and door_seat.crossref_typecode(+)='CAP'
+--and door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17')
+and door_seat.crossref_code(+) = concat('-',seatNumber.valuefloat)
+
+and year_trimester.entity(+) ='year_trimester'  
+and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
+
 
 ;
 
@@ -1882,10 +1909,13 @@ versionLabelGlobalShort ,
 versionLabeGlobalLong   ,
 versionLabelLocalShort  ,
 versionLabelLocalLong   ,
+VEHICULE_TYPE,
 MODEL_GEN,
 TRIM,
 MOTORISATIONBLVD,
-DIMENSIONS
+DIMENSIONS,
+door_seat,
+year_trimester
               )
         VALUES
               (  
@@ -1964,10 +1994,13 @@ REC_veh_VP.versionLabelGlobalShort ,
 REC_veh_VP.versionLabeGlobalLong   ,
 REC_veh_VP.versionLabelLocalShort  ,
 REC_veh_VP.versionLabelLocalLong   ,
+REC_veh_VP.VEHICULE_TYPE,
 rec_veh_vp.MODEL_GEN_ID,
 REC_veh_VP.TRIM_ID,
 REC_veh_VP.MOTORISATIONBLVD_ID,
-REC_veh_VP.DIMENSIONS_ID
+REC_veh_VP.DIMENSIONS_ID,
+REC_veh_VP.door_seat,
+REC_veh_VP.year_trimester
               );
          
         V_INS := V_INS + 1;
@@ -2051,10 +2084,13 @@ versionLabelGlobalShort  = REC_veh_VP.versionLabelGlobalShort ,
 versionLabeGlobalLong    = REC_veh_VP.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VP.versionLabelLocalShort  ,
 versionLabelLocalLong                       = REC_veh_VP.versionLabelLocalLong,
+VEHICULE_TYPE           =       REC_veh_VP.VEHICULE_TYPE,
 model_gen                = REC_veh_vp.MODEL_GEN_ID,
 TRIM                 =  REC_veh_VP.TRIM_ID,
 MOTORISATIONBLVD    = REC_veh_VP.MOTORISATIONBLVD_ID,
-DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID
+DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID,
+door_seat = REC_veh_VP.door_seat,
+year_trimester = REC_veh_VP.year_trimester
 
 
         where  itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef  
@@ -2183,10 +2219,13 @@ versionLabelGlobalShort ,
 versionLabeGlobalLong   ,
 versionLabelLocalShort  ,
 versionLabelLocalLong ,
+VEHICULE_TYPE,
 MODEL_GEN,
 TRIM,
 MOTORISATIONBLVD,
-DIMENSIONS
+DIMENSIONS,
+door_seat,
+year_trimester
               )
         VALUES
               (  
@@ -2265,10 +2304,13 @@ REC_veh_VU.versionLabelGlobalShort ,
 REC_veh_VU.versionLabeGlobalLong   ,
 REC_veh_VU.versionLabelLocalShort  ,
 REC_veh_VU.versionLabelLocalLong   ,
+REC_veh_VU.VEHICULE_TYPE,
 rec_veh_vu.MODEL_GEN_ID,
 REC_veh_Vu.TRIM_ID,
 REC_veh_Vu.MOTORISATIONBLVD_ID,
-REC_veh_Vu.DIMENSIONS_ID
+REC_veh_Vu.DIMENSIONS_ID,
+REC_veh_Vu.door_seat,
+REC_veh_Vu.year_trimester
               );
          
         V_INS := V_INS + 1;
@@ -2352,10 +2394,13 @@ versionLabelGlobalShort  = REC_veh_VU.versionLabelGlobalShort ,
 versionLabeGlobalLong    = REC_veh_VU.versionLabeGlobalLong   ,
 versionLabelLocalShort   = REC_veh_VU.versionLabelLocalShort  ,
 versionLabelLocalLong                       = REC_veh_VU.versionLabelLocalLong   ,
+VEHICULE_TYPE       =       REC_veh_VU.VEHICULE_TYPE,
 MODEL_GEN = REC_veh_Vu.MODEL_GEN_ID,
 TRIM = REC_veh_Vu.TRIM_ID,
 MOTORISATIONBLVD = REC_veh_Vu.MOTORISATIONBLVD_ID,
-DIMENSIONS = REC_veh_Vu.DIMENSIONS_ID
+DIMENSIONS = REC_veh_Vu.DIMENSIONS_ID,
+door_seat = REC_veh_Vu.door_seat,
+year_trimester = REC_veh_Vu.year_trimester
 
 
         where itemDirectoryVehicleRef  = REC_veh_VU.itemDirectoryVehicleRef 
@@ -2418,11 +2463,28 @@ BEGIN
   RES     NUMBER := 0;
 
 
-  Cursor C_veh_crossRefs_VP Is
+  Cursor C_veh_crossRefs Is
   
 select  distinct
-TECH_ID, BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || DOORNUMBER || TRIM || energyCombCode ||MOTORISATIONBLVD || versionTrimester AS BLVD
+TECH_ID as TECH_ID, 
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+versionYear	as versionYear,
+versionTrimester as versionTrimester,
+VEHICULE_TYPE as VEHICULE_TYPE,
+BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester AS BLVD
+--BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || DOORNUMBER || TRIM || energyCombCode ||MOTORISATIONBLVD || versionTrimester AS BLVD
 from MKTQT_VEH
+where  brandcode is not null 
+and brandLabel is not null 
+and familyLabel is not null 
+and KINDCODE is not null 
+and bodyCode is not null 
+and TRIM is not null 
+and energyCombCode is not null 
+and maximumPowerDin is not null 
+and transmissionTypeCode is not null 
+and gearBoxTypeCode is not null 
+and year_trimester is not null
 ;
 
 
@@ -2441,7 +2503,7 @@ from MKTQT_VEH
 
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
 
-  FOR REC_veh_crossRefs_VP IN C_veh_crossRefs_VP
+  FOR REC_veh_crossRefs IN C_veh_crossRefs
   LOOP
 
        /*************************************************************************/
@@ -2457,12 +2519,20 @@ from MKTQT_VEH
         INSERT INTO MKTREF.MKTQT_veh_crossRefs
               (   
 tech_id, 
-BLDV
+itemDirectoryVehicleRef,
+versionYear,
+versionTrimester,
+VEHICULE_TYPE,
+BLVD
               )
         VALUES
               (  
-REC_veh_crossRefs_VP.tech_id,
-(REC_veh_crossRefs_VP.BLVD)
+REC_veh_crossRefs.tech_id,
+REC_veh_crossRefs.itemDirectoryVehicleRef,
+REC_veh_crossRefs.versionYear,
+REC_veh_crossRefs.versionTrimester,
+REC_veh_crossRefs.VEHICULE_TYPE,
+REC_veh_crossRefs.BLVD
               );
 
         V_INS := V_INS + 1;
@@ -2471,10 +2541,13 @@ REC_veh_crossRefs_VP.tech_id,
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_veh_crossRefs
         Set       
+        tech_id = REC_veh_crossRefs.tech_id ,
+        VEHICULE_TYPE = REC_veh_crossRefs.VEHICULE_TYPE
 
-        BLDV  = REC_veh_crossRefs_VP.BLVD
-
-        where tech_id = REC_veh_crossRefs_VP.tech_id ;
+        where   itemDirectoryVehicleRef = REC_veh_crossRefs.itemDirectoryVehicleRef
+        and     versionYear = REC_veh_crossRefs.versionYear
+        and     versionTrimester = REC_veh_crossRefs.versionTrimester 
+        and     BLVD = REC_veh_crossRefs.BLVD ;
         
 
         V_UPD := V_UPD + 1;
@@ -2528,9 +2601,13 @@ BEGIN
 
 ---- pas de doublons
 
-  Cursor C_veh_pricings_VP Is
-  Select 
-A.Id AS tech_id, ------ AJOUT POUR JOINTURE
+  Cursor C_veh_pricings Is
+  Select distinct
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VP' as VEHICULE_TYPE,
 NULL AS tariffAreaCode,
 NULL AS priceCode,
 NULL AS priceType,
@@ -2550,15 +2627,16 @@ B.Basic AS priceWithoutOtrCostIT,
 NULL AS priceWithoutOtrCostET,
 NULL AS priceWithoutOtrCostIncludeVAT
 
-    FROM MKTREF.MKTQT_CapDer_VP A, MKTREF.MKTQT_NVDPrices_VP B
- where  A.id = B.Id
- and a.introduced <= b.effectivefrom and (a.discontinued >= b.effectiveto or b.effectiveto is null )   ; 
- -- validityStartDate <= NVDPrices.EffectiveFrom and (validityEndDate >= NVDPrices.EffectiveTo or NVDPrices.EffectiveTo == blank)     
-
-
-  Cursor C_veh_pricings_VU Is
-  Select 
-A.Id AS tech_id, ------ AJOUT POUR JOINTURE  
+    FROM MKTREF.MKTQT_veh veh, MKTREF.MKTQT_NVDPrices_VP B
+ where  veh.tech_id = B.Id and veh.VEHICULE_TYPE = 'VP'
+ and veh.validityStartDate <= b.effectivefrom and (veh.validityEndDate >= b.effectiveto or b.effectiveto is null )  -- validityStartDate <= NVDPrices.EffectiveFrom and (validityEndDate >= NVDPrices.EffectiveTo or NVDPrices.EffectiveTo == blank)     
+union
+  Select distinct
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH  
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VU' as VEHICULE_TYPE,
 NULL AS tariffAreaCode,
 NULL AS priceCode,
 NULL AS priceType,
@@ -2578,10 +2656,11 @@ B.Basic AS priceWithoutOtrCostIT,
 NULL AS priceWithoutOtrCostET,
 NULL AS priceWithoutOtrCostIncludeVAT
 
-  FROM MKTREF.MKTQT_CapDer_VU A, MKTREF.MKTQT_NVDPrices_VU B
- where  A.id = B.Id
- and a.introduced <= b.effectivefrom and (a.discontinued >= b.effectiveto or b.effectiveto is null ) ; 
- --validityStartDate <= NVDPrices.EffectiveFrom and (validityEndDate >= NVDPrices.EffectiveTo or NVDPrices.EffectiveTo == blank)
+    FROM MKTREF.MKTQT_veh veh, MKTREF.MKTQT_NVDPrices_VU B
+ where  veh.tech_id = B.Id and veh.VEHICULE_TYPE = 'VU'
+ and veh.validityStartDate <= b.effectivefrom and (veh.validityEndDate >= b.effectiveto or b.effectiveto is null )   
+;
+
 
  /*******************************************************************************/
   BEGIN
@@ -2596,9 +2675,9 @@ NULL AS priceWithoutOtrCostIncludeVAT
         SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
         SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
 
-  FOR REC_veh_pricings_VP IN C_veh_pricings_VP
+  FOR REC_veh_pricings IN C_veh_pricings
   LOOP
 
        /*************************************************************************/
@@ -2614,6 +2693,10 @@ NULL AS priceWithoutOtrCostIncludeVAT
         INSERT INTO MKTREF.MKTQT_veh_pricings
               ( 
 tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 tariffAreaCode,
 priceCode,
 priceType,
@@ -2635,25 +2718,29 @@ priceWithoutOtrCostIncludeVAT
               )
         VALUES
               (  
-REC_veh_pricings_VP.tech_id,    ------ AJOUT POUR JOINTURE      
-REC_veh_pricings_VP.tariffAreaCode,
-REC_veh_pricings_VP.priceCode,
-REC_veh_pricings_VP.priceType,
-REC_veh_pricings_VP.priceTypeCustomer,
-REC_veh_pricings_VP.priceStartDate,
-REC_veh_pricings_VP.priceEndDate,
-REC_veh_pricings_VP.vatAmount,
-REC_veh_pricings_VP.priceET,
-REC_veh_pricings_VP.priceIT,
-REC_veh_pricings_VP.priceIncludeVAT,
-REC_veh_pricings_VP.currency,
-REC_veh_pricings_VP.immAmount,
-REC_veh_pricings_VP.immRate,
-REC_veh_pricings_VP.novaAmount,
-REC_veh_pricings_VP.novaRate,
-REC_veh_pricings_VP.priceWithoutOtrCostIT,
-REC_veh_pricings_VP.priceWithoutOtrCostET,
-REC_veh_pricings_VP.priceWithoutOtrCostIncludeVAT
+REC_veh_pricings.tech_id,    ------ AJOUT POUR JOINTURE   
+REC_veh_pricings.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+REC_veh_pricings.versionYear,------ AJOUT POUR JOINTURE  
+REC_veh_pricings.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_pricings.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+REC_veh_pricings.tariffAreaCode,
+REC_veh_pricings.priceCode,
+REC_veh_pricings.priceType,
+REC_veh_pricings.priceTypeCustomer,
+REC_veh_pricings.priceStartDate,
+REC_veh_pricings.priceEndDate,
+REC_veh_pricings.vatAmount,
+REC_veh_pricings.priceET,
+REC_veh_pricings.priceIT,
+REC_veh_pricings.priceIncludeVAT,
+REC_veh_pricings.currency,
+REC_veh_pricings.immAmount,
+REC_veh_pricings.immRate,
+REC_veh_pricings.novaAmount,
+REC_veh_pricings.novaRate,
+REC_veh_pricings.priceWithoutOtrCostIT,
+REC_veh_pricings.priceWithoutOtrCostET,
+REC_veh_pricings.priceWithoutOtrCostIncludeVAT
               );
 
         V_INS := V_INS + 1;
@@ -2662,28 +2749,31 @@ REC_veh_pricings_VP.priceWithoutOtrCostIncludeVAT
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_veh_pricings
         Set        
-tariffAreaCode = REC_veh_pricings_VP.tariffAreaCode,
-priceCode = REC_veh_pricings_VP.priceCode,
-priceType = REC_veh_pricings_VP.priceType,
-priceTypeCustomer = REC_veh_pricings_VP.priceTypeCustomer,
-priceStartDate = REC_veh_pricings_VP.priceStartDate,
-priceEndDate = REC_veh_pricings_VP.priceEndDate,
-vatAmount = REC_veh_pricings_VP.vatAmount,
-priceET = REC_veh_pricings_VP.priceET,
-priceIT = REC_veh_pricings_VP.priceIT,
-priceIncludeVAT = REC_veh_pricings_VP.priceIncludeVAT,
-currency = REC_veh_pricings_VP.currency,
-immAmount = REC_veh_pricings_VP.immAmount,
-immRate = REC_veh_pricings_VP.immRate,
-novaAmount = REC_veh_pricings_VP.novaAmount,
-novaRate = REC_veh_pricings_VP.novaRate,
-priceWithoutOtrCostIT = REC_veh_pricings_VP.priceWithoutOtrCostIT,
-priceWithoutOtrCostET = REC_veh_pricings_VP.priceWithoutOtrCostET,
-priceWithoutOtrCostIncludeVAT = REC_veh_pricings_VP.priceWithoutOtrCostIncludeVAT
+tech_id          =      REC_veh_pricings.tech_id ,
+tariffAreaCode = REC_veh_pricings.tariffAreaCode,
+priceCode = REC_veh_pricings.priceCode,
+priceType = REC_veh_pricings.priceType,
+priceTypeCustomer = REC_veh_pricings.priceTypeCustomer,
+priceStartDate = REC_veh_pricings.priceStartDate,
+priceEndDate = REC_veh_pricings.priceEndDate,
+vatAmount = REC_veh_pricings.vatAmount,
+priceET = REC_veh_pricings.priceET,
+priceIT = REC_veh_pricings.priceIT,
+priceIncludeVAT = REC_veh_pricings.priceIncludeVAT,
+currency = REC_veh_pricings.currency,
+immAmount = REC_veh_pricings.immAmount,
+immRate = REC_veh_pricings.immRate,
+novaAmount = REC_veh_pricings.novaAmount,
+novaRate = REC_veh_pricings.novaRate,
+priceWithoutOtrCostIT = REC_veh_pricings.priceWithoutOtrCostIT,
+priceWithoutOtrCostET = REC_veh_pricings.priceWithoutOtrCostET,
+priceWithoutOtrCostIncludeVAT = REC_veh_pricings.priceWithoutOtrCostIncludeVAT,
+VEHICULE_TYPE = REC_veh_pricings.VEHICULE_TYPE  
 
+        where  itemDirectoryVehicleRef = REC_veh_pricings.itemDirectoryVehicleRef 
+        and versionYear = REC_veh_pricings.versionYear
+        and versionTrimester = REC_veh_pricings.versionTrimester ;
 
-        where   tech_id          =      REC_veh_pricings_VP.tech_id ;
-         
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -2708,124 +2798,7 @@ priceWithoutOtrCostIncludeVAT = REC_veh_pricings_VP.priceWithoutOtrCostIncludeVA
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_pricings','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
-   -------------------------VU
-   
-   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
 
-  FOR REC_veh_pricings_VU IN C_veh_pricings_VU
-  LOOP
-
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_pricings
-              ( 
-tech_id,    ------ AJOUT POUR JOINTURE
-tariffAreaCode,
-priceCode,
-priceType,
-priceTypeCustomer,
-priceStartDate,
-priceEndDate,
-vatAmount,
-priceET,
-priceIT,
-priceIncludeVAT,
-currency,
-immAmount,
-immRate,
-novaAmount,
-novaRate,
-priceWithoutOtrCostIT,
-priceWithoutOtrCostET,
-priceWithoutOtrCostIncludeVAT
-              )
-        VALUES
-              (  
-REC_veh_pricings_VU.tech_id,    ------ AJOUT POUR JOINTURE      
-REC_veh_pricings_VU.tariffAreaCode,
-REC_veh_pricings_VU.priceCode,
-REC_veh_pricings_VU.priceType,
-REC_veh_pricings_VU.priceTypeCustomer,
-REC_veh_pricings_VU.priceStartDate,
-REC_veh_pricings_VU.priceEndDate,
-REC_veh_pricings_VU.vatAmount,
-REC_veh_pricings_VU.priceET,
-REC_veh_pricings_VU.priceIT,
-REC_veh_pricings_VU.priceIncludeVAT,
-REC_veh_pricings_VU.currency,
-REC_veh_pricings_VU.immAmount,
-REC_veh_pricings_VU.immRate,
-REC_veh_pricings_VU.novaAmount,
-REC_veh_pricings_VU.novaRate,
-REC_veh_pricings_VU.priceWithoutOtrCostIT,
-REC_veh_pricings_VU.priceWithoutOtrCostET,
-REC_veh_pricings_VU.priceWithoutOtrCostIncludeVAT
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_pricings
-        Set        
-tariffAreaCode = REC_veh_pricings_VU.tariffAreaCode,
-priceCode = REC_veh_pricings_VU.priceCode,
-priceType = REC_veh_pricings_VU.priceType,
-priceTypeCustomer = REC_veh_pricings_VU.priceTypeCustomer,
-priceStartDate = REC_veh_pricings_VU.priceStartDate,
-priceEndDate = REC_veh_pricings_VU.priceEndDate,
-vatAmount = REC_veh_pricings_VU.vatAmount,
-priceET = REC_veh_pricings_VU.priceET,
-priceIT = REC_veh_pricings_VU.priceIT,
-priceIncludeVAT = REC_veh_pricings_VU.priceIncludeVAT,
-currency = REC_veh_pricings_VU.currency,
-immAmount = REC_veh_pricings_VU.immAmount,
-immRate = REC_veh_pricings_VU.immRate,
-novaAmount = REC_veh_pricings_VU.novaAmount,
-novaRate = REC_veh_pricings_VU.novaRate,
-priceWithoutOtrCostIT = REC_veh_pricings_VU.priceWithoutOtrCostIT,
-priceWithoutOtrCostET = REC_veh_pricings_VU.priceWithoutOtrCostET,
-priceWithoutOtrCostIncludeVAT = REC_veh_pricings_VU.priceWithoutOtrCostIncludeVAT
-
-
-        where  tech_id          =      REC_veh_pricings_VU.tech_id ;
-         
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_pricings','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_pricings','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
-   
-   
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
@@ -2857,9 +2830,58 @@ BEGIN
   RES     NUMBER := 0;
   
   
------------------------------------------------------------- A REVOIR LA REQUETE :  TROP DE LIGNES (DOUBLONS) ==>>  132140858  
 
-  Cursor C_veh_options_VP Is
+  Cursor C_veh_options Is
+  
+    Select 
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+A.optioncode as code,
+NULL as constructorCode,
+(case when B.catcode in (44, 45, 73, 74, 75, 76, 81, 82, 86, 90, 97) then 'C' else 'O' end) as typeCode,
+--(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
+(case when D.periodcode is not null then 'True' else 'False' end) as isPack,
+NULL as isAgregated,
+NULL as startDate,
+NULL as endDate
+
+from mktqt_veh veh, mktref.mktqt_NVDOption_VP A, mktref.mktqt_NVDDictionaryOption_VP B, mktref.mktqt_NVDPackContents_VP C, MKTQT_NVDPackPeriods_VP D
+where veh.tech_id = A.id and veh.VEHICULE_TYPE = 'VP'
+and A.optioncode = B.optioncode (+)
+and A.optioncode = C.optioncode (+) 
+and C.periodcode = D.periodcode (+)
+
+union   
+
+select
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+A.optioncode as code,
+NULL as constructorCode,
+(case when B.catcode in (103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113) then 'C' else 'O' end) as typeCode,
+--(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
+(case when D.periodcode is not null then 'True' else 'False' end) as isPack,
+NULL as isAgregated,
+NULL as startDate,
+NULL as endDate
+
+from mktqt_veh veh, mktref.mktqt_NVDOption_VU A, mktref.mktqt_NVDDictionaryOption_VU B, mktref.mktqt_NVDPackContents_VU C, MKTQT_NVDPackPeriods_VU D
+where veh.tech_id = A.id and veh.VEHICULE_TYPE = 'VP'
+and A.optioncode = B.optioncode (+)
+and A.optioncode = C.optioncode (+) 
+and C.periodcode = D.periodcode (+)
+  
+; 
+  
+  /*
+  ------------------------------------------------------------ A REVOIR LA REQUETE :  TROP DE LIGNES (DOUBLONS) ==>>  132140858  
+    Cursor C_veh_options_VP Is
   Select 
 A.Id as tech_id,
 A.optioncode as code,
@@ -2890,7 +2912,7 @@ NULL as endDate
 from mktref.mktqt_NVDOption_VU A, mktref.mktqt_NVDDictionaryOption_VU B, mktref.mktqt_NVDPackContents_VU C
 where A.optioncode = B.optioncode
 and A.optioncode = C.optioncode (+) ; 
-
+*/
 
 
  /*******************************************************************************/
@@ -2907,9 +2929,9 @@ and A.optioncode = C.optioncode (+) ;
         SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
 
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
 
-  FOR REC_veh_options_VP IN C_veh_options_VP
+  FOR REC_veh_options IN C_veh_options
   LOOP
 
        /*************************************************************************/
@@ -2924,7 +2946,11 @@ and A.optioncode = C.optioncode (+) ;
 
         INSERT INTO MKTREF.MKTQT_veh_options
               (  
-tech_id, --AJOUT
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE 
 code,
 constructorCode,
 typeCode,
@@ -2936,14 +2962,18 @@ endDate
               
         VALUES
               (  
-REC_veh_options_VP.tech_id,   --AJOUT
-REC_veh_options_VP.code,
-REC_veh_options_VP.constructorCode,
-REC_veh_options_VP.typeCode,
-REC_veh_options_VP.isPack,
-REC_veh_options_VP.isAgregated,
-REC_veh_options_VP.startDate,
-REC_veh_options_VP.endDate
+REC_veh_options.tech_id,    ------ AJOUT POUR JOINTURE
+REC_veh_options.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+REC_veh_options.versionYear,------ AJOUT POUR JOINTURE  
+REC_veh_options.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_options.VEHICULE_TYPE,------ AJOUT POUR JOINTURE 
+REC_veh_options.code,
+REC_veh_options.constructorCode,
+REC_veh_options.typeCode,
+REC_veh_options.isPack,
+REC_veh_options.isAgregated,
+REC_veh_options.startDate,
+REC_veh_options.endDate
               );
 
         V_INS := V_INS + 1;
@@ -2953,99 +2983,20 @@ REC_veh_options_VP.endDate
 				Update  MKTREF.MKTQT_veh_options
         Set       
 
---code = REC_veh_options_VP.code,
-constructorCode = REC_veh_options_VP.constructorCode,
-typeCode = REC_veh_options_VP.typeCode,
-isPack = REC_veh_options_VP.isPack,
-isAgregated = REC_veh_options_VP.isAgregated,
-startDate = REC_veh_options_VP.startDate,
-endDate  = REC_veh_options_VP.endDate
+--code = REC_veh_options.code,
+tech_id = REC_veh_options.tech_id,
+VEHICULE_TYPE = REC_veh_options.VEHICULE_TYPE,
+constructorCode = REC_veh_options.constructorCode,
+typeCode = REC_veh_options.typeCode,
+isPack = REC_veh_options.isPack,
+isAgregated = REC_veh_options.isAgregated,
+startDate = REC_veh_options.startDate,
+endDate  = REC_veh_options.endDate
 
-        where code = REC_veh_options_VP.code
-        and tech_id = REC_veh_options_VP.tech_id ;
-         
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_options','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_options','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
-   --------------------------VU
-   
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
-
-  FOR REC_veh_options_VU IN C_veh_options_VU
-  LOOP
-
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_options
-              (  
-tech_id, --AJOUT
-code,
-constructorCode,
-typeCode,
-isPack,
-isAgregated,
-startDate,
-endDate
-              )
-        VALUES
-              (  
-REC_veh_options_VU.tech_id,   --AJOUT
-REC_veh_options_VU.code,
-REC_veh_options_VU.constructorCode,
-REC_veh_options_VU.typeCode,
-REC_veh_options_VU.isPack,
-REC_veh_options_VU.isAgregated,
-REC_veh_options_VU.startDate,
-REC_veh_options_VU.endDate
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_options
-        Set       
-
---code = REC_veh_options_VU.code,
-constructorCode = REC_veh_options_VU.constructorCode,
-typeCode = REC_veh_options_VU.typeCode,
-isPack = REC_veh_options_VU.isPack,
-isAgregated = REC_veh_options_VU.isAgregated,
-startDate = REC_veh_options_VU.startDate,
-endDate  = REC_veh_options_VU.endDate
-
-        where code = REC_veh_options_VU.code
-        and tech_id = REC_veh_options_VU.tech_id ;
+        where code = REC_veh_options.code
+        and   itemDirectoryVehicleRef = REC_veh_options.itemDirectoryVehicleRef
+        and   versionYear = REC_veh_options.versionYear
+        and   versionTrimester = REC_veh_options.versionTrimester ;
          
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -3620,6 +3571,45 @@ BEGIN
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
 
+
+
+
+  Cursor C_veh_baseEquipments Is
+Select distinct
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+A.optioncode as externalRef, 
+NULL as typeCategoryCode,
+'en_GB' as language,
+B.description as label
+
+from MKTREF.MKTQT_veh veh, MKTREF.MKTQT_NVDStandardEquipment_VP A, MKTREF.MKTQT_NVDDictionaryOption_VP B
+where veh.tech_id = A.Id and veh.VEHICULE_TYPE = 'VP'
+and A.optioncode = B.optioncode  (+)
+
+union
+
+Select distinct
+veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+A.optioncode as externalRef, 
+NULL as typeCategoryCode,
+'en_GB' as language,
+B.description as label
+
+from MKTREF.MKTQT_veh veh, MKTREF.MKTQT_NVDStandardEquipment_VU A, MKTREF.MKTQT_NVDDictionaryOption_VU B
+where veh.tech_id = A.Id and veh.VEHICULE_TYPE = 'VU'
+and A.optioncode = B.optioncode  (+)
+
+; 
+
+/*
   Cursor C_veh_baseEquipments_VP Is
   Select distinct
 A.Id as tech_id,
@@ -3644,6 +3634,9 @@ from MKTREF.MKTQT_NVDStandardEquipment_VU A, MKTREF.MKTQT_NVDDictionaryOption_VU
 where A.optioncode = B.optioncode   ;       
           
 
+*/
+
+
  /*******************************************************************************/
   BEGIN
 
@@ -3658,10 +3651,10 @@ where A.optioncode = B.optioncode   ;
         SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
 
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
 
 
-  FOR REC_veh_baseEquipments_VP IN C_veh_baseEquipments_VP
+  FOR REC_veh_baseEquipments IN C_veh_baseEquipments
   LOOP
 
        /*************************************************************************/
@@ -3676,7 +3669,11 @@ where A.optioncode = B.optioncode   ;
 
         INSERT INTO MKTREF.MKTQT_veh_baseEquipments
               (   
-tech_id,
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 externalRef,
 typeCategoryCode,
 language,
@@ -3685,11 +3682,15 @@ label
               
         VALUES
               (  
-REC_veh_baseEquipments_VP.tech_id,
-REC_veh_baseEquipments_VP.externalRef,
-REC_veh_baseEquipments_VP.typeCategoryCode,
-REC_veh_baseEquipments_VP.language,
-REC_veh_baseEquipments_VP.label 
+REC_veh_baseEquipments.tech_id,    ------ AJOUT POUR JOINTURE
+REC_veh_baseEquipments.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+REC_veh_baseEquipments.versionYear,------ AJOUT POUR JOINTURE  
+REC_veh_baseEquipments.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_baseEquipments.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+REC_veh_baseEquipments.externalRef,
+REC_veh_baseEquipments.typeCategoryCode,
+REC_veh_baseEquipments.language,
+REC_veh_baseEquipments.label 
               );
 
         V_INS := V_INS + 1;
@@ -3698,13 +3699,17 @@ REC_veh_baseEquipments_VP.label
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_veh_baseEquipments
         Set        
---externalRef= REC_veh_baseEquipments_VP.externalRef,
-typeCategoryCode= REC_veh_baseEquipments_VP.typeCategoryCode,
-language= REC_veh_baseEquipments_VP.language,
-label= REC_veh_baseEquipments_VP.label 
+--externalRef= REC_veh_baseEquipments.externalRef,
+tech_id          =      REC_veh_baseEquipments.tech_id  ,
+VEHICULE_TYPE = REC_veh_baseEquipments.VEHICULE_TYPE,
+typeCategoryCode= REC_veh_baseEquipments.typeCategoryCode,
+language= REC_veh_baseEquipments.language,
+label= REC_veh_baseEquipments.label 
 
-        where  externalRef          =      REC_veh_baseEquipments_VP.externalRef 
-        and  tech_id          =      REC_veh_baseEquipments_VP.tech_id  ;
+        where  externalRef          =      REC_veh_baseEquipments.externalRef 
+        and  itemDirectoryVehicleRef = REC_veh_baseEquipments.itemDirectoryVehicleRef 
+        and versionYear = REC_veh_baseEquipments.versionYear
+        and versionTrimester = REC_veh_baseEquipments.versionTrimester ;
          
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -3731,80 +3736,6 @@ label= REC_veh_baseEquipments_VP.label
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_baseEquipments','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
-   
-   --------------------------VU
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
-
-
-  FOR REC_veh_baseEquipments_VU IN C_veh_baseEquipments_VU
-  LOOP
-
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_baseEquipments
-              (   
-tech_id,
-externalRef,
-typeCategoryCode,
-language,
-label
-              )
-              
-        VALUES
-              (  
-REC_veh_baseEquipments_VU.tech_id,
-REC_veh_baseEquipments_VU.externalRef,
-REC_veh_baseEquipments_VU.typeCategoryCode,
-REC_veh_baseEquipments_VU.language,
-REC_veh_baseEquipments_VU.label 
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_baseEquipments
-        Set        
---externalRef= REC_veh_baseEquipments_VU.externalRef,
-typeCategoryCode= REC_veh_baseEquipments_VU.typeCategoryCode,
-language= REC_veh_baseEquipments_VU.language,
-label= REC_veh_baseEquipments_VU.label 
-
-        where  externalRef          =      REC_veh_baseEquipments_VU.externalRef 
-        and  tech_id          =      REC_veh_baseEquipments_VU.tech_id  ;
-         
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_baseEquipments','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_baseEquipments','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
    
    
@@ -5201,7 +5132,7 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 					V_LIGNE := 
                     
                     S_mktqt_veh.tech_id  || '|' ||
-                    S_mktqt_veh.BLDV || '|' ;
+                    S_mktqt_veh.BLVD || '|' ;
 						
 											 
 
