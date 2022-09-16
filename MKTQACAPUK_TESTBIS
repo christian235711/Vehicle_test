@@ -3884,8 +3884,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
 				Update  MKTREF.MKTQT_transco
         Set        
         
-      parent =   REC_transco.parent,
-      parent_details_code = REC_transco.parent, --- mapping  parent_details_code = parent
+     
+      parent_details_code = REC_transco.parent , --- mapping  parent_details_code = parent;
       translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
       description_label = REC_transco.description_label
         
@@ -3901,7 +3901,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU  
-       and crossref_code = REC_transco.crossref_code ;
+       and crossref_code = REC_transco.crossref_code
+        and  parent =   REC_transco.parent ;
          
 
         V_UPD := V_UPD + 1;
@@ -3959,18 +3960,19 @@ BEGIN
         
   
  select  distinct
-                TRIM.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                TRIM.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
                 TRIM.VEHICULE_TRIM   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 TRIM.TRIM_ID    as code,
                 TRIM.CROSSREF_CODE   as CROSSREF_CODE,
                 TRIM.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
-                model_gen.code as parent_details_code    -- 2 loop
+                model_gen.model_gen_id as parent_details_code    -- 2 loop
 
- from  MKTREF.MKTQT_TRIM  TRIM, MKTREF.MKTQT_transco model_gen
- where TRIM.BRAND_CODE = model_gen.parent_details_code
- and   model_gen.entity='model_gen'
+ from  MKTREF.MKTQT_TRIM  TRIM, MKTREF.MKTQT_model_gen model_gen
+  where TRIM.BRAND_CODE = model_gen.BRAND_CODE 
+ and TRIM.VEHICULE_NAME = model_gen.VEHICULE_NAME
+  and TRIM.VEHICULE_TYPE = model_gen.VEHICULE_TYPE
 ; 
  
          
@@ -4053,10 +4055,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_transco
         Set        
-        
-      parent_details_code =   REC_transco.parent_details_code_brandcode,   -- parent = parent_details_code 
+       parent_details_code =   REC_transco.parent_details_code_brandcode ,   -- parent = parent_details_code 
       translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
-      parent = REC_transco.parent, 
       description_label = REC_transco.description_label
 
       where  entity = 'trim'
@@ -4071,7 +4071,9 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.crossref_code ;
+       and crossref_code = REC_transco.crossref_code 
+      and parent = REC_transco.parent ;
+
          
 
         V_UPD := V_UPD + 1;
@@ -4158,9 +4160,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
 				Update  MKTREF.MKTQT_transco
         Set        
         
-      parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
+      parent_details_code =   REC_transco.parent_details_code ,   -- parent = parent_details_code 
       translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
-      parent = REC_transco.parent, 
       description_label = REC_transco.description_label
 
       where  entity = 'trim'
@@ -4175,7 +4176,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.crossref_code ;
+       and crossref_code = REC_transco.crossref_code 
+       and parent = REC_transco.parent ; 
          
 
         V_UPD := V_UPD + 1;
@@ -4239,20 +4241,22 @@ BEGIN
   Cursor C_transco_motor_model_gen Is
 
  select  distinct
-                motorisationBLVD.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                motorisationBLVD.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
                 motorisationBLVD.VEHICULE_motorisationBLVD   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 motorisationBLVD.motorisationBLVD_ID    as code,
                -- motorisationBLVD.CROSSREF_CODE   as CROSSREF_CODE,
                 motorisationBLVD.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
-                model_gen.code as parent_details_code    -- 2 loop
+                model_gen.model_gen_id as parent_details_code    -- 2 loop
 
- from  MKTREF.MKTQT_motorisationBLVD  motorisationBLVD, MKTREF.MKTQT_transco model_gen
- where motorisationBLVD.BRAND_CODE = model_gen.parent_details_code
- and   model_gen.entity='model_gen'
-; 
+ from  MKTREF.MKTQT_motorisationBLVD  motorisationBLVD, MKTREF.MKTQT_model_gen model_gen
+ where motorisationBLVD.BRAND_CODE = model_gen.BRAND_CODE 
+ and motorisationBLVD.VEHICULE_NAME = model_gen.VEHICULE_NAME
+ and motorisationBLVD.VEHICULE_TYPE = model_gen.VEHICULE_TYPE
  
+; 
+
 
 
 
@@ -4334,7 +4338,6 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         Set        
         
       parent_details_code =   REC_transco.parent_details_code_brandcode,   -- parent = parent_details_code 
-      parent = REC_transco.parent, --- mapping  parent_details_code = parent
       translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label  
         
@@ -4350,8 +4353,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.description_label ;
-         
+      and crossref_code = REC_transco.description_label 
+      and parent = REC_transco.parent ; --- mapping  parent_details_code = parent
 
         V_UPD := V_UPD + 1;
         
@@ -4439,7 +4442,6 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         Set        
         
       parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
-      parent = REC_transco.parent, --- mapping  parent_details_code = parent
       translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label  
         
@@ -4455,8 +4457,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.description_label ;
-         
+       and crossref_code = REC_transco.description_label 
+       and parent = REC_transco.parent; --- mapping  parent_details_code = parent
 
         V_UPD := V_UPD + 1;
         
@@ -4520,21 +4522,21 @@ BEGIN
   Cursor C_transco_dimensions_model_gen Is
 
  select  distinct
-                dimensions.BRAND_CODE || model_gen.code     as  parent,  -- brandCode
+                dimensions.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
                 dimensions.VEHICULE_dimensions   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 dimensions.dimensions_ID    as code,
                -- motorisationBLVD.CROSSREF_CODE   as CROSSREF_CODE,
                 dimensions.BRAND_CODE as parent_details_code_brandcode, -- 1 loop
-                model_gen.code as parent_details_code    -- 2 loop
+                model_gen.model_gen_id as parent_details_code    -- 2 loop
 
- from  MKTREF.MKTQT_dimensions  dimensions, MKTREF.MKTQT_transco model_gen
- where dimensions.BRAND_CODE = model_gen.parent_details_code
- and   model_gen.entity='model_gen'
+ from  MKTREF.MKTQT_dimensions  dimensions, MKTREF.MKTQT_model_gen model_gen
+  where dimensions.BRAND_CODE = model_gen.BRAND_CODE 
+ and dimensions.VEHICULE_NAME = model_gen.VEHICULE_NAME
+ and dimensions.VEHICULE_TYPE = model_gen.VEHICULE_TYPE
+
 ; 
- 
-
 
 
 
@@ -4615,7 +4617,6 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         Set        
         
       parent_details_code =   REC_transco.parent_details_code_brandcode,   -- parent = parent_details_code 
-      parent = REC_transco.parent, --- mapping  parent_details_code = parent
       translation_label = REC_transco.description_label,  --- mappring translation_label = description_label
       description_label = REC_transco.description_label
       
@@ -4631,7 +4632,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.description_label ;
+       and crossref_code = REC_transco.description_label 
+       and  parent = REC_transco.parent; --- mapping  parent_details_code = parent
          
 
         V_UPD := V_UPD + 1;
@@ -4723,7 +4725,6 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
         Set        
         
       parent_details_code =   REC_transco.parent_details_code,   -- parent = parent_details_code 
-      parent = REC_transco.parent, --- mapping  parent_details_code = parent
       translation_label = REC_transco.description_label,  --- mapping translation_label = description_label
       description_label = REC_transco.description_label
       
@@ -4739,7 +4740,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and countryScope = 'UK' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
-       and crossref_code = REC_transco.description_label ;
+       and crossref_code = REC_transco.description_label 
+       and parent = REC_transco.parent ; --- mapping  parent_details_code = parent
          
 
         V_UPD := V_UPD + 1;
@@ -6848,8 +6850,20 @@ S_mktqt_transco.countryScope	;
 		
 	END MAIN_ABSENT_code;
   
+  
+    FUNCTION MAIN_EXPORT_veh(NOMLOG	VARCHAR2,
+                        P_DATE_TRAI	DATE,
+                        P_PATH    VARCHAR2,
+                        P_FILENAME_VEH  VARCHAR2,
+                        P_FILENAME_crossRefs  VARCHAR2,
+                        P_FILENAME_pricings  VARCHAR2,
+                        P_FILENAME_options VARCHAR2,
+                        P_FILENAME_optionslabels  VARCHAR2,
+                        P_FILENAME_optionspricings  VARCHAR2,
+                        P_FILENAME_baseEquipments  VARCHAR2,
+                        P_FILENAME_transco  VARCHAR2) Return Number is  
 
-	FUNCTION MAIN_EXPORT_veh (NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2 ) RETURN NUMBER IS
+	--FUNCTION MAIN_EXPORT_veh (NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2 ) RETURN NUMBER IS
 		
 		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
 
@@ -6863,56 +6877,56 @@ S_mktqt_transco.countryScope	;
         BEGIN	
      
 		---------------05	
-			V_ERR     := EXPORT_VEH( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+			V_ERR     := EXPORT_VEH( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_VEH  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
 
 		---------------06		
-			V_ERR     := EXPORT_crossRefs( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+			V_ERR     := EXPORT_crossRefs( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_crossRefs  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
       
         ---------------07	
-			V_ERR     := EXPORT_veh_pricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+			V_ERR     := EXPORT_veh_pricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_pricings  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
         -------------------08
-        V_ERR     := EXPORT_veh_options(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+        V_ERR     := EXPORT_veh_options(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_options  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
                  
          -------------------09
-			V_ERR     := EXPORT_veh_optionslabels(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+			V_ERR     := EXPORT_veh_optionslabels(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_optionslabels  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
         -------------------10
-			V_ERR     := EXPORT_veh_optionspricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
+			V_ERR     := EXPORT_veh_optionspricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_optionspricings  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;            
             
          -------------------11
-			V_ERR     := EXPORT_veh_baseEquipments( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME );  
+			V_ERR     := EXPORT_veh_baseEquipments( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_baseEquipments );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;        
 
          -------------------12
-			V_ERR     := EXPORT_transco( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME );  
+			V_ERR     := EXPORT_transco( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME_transco );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
