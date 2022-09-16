@@ -1408,7 +1408,8 @@ TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
 DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
 (case when door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3') then door_seat.code else 'Z' end) as door_seat,
-year_trimester.code as year_trimester
+year_trimester.code as year_trimester,
+B.effectivefrom as effectivefrom
 
 from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_NVDModelYear_VP B,
@@ -1644,8 +1645,8 @@ TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
 DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
 (case when door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17') then door_seat.code else 'Z' end) as door_seat,
-year_trimester.code as year_trimester
-
+year_trimester.code as year_trimester,
+B.effectivefrom as effectivefrom
 
 from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_NVDGenericStatus_VU C,
      MKTREF.MKTQT_transco brand,
@@ -1915,7 +1916,8 @@ TRIM,
 MOTORISATIONBLVD,
 DIMENSIONS,
 door_seat,
-year_trimester
+year_trimester,
+effectivefrom
               )
         VALUES
               (  
@@ -2000,7 +2002,8 @@ REC_veh_VP.TRIM_ID,
 REC_veh_VP.MOTORISATIONBLVD_ID,
 REC_veh_VP.DIMENSIONS_ID,
 REC_veh_VP.door_seat,
-REC_veh_VP.year_trimester
+REC_veh_VP.year_trimester,
+REC_veh_VP.effectivefrom
               );
          
         V_INS := V_INS + 1;
@@ -2090,7 +2093,8 @@ TRIM                 =  REC_veh_VP.TRIM_ID,
 MOTORISATIONBLVD    = REC_veh_VP.MOTORISATIONBLVD_ID,
 --DIMENSIONS       = REC_veh_VP.DIMENSIONS_ID,
 door_seat = REC_veh_VP.door_seat,
-year_trimester = REC_veh_VP.year_trimester
+year_trimester = REC_veh_VP.year_trimester,
+effectivefrom = REC_veh_VP.effectivefrom
 
 
         where  itemDirectoryVehicleRef  = REC_veh_VP.itemDirectoryVehicleRef  
@@ -2229,7 +2233,8 @@ TRIM,
 MOTORISATIONBLVD,
 DIMENSIONS,
 door_seat,
-year_trimester
+year_trimester,
+effectivefrom
               )
         VALUES
               (  
@@ -2314,7 +2319,8 @@ REC_veh_Vu.TRIM_ID,
 REC_veh_Vu.MOTORISATIONBLVD_ID,
 REC_veh_Vu.DIMENSIONS_ID,
 REC_veh_Vu.door_seat,
-REC_veh_Vu.year_trimester
+REC_veh_Vu.year_trimester,
+REC_veh_Vu.effectivefrom
               );
          
         V_INS := V_INS + 1;
@@ -2404,7 +2410,8 @@ TRIM = REC_veh_Vu.TRIM_ID,
 MOTORISATIONBLVD = REC_veh_Vu.MOTORISATIONBLVD_ID,
 --DIMENSIONS = REC_veh_Vu.DIMENSIONS_ID,
 door_seat = REC_veh_Vu.door_seat,
-year_trimester = REC_veh_Vu.year_trimester
+year_trimester = REC_veh_Vu.year_trimester,
+effectivefrom = REC_veh_Vu.effectivefrom
 
 
         where itemDirectoryVehicleRef  = REC_veh_VU.itemDirectoryVehicleRef 
@@ -2693,6 +2700,7 @@ NULL AS priceWithoutOtrCostIncludeVAT
   BEGIN
 
     File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_pricings','------------------------------BEGIN------------------------------##');
   Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_pricings','## Alimentation de la table MKTREF.REC_veh_pricings ##');
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh_pricings','## Flux BILAN   ##');
   
@@ -2873,12 +2881,12 @@ BEGIN
   
     Select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
-itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-generation,-- add
-DIMENSIONS,  -- add
-MODEL_GEN,-- add
+veh.itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+veh.versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+veh.versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+veh.generation,-- add
+veh.DIMENSIONS,  -- add
+veh.MODEL_GEN,-- add
 'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
@@ -2887,11 +2895,16 @@ NULL as constructorCode,
 (case when D.periodcode is not null then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
 NULL as startDate,
-NULL as endDate
+NULL as endDate,
+B.description as description,
+B.longdescription as longdescription,
+A.effectivefrom as effectivefrom,
+A.effectiveto as effectiveto,
+A.basic as basic
 
 from mktqt_veh veh, mktref.mktqt_NVDOption_VP A, mktref.mktqt_NVDDictionaryOption_VP B, mktref.mktqt_NVDPackContents_VP C, MKTQT_NVDPackPeriods_VP D
-where veh.tech_id = A.id and veh.VEHICULE_TYPE = 'VP'
-and A.optioncode = B.optioncode (+)
+where veh.tech_id = A.id and veh.effectivefrom = A.effectivefrom and veh.VEHICULE_TYPE = 'VP'
+and A.optioncode = B.optioncode (+) 
 and A.optioncode = C.optioncode (+) 
 and C.periodcode = D.periodcode (+)
 
@@ -2899,12 +2912,12 @@ union
 
 select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
-itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-generation,-- add
-DIMENSIONS,  -- add
-MODEL_GEN,-- add
+veh.itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
+veh.versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
+veh.versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
+veh.generation,-- add
+veh.DIMENSIONS,  -- add
+veh.MODEL_GEN,-- add
 'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
@@ -2913,10 +2926,15 @@ NULL as constructorCode,
 (case when D.periodcode is not null then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
 NULL as startDate,
-NULL as endDate
+NULL as endDate,
+B.description as description,
+B.longdescription as longdescription,
+A.effectivefrom as effectivefrom,
+A.effectiveto as effectiveto,
+A.basic as basic
 
 from mktqt_veh veh, mktref.mktqt_NVDOption_VU A, mktref.mktqt_NVDDictionaryOption_VU B, mktref.mktqt_NVDPackContents_VU C, MKTQT_NVDPackPeriods_VU D
-where veh.tech_id = A.id and veh.VEHICULE_TYPE = 'VP'
+where veh.tech_id = A.id and veh.effectivefrom = A.effectivefrom and veh.VEHICULE_TYPE = 'VU'
 and A.optioncode = B.optioncode (+)
 and A.optioncode = C.optioncode (+) 
 and C.periodcode = D.periodcode (+)
@@ -2963,6 +2981,7 @@ and A.optioncode = C.optioncode (+) ;
   BEGIN
 
     File_Id := mkt.mktqaut.F_Open(Nomlog);
+    Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_options','------------------------------BEGIN------------------------------##');
   Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_options','## Alimentation de la table MKTREF.MKTQT_veh_options ##');
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh_options','## Flux BILAN   ##');
   
@@ -2994,14 +3013,22 @@ tech_id,    ------ AJOUT POUR JOINTURE
 itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 versionYear,------ AJOUT POUR JOINTURE  
 versionTrimester,------ AJOUT POUR JOINTURE  
-VEHICULE_TYPE,------ AJOUT POUR JOINTURE 
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 code,
 constructorCode,
 typeCode,
 isPack,
 isAgregated,
 startDate,
-endDate
+endDate,
+description, --add
+longdescription, --add
+effectivefrom, --add
+effectiveto, --add
+basic  --add
               )
               
         VALUES
@@ -3010,14 +3037,22 @@ REC_veh_options.tech_id,    ------ AJOUT POUR JOINTURE
 REC_veh_options.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 REC_veh_options.versionYear,------ AJOUT POUR JOINTURE  
 REC_veh_options.versionTrimester,------ AJOUT POUR JOINTURE  
-REC_veh_options.VEHICULE_TYPE,------ AJOUT POUR JOINTURE 
+REC_veh_options.generation,-- add
+REC_veh_options.DIMENSIONS,  -- add
+REC_veh_options.MODEL_GEN,-- add
+REC_veh_options.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 REC_veh_options.code,
 REC_veh_options.constructorCode,
 REC_veh_options.typeCode,
 REC_veh_options.isPack,
 REC_veh_options.isAgregated,
 REC_veh_options.startDate,
-REC_veh_options.endDate
+REC_veh_options.endDate,
+REC_veh_options.description, --add
+REC_veh_options.longdescription, --add
+REC_veh_options.effectivefrom, --add
+REC_veh_options.effectiveto, --add
+REC_veh_options.basic  --add
               );
 
         V_INS := V_INS + 1;
@@ -3035,12 +3070,20 @@ typeCode = REC_veh_options.typeCode,
 isPack = REC_veh_options.isPack,
 isAgregated = REC_veh_options.isAgregated,
 startDate = REC_veh_options.startDate,
-endDate  = REC_veh_options.endDate
+endDate  = REC_veh_options.endDate,
+description = REC_veh_options.description, --add
+longdescription = REC_veh_options.longdescription, --add
+effectivefrom = REC_veh_options.effectivefrom, --add
+effectiveto = REC_veh_options.effectiveto, --add
+basic = REC_veh_options.basic  --add
 
         where code = REC_veh_options.code
         and   itemDirectoryVehicleRef = REC_veh_options.itemDirectoryVehicleRef
         and   versionYear = REC_veh_options.versionYear
-        and   versionTrimester = REC_veh_options.versionTrimester ;
+        and   versionTrimester = REC_veh_options.versionTrimester 
+        and generation = REC_veh_options.generation  -- add
+        and DIMENSIONS = REC_veh_options.DIMENSIONS  -- add
+        and MODEL_GEN = REC_veh_options.MODEL_GEN  ;-- add;
          
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -3101,7 +3144,25 @@ BEGIN
 
 
 
-  Cursor C_veh_optionslabels_VP Is
+  Cursor C_veh_optionslabels Is
+  
+  select distinct
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+code as code, --ADD
+'en_GB' as language,
+description as labelShort,
+longdescription as labelLong
+
+from MKTQT_veh_options;
+  
+  /*
   Select  distinct
 A.ID as tech_id, --ADD
 A.optioncode as code, --ADD
@@ -3124,7 +3185,7 @@ B.longdescription as labelLong
           
 from mktref.mktqt_NVDOption_VU A, mktref.mktqt_NVDDictionaryOption_VU B
 where A.optioncode = B.optioncode;
-
+*/
 
  /*******************************************************************************/
   BEGIN
@@ -3143,7 +3204,7 @@ where A.optioncode = B.optioncode;
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
 
 
-  FOR REC_veh_optionslabels_VP IN C_veh_optionslabels_VP
+  FOR REC_veh_optionslabels IN C_veh_optionslabels
   LOOP
 
        /*************************************************************************/
@@ -3158,7 +3219,14 @@ where A.optioncode = B.optioncode;
 
         INSERT INTO MKTREF.MKTQT_veh_optionslabels
               (   
-tech_id,
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 code,
 language,
 labelShort,
@@ -3166,11 +3234,18 @@ labelLong
               )
         VALUES
               (  
-REC_veh_optionslabels_VP.tech_id,
-REC_veh_optionslabels_VP.code,
-REC_veh_optionslabels_VP.language,
-REC_veh_optionslabels_VP.labelShort,
-REC_veh_optionslabels_VP.labelLong
+REC_veh_optionslabels.tech_id,    ------ AJOUT POUR JOINTURE
+REC_veh_optionslabels.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+REC_veh_optionslabels.versionYear,------ AJOUT POUR JOINTURE  
+REC_veh_optionslabels.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_optionslabels.generation,-- add
+REC_veh_optionslabels.DIMENSIONS,  -- add
+REC_veh_optionslabels.MODEL_GEN,-- add
+REC_veh_optionslabels.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+REC_veh_optionslabels.code,
+REC_veh_optionslabels.language,
+REC_veh_optionslabels.labelShort,
+REC_veh_optionslabels.labelLong
               );
 
         V_INS := V_INS + 1;
@@ -3180,13 +3255,22 @@ REC_veh_optionslabels_VP.labelLong
 				Update  MKTREF.MKTQT_veh_optionslabels
         Set       
 
---language = REC_veh_optionslabels_VP.language,
-labelShort = REC_veh_optionslabels_VP.labelShort,
-labelLong = REC_veh_optionslabels_VP.labelLong
+tech_id = REC_veh_optionslabels.tech_id,
+VEHICULE_TYPE = REC_veh_optionslabels.VEHICULE_TYPE,
+labelShort = REC_veh_optionslabels.labelShort,
+labelLong = REC_veh_optionslabels.labelLong
 
-        where language = REC_veh_optionslabels_VP.language
-        and tech_id = REC_veh_optionslabels_VP.tech_id
-        and code = REC_veh_optionslabels_VP.code ;
+        where code = REC_veh_optionslabels.code 
+        and language = REC_veh_optionslabels.language
+        and itemDirectoryVehicleRef = REC_veh_optionslabels.itemDirectoryVehicleRef ------ AJOUT POUR JOINTURE  
+        and versionYear = REC_veh_optionslabels.versionYear ------ AJOUT POUR JOINTURE  
+        and versionTrimester = REC_veh_optionslabels.versionTrimester ------ AJOUT POUR JOINTURE  
+        and generation = REC_veh_optionslabels.generation -- add
+        and DIMENSIONS = REC_veh_optionslabels.DIMENSIONS  -- add
+        and MODEL_GEN = REC_veh_optionslabels.MODEL_GEN  ;-- add
+
+        
+        
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -3212,81 +3296,7 @@ labelLong = REC_veh_optionslabels_VP.labelLong
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_optionslabels','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
-   
-    --------------------------VU
-   
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
-   
-   
-     FOR REC_veh_optionslabels_VU IN C_veh_optionslabels_VU
-  LOOP
 
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_optionslabels
-              (   
-tech_id,
-code,
-language,
-labelShort,
-labelLong
-              )
-        VALUES
-              (  
-REC_veh_optionslabels_VU.tech_id,
-REC_veh_optionslabels_VU.code,
-REC_veh_optionslabels_VU.language,
-REC_veh_optionslabels_VU.labelShort,
-REC_veh_optionslabels_VU.labelLong
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_optionslabels
-        Set       
-
---language = REC_veh_optionslabels_VU.language,
-labelShort = REC_veh_optionslabels_VU.labelShort,
-labelLong = REC_veh_optionslabels_VU.labelLong
-
-        where language = REC_veh_optionslabels_VU.language
-        and tech_id = REC_veh_optionslabels_VU.tech_id
-        and code = REC_veh_optionslabels_VU.code ;
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_optionslabels','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_optionslabels','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
@@ -3319,7 +3329,34 @@ BEGIN
   FILE_ID UTL_FILE.FILE_TYPE;
   RES     NUMBER := 0;
 
-  Cursor C_veh_optionspricings_VP Is
+  Cursor C_veh_optionspricings Is
+  select distinct
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+code as code,
+NULL as territorialityCode,
+NULL as pricebookCode,
+NULL as pricebookType,
+NULL as pricebookTypeCustomer,
+effectiveFrom as pricebookStartDate,
+effectiveTo as pricebookEndDate,
+NULL as vatAmount,
+'GBP' as currency,
+Basic as priceET,
+NULL as priceIT,
+NULL as priceIncludeVAT,
+NULL as basePriceWithChargesET,
+NULL as basePriceWithChargesIT,
+NULL as basePriceWithChargesIncludeVAT
+
+  from MKTQT_veh_options;
+  /*
   Select distinct
 A.id as tech_id,
 A.optioncode as code,
@@ -3361,7 +3398,7 @@ NULL as basePriceWithChargesIT,
 NULL as basePriceWithChargesIncludeVAT
 
 from MKTREF.MKTQT_NVDOption_VU A ;
-          
+          */
 
  /*******************************************************************************/
   BEGIN
@@ -3380,7 +3417,7 @@ from MKTREF.MKTQT_NVDOption_VU A ;
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP : ',' ');  
 
 
-  FOR REC_veh_optionspricings_VP IN C_veh_optionspricings_VP
+  FOR REC_veh_optionspricings IN C_veh_optionspricings
   LOOP
 
        /*************************************************************************/
@@ -3395,7 +3432,14 @@ from MKTREF.MKTQT_NVDOption_VU A ;
 
         INSERT INTO MKTREF.MKTQT_veh_optionspricings
               (
-tech_id,
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 code,
 territorialityCode,
 pricebookCode,
@@ -3414,22 +3458,29 @@ basePriceWithChargesIncludeVAT
               )
         VALUES
               (  
-REC_veh_optionspricings_VP.tech_id,
-REC_veh_optionspricings_VP.code,
-REC_veh_optionspricings_VP.territorialityCode,
-REC_veh_optionspricings_VP.pricebookCode,
-REC_veh_optionspricings_VP.pricebookType,
-REC_veh_optionspricings_VP.pricebookTypeCustomer,
-REC_veh_optionspricings_VP.pricebookStartDate,
-REC_veh_optionspricings_VP.pricebookEndDate,
-REC_veh_optionspricings_VP.vatAmount,
-REC_veh_optionspricings_VP.currency,
-REC_veh_optionspricings_VP.priceET,
-REC_veh_optionspricings_VP.priceIT,
-REC_veh_optionspricings_VP.priceIncludeVAT,
-REC_veh_optionspricings_VP.basePriceWithChargesET,
-REC_veh_optionspricings_VP.basePriceWithChargesIT,
-REC_veh_optionspricings_VP.basePriceWithChargesIncludeVAT
+REC_veh_optionspricings.tech_id,    ------ AJOUT POUR JOINTURE
+REC_veh_optionspricings.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+REC_veh_optionspricings.versionYear,------ AJOUT POUR JOINTURE  
+REC_veh_optionspricings.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_optionspricings.generation,-- add
+REC_veh_optionspricings.DIMENSIONS,  -- add
+REC_veh_optionspricings.MODEL_GEN,-- add
+REC_veh_optionspricings.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+REC_veh_optionspricings.code,
+REC_veh_optionspricings.territorialityCode,
+REC_veh_optionspricings.pricebookCode,
+REC_veh_optionspricings.pricebookType,
+REC_veh_optionspricings.pricebookTypeCustomer,
+REC_veh_optionspricings.pricebookStartDate,
+REC_veh_optionspricings.pricebookEndDate,
+REC_veh_optionspricings.vatAmount,
+REC_veh_optionspricings.currency,
+REC_veh_optionspricings.priceET,
+REC_veh_optionspricings.priceIT,
+REC_veh_optionspricings.priceIncludeVAT,
+REC_veh_optionspricings.basePriceWithChargesET,
+REC_veh_optionspricings.basePriceWithChargesIT,
+REC_veh_optionspricings.basePriceWithChargesIncludeVAT
               );
 
         V_INS := V_INS + 1;
@@ -3438,23 +3489,31 @@ REC_veh_optionspricings_VP.basePriceWithChargesIncludeVAT
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_veh_optionspricings
         Set       
-territorialityCode = REC_veh_optionspricings_VP.territorialityCode,
-pricebookCode = REC_veh_optionspricings_VP.pricebookCode,
-pricebookType = REC_veh_optionspricings_VP.pricebookType,
-pricebookTypeCustomer = REC_veh_optionspricings_VP.pricebookTypeCustomer,
-pricebookStartDate = REC_veh_optionspricings_VP.pricebookStartDate,
-pricebookEndDate = REC_veh_optionspricings_VP.pricebookEndDate,
-vatAmount = REC_veh_optionspricings_VP.vatAmount,
-currency = REC_veh_optionspricings_VP.currency,
-priceET = REC_veh_optionspricings_VP.priceET,
-priceIT = REC_veh_optionspricings_VP.priceIT,
-priceIncludeVAT = REC_veh_optionspricings_VP.priceIncludeVAT,
-basePriceWithChargesET = REC_veh_optionspricings_VP.basePriceWithChargesET,
-basePriceWithChargesIT = REC_veh_optionspricings_VP.basePriceWithChargesIT,
-basePriceWithChargesIncludeVAT = REC_veh_optionspricings_VP.basePriceWithChargesIncludeVAT
+        tech_id = REC_veh_optionspricings.tech_id,    ------ AJOUT POUR JOINTURE
+        VEHICULE_TYPE = REC_veh_optionspricings.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
+territorialityCode = REC_veh_optionspricings.territorialityCode,
+pricebookCode = REC_veh_optionspricings.pricebookCode,
+pricebookType = REC_veh_optionspricings.pricebookType,
+pricebookTypeCustomer = REC_veh_optionspricings.pricebookTypeCustomer,
+pricebookStartDate = REC_veh_optionspricings.pricebookStartDate,
+pricebookEndDate = REC_veh_optionspricings.pricebookEndDate,
+vatAmount = REC_veh_optionspricings.vatAmount,
+currency = REC_veh_optionspricings.currency,
+priceET = REC_veh_optionspricings.priceET,
+priceIT = REC_veh_optionspricings.priceIT,
+priceIncludeVAT = REC_veh_optionspricings.priceIncludeVAT,
+basePriceWithChargesET = REC_veh_optionspricings.basePriceWithChargesET,
+basePriceWithChargesIT = REC_veh_optionspricings.basePriceWithChargesIT,
+basePriceWithChargesIncludeVAT = REC_veh_optionspricings.basePriceWithChargesIncludeVAT
 
-        where tech_id = REC_veh_optionspricings_VP.tech_id
-        and code = REC_veh_optionspricings_VP.code  ;
+        where  code = REC_veh_optionspricings.code  
+        and itemDirectoryVehicleRef = REC_veh_optionspricings.itemDirectoryVehicleRef------ AJOUT POUR JOINTURE  
+        and versionYear = REC_veh_optionspricings.versionYear------ AJOUT POUR JOINTURE  
+        and versionTrimester = REC_veh_optionspricings.versionTrimester------ AJOUT POUR JOINTURE  
+        and generation = REC_veh_optionspricings.generation-- add
+        and DIMENSIONS = REC_veh_optionspricings.DIMENSIONS  -- add
+        and MODEL_GEN = REC_veh_optionspricings.MODEL_GEN  ;-- add
+
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
     --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
@@ -3479,110 +3538,7 @@ basePriceWithChargesIncludeVAT = REC_veh_optionspricings_VP.basePriceWithCharges
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_optionspricings','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
-   
-   ---------------------------VU
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VU : ',' ');  
 
-
-  FOR REC_veh_optionspricings_VU IN C_veh_optionspricings_VU
-  LOOP
-
-       /*************************************************************************/
-        BEGIN
-
-        IF V_ERR=1 THEN EXIT;
-        END IF;
-
-        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
-        END IF;
-        
-
-        INSERT INTO MKTREF.MKTQT_veh_optionspricings
-              (
-tech_id,
-code,
-territorialityCode,
-pricebookCode,
-pricebookType,
-pricebookTypeCustomer,
-pricebookStartDate,
-pricebookEndDate,
-vatAmount,
-currency,
-priceET,
-priceIT,
-priceIncludeVAT,
-basePriceWithChargesET,
-basePriceWithChargesIT,
-basePriceWithChargesIncludeVAT
-              )
-        VALUES
-              (  
-REC_veh_optionspricings_VU.tech_id,
-REC_veh_optionspricings_VU.code,
-REC_veh_optionspricings_VU.territorialityCode,
-REC_veh_optionspricings_VU.pricebookCode,
-REC_veh_optionspricings_VU.pricebookType,
-REC_veh_optionspricings_VU.pricebookTypeCustomer,
-REC_veh_optionspricings_VU.pricebookStartDate,
-REC_veh_optionspricings_VU.pricebookEndDate,
-REC_veh_optionspricings_VU.vatAmount,
-REC_veh_optionspricings_VU.currency,
-REC_veh_optionspricings_VU.priceET,
-REC_veh_optionspricings_VU.priceIT,
-REC_veh_optionspricings_VU.priceIncludeVAT,
-REC_veh_optionspricings_VU.basePriceWithChargesET,
-REC_veh_optionspricings_VU.basePriceWithChargesIT,
-REC_veh_optionspricings_VU.basePriceWithChargesIncludeVAT
-              );
-
-        V_INS := V_INS + 1;
-
-        EXCEPTION
-        WHEN DUP_VAL_ON_INDEX THEN
-				Update  MKTREF.MKTQT_veh_optionspricings
-        Set       
-territorialityCode = REC_veh_optionspricings_VU.territorialityCode,
-pricebookCode = REC_veh_optionspricings_VU.pricebookCode,
-pricebookType = REC_veh_optionspricings_VU.pricebookType,
-pricebookTypeCustomer = REC_veh_optionspricings_VU.pricebookTypeCustomer,
-pricebookStartDate = REC_veh_optionspricings_VU.pricebookStartDate,
-pricebookEndDate = REC_veh_optionspricings_VU.pricebookEndDate,
-vatAmount = REC_veh_optionspricings_VU.vatAmount,
-currency = REC_veh_optionspricings_VU.currency,
-priceET = REC_veh_optionspricings_VU.priceET,
-priceIT = REC_veh_optionspricings_VU.priceIT,
-priceIncludeVAT = REC_veh_optionspricings_VU.priceIncludeVAT,
-basePriceWithChargesET = REC_veh_optionspricings_VU.basePriceWithChargesET,
-basePriceWithChargesIT = REC_veh_optionspricings_VU.basePriceWithChargesIT,
-basePriceWithChargesIncludeVAT = REC_veh_optionspricings_VU.basePriceWithChargesIncludeVAT
-
-        where tech_id = REC_veh_optionspricings_VU.tech_id
-        and code = REC_veh_optionspricings_VU.code  ;
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-     --   and V_DATE_SITU  =  Date_situ 
-      --  and Code_pays = 'UK';
-
-
-        V_UPD := V_UPD + 1;
-        
-        WHEN OTHERS THEN
-				COMMIT;
-				V_ERR := 1;
-
-				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_optionspricings','Message Erreur pl/sql :'||Sqlerrm,'E');
-        RETURN V_ERR;
-        END;
-   END LOOP;
-
-   COMMIT;
-
-   V_INSERTS := V_INS;
-   V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_veh_optionspricings','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS)); 
    
    
    UTL_FILE.FCLOSE(FILE_ID);
@@ -3620,11 +3576,14 @@ BEGIN
 
   Cursor C_veh_baseEquipments Is
 Select distinct
-veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
-itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 A.optioncode as externalRef, 
 NULL as typeCategoryCode,
 'en_GB' as language,
@@ -3637,11 +3596,14 @@ and A.optioncode = B.optioncode  (+)
 union
 
 Select distinct
-veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
-itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
+tech_id,    ------ AJOUT POUR JOINTURE
+itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
+versionYear,------ AJOUT POUR JOINTURE  
+versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 A.optioncode as externalRef, 
 NULL as typeCategoryCode,
 'en_GB' as language,
@@ -3685,6 +3647,7 @@ where A.optioncode = B.optioncode   ;
   BEGIN
 
     File_Id := mkt.mktqaut.F_Open(Nomlog);
+    Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_baseEquipments','------------------------------BEGIN------------------------------##');
   Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_veh_baseEquipments','## Alimentation de la table MKTREF.MKTQT_veh_baseEquipments ##');
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_veh_baseEquipments','## Flux BILAN   ##');
   
@@ -3717,6 +3680,9 @@ tech_id,    ------ AJOUT POUR JOINTURE
 itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 versionYear,------ AJOUT POUR JOINTURE  
 versionTrimester,------ AJOUT POUR JOINTURE  
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
 VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 externalRef,
 typeCategoryCode,
@@ -3730,6 +3696,9 @@ REC_veh_baseEquipments.tech_id,    ------ AJOUT POUR JOINTURE
 REC_veh_baseEquipments.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
 REC_veh_baseEquipments.versionYear,------ AJOUT POUR JOINTURE  
 REC_veh_baseEquipments.versionTrimester,------ AJOUT POUR JOINTURE  
+REC_veh_baseEquipments.generation,-- add
+REC_veh_baseEquipments.DIMENSIONS,  -- add
+REC_veh_baseEquipments.MODEL_GEN,-- add
 REC_veh_baseEquipments.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 REC_veh_baseEquipments.externalRef,
 REC_veh_baseEquipments.typeCategoryCode,
@@ -3753,7 +3722,12 @@ label= REC_veh_baseEquipments.label
         where  externalRef          =      REC_veh_baseEquipments.externalRef 
         and  itemDirectoryVehicleRef = REC_veh_baseEquipments.itemDirectoryVehicleRef 
         and versionYear = REC_veh_baseEquipments.versionYear
-        and versionTrimester = REC_veh_baseEquipments.versionTrimester ;
+        and versionTrimester = REC_veh_baseEquipments.versionTrimester
+        and generation = REC_veh_baseEquipments.generation-- add
+        and DIMENSIONS = REC_veh_baseEquipments.DIMENSIONS  -- add
+        and MODEL_GEN = REC_veh_baseEquipments.MODEL_GEN ;-- add
+
+        
          
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -3817,8 +3791,6 @@ BEGIN
 
   Cursor C_transco_model_gen Is
  
- 
-  
  select  distinct
  
                  BRAND_CODE     as  parent,  -- brandCode
@@ -4984,10 +4956,697 @@ REC_transco.countryScope
     
   END UPDATE_transco_model;
 
+--------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
 
+  FUNCTION ALIM_ABSENT_BLVD (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_ABSENT_BLVD Is
+  
+select  distinct
+TECH_ID as TECH_ID, 
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+versionYear	as versionYear,
+versionTrimester as versionTrimester,
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE as VEHICULE_TYPE,
+BRANDCODE || '/' || MODEL_GEN || '/' ||  KINDCODE || '/' ||DIMENSIONS || '/' ||door_seat ||'/'|| TRIM || '/' || energyCombCode|| '/' ||MOTORISATIONBLVD ||'/' || year_trimester AS BLVD,
+brandLabel || '/' ||  familyLabel AS COMPOSANTS_MODEL_GEN,
+maximumPowerDin || '/' ||  transmissionTypeCode || '/'|| gearBoxTypeCode AS COMPOSANTS_motorisation
+
+from MKTQT_VEH
+where  brandcode is  null 
+or brandLabel is  null 
+or familyLabel is  null 
+or KINDCODE is  null 
+or bodyCode is  null 
+or TRIM is  null 
+or energyCombCode is  null 
+or maximumPowerDin is  null 
+or transmissionTypeCode is  null 
+or gearBoxTypeCode is  null 
+or year_trimester is  null
+;
+
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+    Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_BLVD','----------------------BEGIN------------------------------');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_BLVD','## Alimentation de la table MKTREF.MKTQT_ABSENT_BLVD ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_BLVD','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
+
+  FOR REC_ABSENT_BLVD IN C_ABSENT_BLVD
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_ABSENT_BLVD
+              (   
+tech_id, 
+itemDirectoryVehicleRef,
+versionYear,
+versionTrimester,
+generation,-- add
+DIMENSIONS,  -- add
+MODEL_GEN,-- add
+VEHICULE_TYPE,
+BLVD,
+COMPOSANTS_MODEL_GEN,
+COMPOSANTS_motorisation
+              )
+        VALUES
+              (  
+REC_ABSENT_BLVD.tech_id,
+REC_ABSENT_BLVD.itemDirectoryVehicleRef,
+REC_ABSENT_BLVD.versionYear,
+REC_ABSENT_BLVD.versionTrimester,
+REC_ABSENT_BLVD.generation,-- add
+REC_ABSENT_BLVD.DIMENSIONS,-- add
+REC_ABSENT_BLVD.MODEL_GEN,-- add
+REC_ABSENT_BLVD.VEHICULE_TYPE,
+REC_ABSENT_BLVD.BLVD,
+REC_ABSENT_BLVD.COMPOSANTS_MODEL_GEN,
+REC_ABSENT_BLVD.COMPOSANTS_motorisation
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_ABSENT_BLVD
+        Set       
+        tech_id = REC_ABSENT_BLVD.tech_id ,
+        VEHICULE_TYPE = REC_ABSENT_BLVD.VEHICULE_TYPE,
+        COMPOSANTS_MODEL_GEN = REC_ABSENT_BLVD.COMPOSANTS_MODEL_GEN,
+        COMPOSANTS_motorisation = REC_ABSENT_BLVD.COMPOSANTS_motorisation
+
+        where   itemDirectoryVehicleRef = REC_ABSENT_BLVD.itemDirectoryVehicleRef
+        and     versionYear = REC_ABSENT_BLVD.versionYear
+        and     versionTrimester = REC_ABSENT_BLVD.versionTrimester 
+        and     generation = REC_ABSENT_BLVD.generation
+        and     DIMENSIONS = REC_ABSENT_BLVD.DIMENSIONS
+        and     MODEL_GEN = REC_ABSENT_BLVD.MODEL_GEN
+        and     BLVD = REC_ABSENT_BLVD.BLVD ;
+        
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_BLVD','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_BLVD','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+
+          
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_ABSENT_BLVD;
 
 	
+
+  FUNCTION ALIM_ABSENT_MODEL (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+
+  Cursor C_ABSENT_MODEL Is
+  select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.familyCode, veh.familyLabel, veh.versionLabelLocalShort, 'C' || capder.rancode as code_rancode, 'VP' as VEHICULE_TYPE 
+from mktqt_veh veh, mktqt_capder_vp capder
+where veh.tech_id = capder.id and (veh.familyCode is null or veh.familyLabel is null or veh.versionLabelLocalShort is null) and veh.VEHICULE_TYPE = 'VP'
+union
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.familyCode, veh.familyLabel, veh.versionLabelLocalShort, 'L' || capder.rancode as code_rancode, 'VU' as VEHICULE_TYPE 
+from mktqt_veh veh, mktqt_capder_vu capder
+where veh.tech_id = capder.id and (veh.familyCode is null or veh.familyLabel is null or veh.versionLabelLocalShort is null) and veh.VEHICULE_TYPE = 'VU'
+  ;
+  
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_MODEL','------------------------------BEGIN------------------------------##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_MODEL','## Alimentation de la table MKTREF.MKTQT_ABSENT_MODEL ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_MODEL','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_ABSENT_MODEL IN C_ABSENT_MODEL
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_ABSENT_MODEL
+              (   
+tech_id,
+itemDirectoryVehicleRef,
+familyCode,
+familyLabel,
+versionLabelLocalShort,
+code_rancode,
+VEHICULE_TYPE
+              )
+        VALUES
+              (  
+REC_ABSENT_MODEL.tech_id,
+REC_ABSENT_MODEL.itemDirectoryVehicleRef,
+REC_ABSENT_MODEL.familyCode,
+REC_ABSENT_MODEL.familyLabel,
+REC_ABSENT_MODEL.versionLabelLocalShort,
+REC_ABSENT_MODEL.code_rancode,
+REC_ABSENT_MODEL.VEHICULE_TYPE
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_ABSENT_MODEL
+        Set       
+
+tech_id = REC_ABSENT_MODEL.tech_id,
+familyCode = REC_ABSENT_MODEL.familyCode,
+familyLabel = REC_ABSENT_MODEL.familyLabel,
+versionLabelLocalShort = REC_ABSENT_MODEL.versionLabelLocalShort,
+VEHICULE_TYPE = REC_ABSENT_MODEL.VEHICULE_TYPE
+
+        where itemDirectoryVehicleRef = REC_ABSENT_MODEL.itemDirectoryVehicleRef
+        and code_rancode = REC_ABSENT_MODEL.code_rancode;
+        
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+     --   and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_MODEL','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_MODEL','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_ABSENT_MODEL;
+
+ 
+ 
+ 
+  FUNCTION ALIM_ABSENT_SEGMENT (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+
+  Cursor C_ABSENT_SEGMENT Is
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.segmentMarketingCode, capder.vehiclesector, 'VP' as VEHICULE_TYPE 
+from mktqt_veh veh, mktqt_capder_vp capder
+where veh.tech_id = capder.id and veh.segmentMarketingCode is null and veh.VEHICULE_TYPE = 'VP' and capder.vehiclesector is not null
+union
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.segmentMarketingCode, capder.vehiclesector, 'VU' as VEHICULE_TYPE
+from mktqt_veh veh, mktqt_capder_vu capder
+where veh.tech_id = capder.id and veh.segmentMarketingCode is null and veh.VEHICULE_TYPE = 'VU' and capder.vehiclesector is not null
+  ;
+  
+  
+  
+  
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_SEGMENT','------------------------------BEGIN------------------------------##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_SEGMENT','## Alimentation de la table MKTREF.MKTQT_ABSENT_SEGMENT ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_SEGMENT','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_ABSENT_SEGMENT IN C_ABSENT_SEGMENT
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_ABSENT_SEGMENT
+              (   
+tech_id					,
+itemDirectoryVehicleRef			,
+segmentMarketingCode		,
+vehiclesector				,
+VEHICULE_TYPE				
+              )
+        VALUES
+              (  
+REC_ABSENT_SEGMENT.tech_id					,
+REC_ABSENT_SEGMENT.itemDirectoryVehicleRef			,
+REC_ABSENT_SEGMENT.segmentMarketingCode		,
+REC_ABSENT_SEGMENT.vehiclesector				,
+REC_ABSENT_SEGMENT.VEHICULE_TYPE				
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_ABSENT_SEGMENT
+        Set       
+
+tech_id = REC_ABSENT_SEGMENT.tech_id					,
+segmentMarketingCode = REC_ABSENT_SEGMENT.segmentMarketingCode		,
+VEHICULE_TYPE = REC_ABSENT_SEGMENT.VEHICULE_TYPE
+
+        where itemDirectoryVehicleRef = REC_ABSENT_SEGMENT.itemDirectoryVehicleRef			
+        and vehiclesector = REC_ABSENT_SEGMENT.vehiclesector				;
+        
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+     --   and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_SEGMENT','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_SEGMENT','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_ABSENT_SEGMENT;
+ 
+
+
+
+  FUNCTION ALIM_ABSENT_transmission (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+
+  Cursor C_ABSENT_transmission Is
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.transmissionTypeCode, capder.drivetrain, 'VP' as VEHICULE_TYPE
+from mktqt_veh veh, mktqt_capder_vp capder
+where veh.tech_id = capder.id and veh.transmissionTypeCode is null and veh.VEHICULE_TYPE= 'VP'
+union
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.transmissionTypeCode, capder.drivetrain, 'VU' as VEHICULE_TYPE 
+from mktqt_veh veh, mktqt_capder_vu capder
+where veh.tech_id = capder.id and veh.transmissionTypeCode is null and veh.VEHICULE_TYPE = 'VU'
+  ;
+  
+  
+  
+  
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_transmission','------------------------------BEGIN------------------------------##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_transmission','## Alimentation de la table MKTREF.MKTQT_ABSENT_transmission##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_transmission','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_ABSENT_transmission IN C_ABSENT_transmission
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_ABSENT_transmission
+              (   
+tech_id					,
+itemDirectoryVehicleRef			,
+transmissionTypeCode			,
+drivetrain			,
+VEHICULE_TYPE			
+              )
+        VALUES
+              (  
+REC_ABSENT_transmission.tech_id					,
+REC_ABSENT_transmission.itemDirectoryVehicleRef			,
+REC_ABSENT_transmission.transmissionTypeCode			,
+REC_ABSENT_transmission.drivetrain			,
+REC_ABSENT_transmission.VEHICULE_TYPE			
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_ABSENT_transmission
+        Set       
+
+tech_id = REC_ABSENT_transmission.tech_id					,
+transmissionTypeCode = REC_ABSENT_transmission.transmissionTypeCode			,
+VEHICULE_TYPE = REC_ABSENT_transmission.VEHICULE_TYPE
+
+        where itemDirectoryVehicleRef = REC_ABSENT_transmission.itemDirectoryVehicleRef			
+        and drivetrain = REC_ABSENT_transmission.drivetrain			;
+        
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+     --   and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_transmission','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_transmission','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_ABSENT_transmission;
+
+
+  FUNCTION ALIM_ABSENT_TRIM (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+
+  Cursor C_ABSENT_TRIM Is
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.trimLevel, capder.trimcode, veh.trim as TRIM_ID, 'VP' as VEHICULE_TYPE --, captrim.code, captrim.name
+from mktqt_veh veh, mktqt_capder_vp capder, mktqt_captrim_vp captrim
+where veh.tech_id = capder.id and veh.trimLevel is null and veh.VEHICULE_TYPE ='VP'  -- and capder.trimcode is  null
+and captrim.code(+) = CAPDER.TrimCode -- captrim.code existe toujours dans captrim_vp et capder.trimcode existe toujours dans capder_vp
+union
+select distinct veh.tech_id, veh.itemDirectoryVehicleRef, veh.trimLevel, capder.trimcode, veh.trim as TRIM_ID, 'VU' as VEHICULE_TYPE  --, captrim.code, captrim.name
+from mktqt_veh veh, mktqt_capder_vu capder, mktqt_captrim_vu captrim
+where veh.tech_id = capder.id and veh.trimLevel is null and veh.VEHICULE_TYPE = 'VU' and capder.trimcode is not null
+and captrim.code(+) = CAPDER.TrimCode -- captrim.code existe toujours dans captrim_vu et capder.trimcode peut ne pas exister dasn capder_vu
+
+  ;
+  
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_TRIM','------------------------------BEGIN------------------------------##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_TRIM','## Alimentation de la table MKTREF.MKTQT_ABSENT_TRIM ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_TRIM','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_ABSENT_TRIM IN C_ABSENT_TRIM
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_ABSENT_TRIM
+              (   
+tech_id				,
+itemDirectoryVehicleRef			,
+trimLevel				,
+trimcode			,
+TRIM_ID				,
+VEHICULE_TYPE			
+              )
+        VALUES
+              (  
+REC_ABSENT_TRIM.tech_id				,
+REC_ABSENT_TRIM.itemDirectoryVehicleRef			,
+REC_ABSENT_TRIM.trimLevel				,
+REC_ABSENT_TRIM.trimcode			,
+REC_ABSENT_TRIM.TRIM_ID				,
+REC_ABSENT_TRIM.VEHICULE_TYPE		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_ABSENT_TRIM
+        Set       
+
+tech_id = REC_ABSENT_TRIM.tech_id				,
+trimLevel = REC_ABSENT_TRIM.trimLevel				,
+VEHICULE_TYPE = REC_ABSENT_TRIM.VEHICULE_TYPE	
+
+        where itemDirectoryVehicleRef = REC_ABSENT_TRIM.itemDirectoryVehicleRef
+        and trimcode = REC_ABSENT_TRIM.trimcode
+        and TRIM_ID = REC_ABSENT_TRIM.TRIM_ID				;
+        
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+     --   and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_ABSENT_TRIM','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_ABSENT_TRIM','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+
+   
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_ABSENT_TRIM;
+
+ 
+
+
+    
 	FUNCTION EXPORT_VEH(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
 
 		V_ERR                NUMBER := 0;	
@@ -5001,9 +5660,92 @@ REC_transco.countryScope
         
 
 		Cursor C_mktqt_veh Is 
-		SELECT  *   FROM MKTREF.MKTQT_VEH
-        order by tech_id
-        ;  
+		SELECT  
+tech_id as tech_id,
+tech_dateExtraction as tech_dateExtraction,
+tech_dateInsertion as tech_dateInsertion,
+countryCode as countryCode,
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+versionState as versionState,
+validityStartDate as validityStartDate,
+validityEndDate as validityEndDate,
+corporateGroupCode as corporateGroupCode,
+corporateGroupLabel as corporateGroupLabel,
+brandCode as brandCode,
+brandLabel as brandLabel,
+familyCode as familyCode,
+familyLabel as familyLabel,
+generation as generation,
+versionYear as versionYear,
+versionTrimester as versionTrimester,
+segmentMarketingCode as segmentMarketingCode,
+faceLiftGeneration as faceLiftGeneration,
+kindCode as kindCode,
+bodyCode as bodyCode,
+height as height,
+length as length,
+sportinessFlag as sportinessFlag,
+co2EmissionNEDC as co2EmissionNEDC,
+co2EmissionWLTP as co2EmissionWLTP,
+co2ClassCode as co2ClassCode,
+fiscalHorsePower as fiscalHorsePower,
+maximumPowerDin as maximumPowerDin,
+maximumPowerKW as maximumPowerKW,
+energy1Code as energy1Code,
+energy1DetailCode as energy1DetailCode,
+energy2Code as energy2Code,
+energy2DetailCode as energy2DetailCode,
+energyCombCode as energyCombCode,
+motorisation as motorisation,
+motorisationComb as motorisationComb,
+cubicCapacity as cubicCapacity,
+transmissionTypeCode as transmissionTypeCode,
+gearBoxTypeCode as gearBoxTypeCode,
+nbRapports as nbRapports,
+typeVariantVersion as typeVariantVersion,
+trimLevel as trimLevel,
+seatNumber as seatNumber,
+doorNumber as doorNumber,
+nedcCombineFuelConsumption as nedcCombineFuelConsumption,
+nedcExtraUrbanFuelConsumption as nedcExtraUrbanFuelConsumption,
+nedcUrbanFuelConsumption as nedcUrbanFuelConsumption,
+wltpLowFuelConsumption as wltpLowFuelConsumption,
+wltpMediumFuelConsumption as wltpMediumFuelConsumption,
+wltpHighFuelConsumption as wltpHighFuelConsumption,
+wltpExtraHighConsumption as wltpExtraHighConsumption,
+wltpCombinedFuelConsumption as wltpCombinedFuelConsumption,
+wltpElectricConsumption as wltpElectricConsumption,
+wltpElectricRange as wltpElectricRange,
+batteryCapacity as batteryCapacity,
+maxLadenWeight as maxLadenWeight,
+kerbWeight as kerbWeight,
+payLoad as payLoad,
+hasTelematicBox as hasTelematicBox,
+catalogueDetail as catalogueDetail,
+tsnNumber as tsnNumber,
+wltpFlag as wltpFlag,
+completenessFlag as completenessFlag,
+validationUser as validationUser,
+validationDate as validationDate,
+updateUser as updateUser,
+updateDate as updateDate,
+purchaseCondition as purchaseCondition,
+designBases as designBases,
+designCustomerShip as designCustomerShip,
+versionLabelGlobalShort as versionLabelGlobalShort,
+versionLabeGlobalLong as versionLabeGlobalLong,
+versionLabelLocalShort as versionLabelLocalShort,
+versionLabelLocalLong as versionLabelLocalLong,
+VEHICULE_TYPE as VEHICULE_TYPE,
+MODEL_GEN as MODEL_GEN,
+TRIM as TRIM,
+MOTORISATIONBLVD as MOTORISATIONBLVD,
+DIMENSIONS as DIMENSIONS --,
+--door_seat as door_seat,
+--year_trimester as year_trimester,
+--effectivefrom as effectivefrom
+
+        FROM MKTREF.MKTQT_VEH ;  
 
 
 		BEGIN
@@ -5012,7 +5754,7 @@ REC_transco.countryScope
 			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
 			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_VEH', ' ## MISE A DISPOSITION du fichier ##');
 
- 			V_LIGNE := 'TECH_ID|TECH_DATEEXTRACTION|TECH_DATEINSERTION|COUNTRYCODE|ITEMDIRECTORYVEHICLEREF|VERSIONSTATE|VALIDITYSTARTDATE|VALIDITYENDDATE|CORPORATEGROUPCODE|CORPORATEGROUPLABEL|BRANDCODE|BRANDLABEL|FAMILYCODE|FAMILYLABEL|GENERATION|VERSIONYEAR|VERSIONTRIMESTER|SEGMENTMARKETINGCODE|FACELIFTGENERATION|KINDCODE|BODYCODE|HEIGHT|LENGTH|SPORTINESSFLAG|CO2EMISSIONNEDC|CO2EMISSIONWLTP|CO2CLASSCODE|FISCALHORSEPOWER|MAXIMUMPOWERDIN|MAXIMUMPOWERKW|ENERGY1CODE|ENERGY1DETAILCODE|ENERGY2CODE|ENERGY2DETAILCODE|ENERGYCOMBCODE|MOTORISATION|MOTORISATIONCOMB|CUBICCAPACITY|TRANSMISSIONTYPECODE|GEARBOXTYPECODE|NBRAPPORTS|TYPEVARIANTVERSION|TRIMLEVEL|SEATNUMBER|DOORNUMBER|NEDCCOMBINEFUELCONSUMPTION|NEDCEXTRAURBANFUELCONSUMPTION|NEDCURBANFUELCONSUMPTION|WLTPLOWFUELCONSUMPTION|WLTPMEDIUMFUELCONSUMPTION|WLTPHIGHFUELCONSUMPTION|WLTPEXTRAHIGHCONSUMPTION|WLTPCOMBINEDFUELCONSUMPTION|WLTPELECTRICCONSUMPTION|WLTPELECTRICRANGE|BATTERYCAPACITY|MAXLADENWEIGHT|KERBWEIGHT|PAYLOAD|HASTELEMATICBOX|CATALOGUEDETAIL|TSNNUMBER|WLTPFLAG|COMPLETENESSFLAG|VALIDATIONUSER|VALIDATIONDATE|UPDATEUSER|UPDATEDATE|PURCHASECONDITION|DESIGNBASES|DESIGNCUSTOMERSHIP|VERSIONLABELGLOBALSHORT|VERSIONLABEGLOBALLONG|VERSIONLABELLOCALSHORT|VERSIONLABELLOCALLONG'; --|MODEL_GEN|TRIM|MOTORISATIONBLVD|DIMENSIONS'; 
+ 			V_LIGNE := 'TECH_ID|TECH_DATEEXTRACTION|TECH_DATEINSERTION|COUNTRYCODE|ITEMDIRECTORYVEHICLEREF|VERSIONSTATE|VALIDITYSTARTDATE|VALIDITYENDDATE|CORPORATEGROUPCODE|CORPORATEGROUPLABEL|BRANDCODE|BRANDLABEL|FAMILYCODE|FAMILYLABEL|GENERATION|VERSIONYEAR|VERSIONTRIMESTER|SEGMENTMARKETINGCODE|FACELIFTGENERATION|KINDCODE|BODYCODE|HEIGHT|LENGTH|SPORTINESSFLAG|CO2EMISSIONNEDC|CO2EMISSIONWLTP|CO2CLASSCODE|FISCALHORSEPOWER|MAXIMUMPOWERDIN|MAXIMUMPOWERKW|ENERGY1CODE|ENERGY1DETAILCODE|ENERGY2CODE|ENERGY2DETAILCODE|ENERGYCOMBCODE|MOTORISATION|MOTORISATIONCOMB|CUBICCAPACITY|TRANSMISSIONTYPECODE|GEARBOXTYPECODE|NBRAPPORTS|TYPEVARIANTVERSION|TRIMLEVEL|SEATNUMBER|DOORNUMBER|NEDCCOMBINEFUELCONSUMPTION|NEDCEXTRAURBANFUELCONSUMPTION|NEDCURBANFUELCONSUMPTION|WLTPLOWFUELCONSUMPTION|WLTPMEDIUMFUELCONSUMPTION|WLTPHIGHFUELCONSUMPTION|WLTPEXTRAHIGHCONSUMPTION|WLTPCOMBINEDFUELCONSUMPTION|WLTPELECTRICCONSUMPTION|WLTPELECTRICRANGE|BATTERYCAPACITY|MAXLADENWEIGHT|KERBWEIGHT|PAYLOAD|HASTELEMATICBOX|CATALOGUEDETAIL|TSNNUMBER|WLTPFLAG|COMPLETENESSFLAG|VALIDATIONUSER|VALIDATIONDATE|UPDATEUSER|UPDATEDATE|PURCHASECONDITION|DESIGNBASES|DESIGNCUSTOMERSHIP|VERSIONLABELGLOBALSHORT|VERSIONLABEGLOBALLONG|VERSIONLABELLOCALSHORT|VERSIONLABELLOCALLONG|MODEL_GEN|TRIM|MOTORISATIONBLVD|DIMENSIONS'; 
  			
 			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
 
@@ -5023,7 +5765,7 @@ REC_transco.countryScope
 					END IF;
 				
 					V_LIGNE := 
-						S_mktqt_veh.tech_id || '|' ||
+S_mktqt_veh.tech_id || '|' ||
 S_mktqt_veh.tech_dateExtraction || '|' ||
 S_mktqt_veh.tech_dateInsertion || '|' ||
 S_mktqt_veh.countryCode || '|' ||
@@ -5097,11 +5839,11 @@ S_mktqt_veh.designCustomerShip || '|' ||
 S_mktqt_veh.versionLabelGlobalShort || '|' ||
 S_mktqt_veh.versionLabeGlobalLong || '|' ||
 S_mktqt_veh.versionLabelLocalShort || '|' ||
-S_mktqt_veh.versionLabelLocalLong || '|' ;
---S_mktqt_veh.MODEL_GEN || '|' ||
---S_mktqt_veh.TRIM || '|' ||
---S_mktqt_veh.MOTORISATIONBLVD || '|' ||
---S_mktqt_veh.DIMENSIONS || '|' ;
+S_mktqt_veh.versionLabelLocalLong  || '|' ||
+S_mktqt_veh.MODEL_GEN || '|' ||
+S_mktqt_veh.TRIM || '|' ||
+S_mktqt_veh.MOTORISATIONBLVD || '|' ||
+S_mktqt_veh.DIMENSIONS  ;
 											 
 
 					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
@@ -5151,8 +5893,19 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 		RES       NUMBER := 0;			
 
 
-		Cursor C_mktqt_veh Is 
-		SELECT  *   FROM MKTREF.MKTQT_veh_crossRefs
+		Cursor C_mktqt_crossRefs Is 
+		SELECT  
+tech_id			as tech_id			,
+itemDirectoryVehicleRef as itemDirectoryVehicleRef ,
+versionYear		as versionYear		,
+versionTrimester	as versionTrimester	,
+VEHICULE_TYPE		as VEHICULE_TYPE		,
+generation		as generation		,
+DIMENSIONS		as DIMENSIONS		,
+MODEL_GEN		as MODEL_GEN		,
+BLVD		as BLVD		
+  
+        FROM MKTREF.MKTQT_veh_crossRefs
         order by tech_id
         ;  
 
@@ -5163,11 +5916,11 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
 			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_crossRefs', ' ## MISE A DISPOSITION du fichier ##');
 
- 			V_LIGNE := 'TECH_ID|BLDV'; 
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|VEHICULE_TYPE|generation|DIMENSIONS|MODEL_GEN|BLVD'; 
  			
 			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
 
-			FOR S_mktqt_veh IN C_mktqt_veh LOOP 
+			FOR S_mktqt_crossRefs IN C_mktqt_crossRefs LOOP 
 
 				BEGIN
 					IF V_ERR=1 THEN EXIT;
@@ -5175,8 +5928,15 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 				
 					V_LIGNE := 
                     
-                    S_mktqt_veh.tech_id  || '|' ||
-                    S_mktqt_veh.BLVD || '|' ;
+S_mktqt_crossRefs.tech_id			        || '|' || 
+S_mktqt_crossRefs.itemDirectoryVehicleRef || '|' || 
+S_mktqt_crossRefs.versionYear		    || '|' || 
+S_mktqt_crossRefs.versionTrimester	|| '|' || 
+S_mktqt_crossRefs.VEHICULE_TYPE		|| '|' || 
+S_mktqt_crossRefs.generation		|| '|' || 
+S_mktqt_crossRefs.DIMENSIONS		|| '|' || 
+S_mktqt_crossRefs.MODEL_GEN		|| '|' || 
+S_mktqt_crossRefs.BLVD		;
 						
 											 
 
@@ -5215,10 +5975,764 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 
 
 
+	
+	FUNCTION EXPORT_veh_pricings(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh_pricings Is 
+		SELECT  
+tech_id,    
+itemDirectoryVehicleRef, 
+versionYear,  
+versionTrimester,
+generation,
+DIMENSIONS, 
+MODEL_GEN,
+VEHICULE_TYPE, 
+tariffAreaCode,
+priceCode,
+priceType,
+priceTypeCustomer,
+priceStartDate,
+priceEndDate,
+vatAmount,
+priceET,
+priceIT,
+priceIncludeVAT,
+currency,
+immAmount,
+immRate,
+novaAmount,
+novaRate,
+priceWithoutOtrCostIT,
+priceWithoutOtrCostET,
+priceWithoutOtrCostIncludeVAT
+
+from MKTREF.MKTQT_veh_pricings ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_veh_pricings', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|generation|DIMENSIONS|MODEL_GEN|VEHICULE_TYPE|tariffAreaCode|priceCode|priceType|priceTypeCustomer|priceStartDate|priceEndDate|vatAmount|priceET|priceIT|priceIncludeVAT|currency|immAmount|immRate|novaAmount|novaRate|priceWithoutOtrCostIT|priceWithoutOtrCostET|priceWithoutOtrCostIncludeVAT'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh_pricings IN C_mktqt_veh_pricings LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+S_mktqt_veh_pricings.tech_id       || '|' ||
+S_mktqt_veh_pricings.itemDirectoryVehicleRef    || '|' ||
+S_mktqt_veh_pricings.versionYear     || '|' ||
+S_mktqt_veh_pricings.versionTrimester   || '|' ||
+S_mktqt_veh_pricings.generation   || '|' ||
+S_mktqt_veh_pricings.DIMENSIONS    || '|' ||
+S_mktqt_veh_pricings.MODEL_GEN   || '|' ||
+S_mktqt_veh_pricings.VEHICULE_TYPE    || '|' ||
+S_mktqt_veh_pricings.tariffAreaCode   || '|' ||
+S_mktqt_veh_pricings.priceCode   || '|' ||
+S_mktqt_veh_pricings.priceType   || '|' ||
+S_mktqt_veh_pricings.priceTypeCustomer   || '|' ||
+S_mktqt_veh_pricings.priceStartDate   || '|' ||
+S_mktqt_veh_pricings.priceEndDate   || '|' ||
+S_mktqt_veh_pricings.vatAmount   || '|' ||
+S_mktqt_veh_pricings.priceET   || '|' ||
+S_mktqt_veh_pricings.priceIT   || '|' ||
+S_mktqt_veh_pricings.priceIncludeVAT   || '|' ||
+S_mktqt_veh_pricings.currency   || '|' ||
+S_mktqt_veh_pricings.immAmount   || '|' ||
+S_mktqt_veh_pricings.immRate   || '|' ||
+S_mktqt_veh_pricings.novaAmount   || '|' ||
+S_mktqt_veh_pricings.novaRate   || '|' ||
+S_mktqt_veh_pricings.priceWithoutOtrCostIT   || '|' ||
+S_mktqt_veh_pricings.priceWithoutOtrCostET   || '|' ||
+S_mktqt_veh_pricings.priceWithoutOtrCostIncludeVAT  ;
+
+						
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_pricings ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'v', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_veh_pricings','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_veh_pricings;
 
 
 
 
+
+	
+	FUNCTION EXPORT_veh_options(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh_options Is 
+		SELECT  
+tech_id,   
+itemDirectoryVehicleRef,
+versionYear, 
+versionTrimester,  
+generation,
+DIMENSIONS,  
+MODEL_GEN,
+VEHICULE_TYPE,  
+code,
+constructorCode,
+typeCode,
+isPack,
+isAgregated,
+startDate,
+endDate --,
+--description, 
+--longdescription, 
+--effectivefrom, 
+--effectiveto, 
+--basic  
+        FROM MKTREF.MKTQT_veh_options ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_veh_options', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|generation|DIMENSIONS|MODEL_GEN|VEHICULE_TYPE|code|constructorCode|typeCode|isPack|isAgregated|startDate|endDate';   --|description|longdescription|effectivefrom|effectiveto|basic'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh_options IN C_mktqt_veh_options LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+S_mktqt_veh_options.tech_id     || '|' ||
+S_mktqt_veh_options.itemDirectoryVehicleRef  || '|' ||
+S_mktqt_veh_options.versionYear   || '|' ||
+S_mktqt_veh_options.versionTrimester    || '|' ||
+S_mktqt_veh_options.generation  || '|' ||
+S_mktqt_veh_options.DIMENSIONS    || '|' ||
+S_mktqt_veh_options.MODEL_GEN  || '|' ||
+S_mktqt_veh_options.VEHICULE_TYPE    || '|' ||
+S_mktqt_veh_options.code  || '|' ||
+S_mktqt_veh_options.constructorCode  || '|' ||
+S_mktqt_veh_options.typeCode  || '|' ||
+S_mktqt_veh_options.isPack  || '|' ||
+S_mktqt_veh_options.isAgregated  || '|' ||
+S_mktqt_veh_options.startDate  || '|' ||
+S_mktqt_veh_options.endDate ;        -- || '|' ||
+--S_mktqt_veh_options.description       || '|' ||
+--S_mktqt_veh_options.longdescription   || '|' ||
+--S_mktqt_veh_options.effectivefrom     || '|' ||
+--S_mktqt_veh_options.effectiveto       || '|' ||
+--S_mktqt_veh_options.basic  	;
+						
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_options ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_options', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_veh_options','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_veh_options;
+
+
+
+	
+	FUNCTION EXPORT_veh_optionslabels(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh_optionslabels Is 
+		SELECT  
+tech_id,    
+itemDirectoryVehicleRef,
+versionYear, 
+versionTrimester,  
+generation,
+DIMENSIONS,  
+MODEL_GEN,
+VEHICULE_TYPE,
+code,
+language,
+labelShort,
+labelLong
+        FROM MKTREF.MKTQT_veh_optionslabels ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_veh_optionslabels', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|generation|DIMENSIONS|MODEL_GEN|VEHICULE_TYPE|code|language|labelShort|labelLong'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh_optionslabels IN C_mktqt_veh_optionslabels LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+S_mktqt_veh_optionslabels.tech_id     || '|' ||
+S_mktqt_veh_optionslabels.itemDirectoryVehicleRef || '|' ||
+S_mktqt_veh_optionslabels.versionYear  || '|' ||
+S_mktqt_veh_optionslabels.versionTrimester   || '|' ||
+S_mktqt_veh_optionslabels.generation || '|' ||
+S_mktqt_veh_optionslabels.DIMENSIONS   || '|' ||
+S_mktqt_veh_optionslabels.MODEL_GEN || '|' ||
+S_mktqt_veh_optionslabels.VEHICULE_TYPE || '|' ||
+S_mktqt_veh_optionslabels.code || '|' ||
+S_mktqt_veh_optionslabels.language || '|' ||
+S_mktqt_veh_optionslabels.labelShort || '|' ||
+S_mktqt_veh_optionslabels.labelLong 	;
+						
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_optionslabels ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_optionslabels', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_veh_optionslabels','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_veh_optionslabels;
+
+
+
+	
+	FUNCTION EXPORT_veh_optionspricings(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh_optionspricings Is 
+		SELECT  
+tech_id,   
+itemDirectoryVehicleRef, 
+versionYear, 
+versionTrimester,
+generation,
+DIMENSIONS,  
+MODEL_GEN,
+VEHICULE_TYPE,
+code,
+territorialityCode,
+pricebookCode,
+pricebookType,
+pricebookTypeCustomer,
+pricebookStartDate,
+pricebookEndDate,
+vatAmount,
+currency,
+priceET,
+priceIT,
+priceIncludeVAT,
+basePriceWithChargesET,
+basePriceWithChargesIT,
+basePriceWithChargesIncludeVAT
+        FROM MKTREF.MKTQT_veh_optionspricings ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_veh_optionspricings', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|generation|DIMENSIONS|MODEL_GEN|VEHICULE_TYPE|code|territorialityCode|pricebookCode|pricebookType|pricebookTypeCustomer|pricebookStartDate|pricebookEndDate|vatAmount|currency|priceET|priceIT|priceIncludeVAT|basePriceWithChargesET|basePriceWithChargesIT|basePriceWithChargesIncludeVAT'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh_optionspricings IN C_mktqt_veh_optionspricings LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+S_mktqt_veh_optionspricings.tech_id    || '|' ||
+S_mktqt_veh_optionspricings.itemDirectoryVehicleRef  || '|' ||
+S_mktqt_veh_optionspricings.versionYear  || '|' ||
+S_mktqt_veh_optionspricings.versionTrimester || '|' ||
+S_mktqt_veh_optionspricings.generation || '|' ||
+S_mktqt_veh_optionspricings.DIMENSIONS   || '|' ||
+S_mktqt_veh_optionspricings.MODEL_GEN || '|' ||
+S_mktqt_veh_optionspricings.VEHICULE_TYPE || '|' ||
+S_mktqt_veh_optionspricings.code || '|' ||
+S_mktqt_veh_optionspricings.territorialityCode || '|' ||
+S_mktqt_veh_optionspricings.pricebookCode || '|' ||
+S_mktqt_veh_optionspricings.pricebookType || '|' ||
+S_mktqt_veh_optionspricings.pricebookTypeCustomer || '|' ||
+S_mktqt_veh_optionspricings.pricebookStartDate || '|' ||
+S_mktqt_veh_optionspricings.pricebookEndDate || '|' ||
+S_mktqt_veh_optionspricings.vatAmount || '|' ||
+S_mktqt_veh_optionspricings.currency || '|' ||
+S_mktqt_veh_optionspricings.priceET || '|' ||
+S_mktqt_veh_optionspricings.priceIT || '|' ||
+S_mktqt_veh_optionspricings.priceIncludeVAT || '|' ||
+S_mktqt_veh_optionspricings.basePriceWithChargesET || '|' ||
+S_mktqt_veh_optionspricings.basePriceWithChargesIT || '|' ||
+S_mktqt_veh_optionspricings.basePriceWithChargesIncludeVAT  	;
+						
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_optionspricings ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_optionspricings', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_veh_optionspricings','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_veh_optionspricings;
+
+
+
+
+	
+	FUNCTION EXPORT_veh_baseEquipments(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_veh_baseEquipments Is 
+		SELECT  
+tech_id,    
+itemDirectoryVehicleRef,
+versionYear, 
+versionTrimester, 
+generation,
+DIMENSIONS,  
+MODEL_GEN,
+VEHICULE_TYPE, 
+externalRef,
+typeCategoryCode,
+language,
+label
+        FROM MKTREF.MKTQT_veh_baseEquipments ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_veh_baseEquipments', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'tech_id|itemDirectoryVehicleRef|versionYear|versionTrimester|generation|DIMENSIONS|MODEL_GEN|VEHICULE_TYPE|externalRef|typeCategoryCode|language|label'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_veh_baseEquipments IN C_mktqt_veh_baseEquipments LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+S_mktqt_veh_baseEquipments.tech_id     || '|' ||
+S_mktqt_veh_baseEquipments.itemDirectoryVehicleRef || '|' ||
+S_mktqt_veh_baseEquipments.versionYear  || '|' ||
+S_mktqt_veh_baseEquipments.versionTrimester  || '|' ||
+S_mktqt_veh_baseEquipments.generation || '|' ||
+S_mktqt_veh_baseEquipments.DIMENSIONS   || '|' ||
+S_mktqt_veh_baseEquipments.MODEL_GEN || '|' ||
+S_mktqt_veh_baseEquipments.VEHICULE_TYPE  || '|' ||
+S_mktqt_veh_baseEquipments.externalRef || '|' ||
+S_mktqt_veh_baseEquipments.typeCategoryCode || '|' ||
+S_mktqt_veh_baseEquipments.language || '|' ||
+S_mktqt_veh_baseEquipments.label ;
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_baseEquipments ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_veh_baseEquipments', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_veh_baseEquipments','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_veh_baseEquipments;
+
+
+
+
+
+	
+	FUNCTION EXPORT_transco(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+
+		V_ERR                NUMBER := 0;	
+		N_SAUV               NUMBER:=0;		
+		v_ligne         VARCHAR2(4000);		
+		file_id_cvs     utl_file.file_type;  
+		file_name       VARCHAR2(30); 	 
+
+		FILE_ID   UTL_FILE.FILE_TYPE; 
+		RES       NUMBER := 0;			
+
+
+		Cursor C_mktqt_transco Is 
+		SELECT  
+Entity			,
+code			,
+startValidityDate	,
+endValidityDate		,
+parent			,
+parent_details_entity		,
+parent_details_code		,
+description_language		,
+description_label		,
+crossref_typecode		,
+crossref_country		,
+crossref_code			,
+translation_language	,
+translation_label	,
+bomAttribut		,
+countryScope	
+        FROM MKTREF.MKTQT_transco ;  
+
+
+		BEGIN
+			file_name := p_filename;
+			FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+			file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+			RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_transco', ' ## MISE A DISPOSITION du fichier ##');
+
+ 			V_LIGNE := 'Entity|code|startValidityDate|endValidityDate|parent|parent_details_entity|parent_details_code|description_language|description_label|crossref_typecode|crossref_country|crossref_code|translation_language|translation_label|bomAttribut|countryScope'; 
+ 			
+			RES := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
+
+			FOR S_mktqt_transco IN C_mktqt_transco LOOP 
+
+				BEGIN
+					IF V_ERR=1 THEN EXIT;
+					END IF;
+				
+					V_LIGNE := 
+                    
+S_mktqt_transco.Entity			|| '|' ||
+S_mktqt_transco.code			|| '|' ||
+S_mktqt_transco.startValidityDate	|| '|' ||
+S_mktqt_transco.endValidityDate		|| '|' ||
+S_mktqt_transco.parent			|| '|' ||
+S_mktqt_transco.parent_details_entity		|| '|' ||
+S_mktqt_transco.parent_details_code		|| '|' ||
+S_mktqt_transco.description_language		|| '|' ||
+S_mktqt_transco.description_label		|| '|' ||
+S_mktqt_transco.crossref_typecode		|| '|' ||
+S_mktqt_transco.crossref_country		|| '|' ||
+S_mktqt_transco.crossref_code			|| '|' ||
+S_mktqt_transco.translation_language	|| '|' ||
+S_mktqt_transco.translation_label	|| '|' ||
+S_mktqt_transco.bomAttribut		|| '|' ||
+S_mktqt_transco.countryScope	;
+											 
+
+					res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+					N_SAUV := N_SAUV + 1;
+				EXCEPTION
+					WHEN OTHERS THEN
+						COMMIT;
+						V_ERR  := 1;
+						res     := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_transco ', 'Message Erreur pl/sql : ' || SQLERRM );
+					RETURN V_ERR;
+
+				END;
+			END LOOP;
+
+			
+			UTL_FILE.FCLOSE(file_id_cvs);
+			res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_transco', 'Nombre de lignes Ecrites :' || N_SAUV);
+			UTL_FILE.FCLOSE(file_id);
+
+
+			RETURN V_ERR;
+
+		EXCEPTION 
+			WHEN OTHERS THEN
+				COMMIT;
+				V_ERR  := 1;
+				res     := MKT.MKTQAUT.F_WRITE(file_id,'EXPORT_transco','Message Erreur pl/sql : ' || SQLERRM);
+			RETURN V_ERR; 
+
+		/*end;  */
+
+	END EXPORT_transco;
+
+
+
+
+
+
+	FUNCTION MAIN_ALIM_veh (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+     ---------------01			
+      V_ERR     := ALIM_MODEL_GEN( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------02
+      V_ERR     := ALIM_TRIM( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------03
+      V_ERR     := ALIM_MOTORISATIONBLVD( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+    ---------------04
+      V_ERR     := ALIM_DIMENSIONS( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+		---------------05	
+			V_ERR     := ALIM_veh( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+		---------------06		
+			V_ERR     := ALIM_veh_crossRefs( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+      
+        ---------------07	--ON EST LA
+			V_ERR     := ALIM_veh_pricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        -------------------08
+  	V_ERR     := ALIM_veh_options( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+        
+            
+         -------------------09
+			V_ERR     := ALIM_veh_optionslabels( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        -------------------10
+			V_ERR     := ALIM_veh_optionspricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;            
+            
+         -------------------11
+			V_ERR     := ALIM_veh_baseEquipments( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;          
+ 
+            
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_ALIM_veh;
 
 
 
@@ -5280,7 +6794,7 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 	END MAIN_ALIM_transco;
 
 
-	FUNCTION MAIN_ALIM_veh (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
+	FUNCTION MAIN_ABSENT_code (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
                                 V_UPDATES   OUT NUMBER,
                                 V_Error     Out Varchar2 ) RETURN NUMBER IS
 		
@@ -5295,87 +6809,121 @@ S_mktqt_veh.versionLabelLocalLong || '|' ;
 
         BEGIN	
      ---------------01			
-      V_ERR     := ALIM_MODEL_GEN( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      V_ERR     := ALIM_ABSENT_BLVD( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
     ---------------02
-      V_ERR     := ALIM_TRIM( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      V_ERR     := ALIM_ABSENT_MODEL( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
     ---------------03
-      V_ERR     := ALIM_MOTORISATIONBLVD( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      V_ERR     := ALIM_ABSENT_SEGMENT( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
     ---------------04
-      V_ERR     := ALIM_DIMENSIONS( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      V_ERR     := ALIM_ABSENT_transmission( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
 		---------------05	
-			V_ERR     := ALIM_veh( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := ALIM_ABSENT_TRIM( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+	
+           
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_ABSENT_code;
+  
+
+	FUNCTION MAIN_EXPORT_veh (NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+     
+		---------------05	
+			V_ERR     := EXPORT_VEH( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
 
 		---------------06		
-			V_ERR     := ALIM_veh_crossRefs( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := EXPORT_crossRefs( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
       
         ---------------07	
-			/*V_ERR     := ALIM_veh_pricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := EXPORT_veh_pricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
         -------------------08
-  	V_ERR     := ALIM_veh_options( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+        V_ERR     := EXPORT_veh_options(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
-        
-            
+                 
          -------------------09
-			V_ERR     := ALIM_veh_optionslabels( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := EXPORT_veh_optionslabels(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;
             
         -------------------10
-			V_ERR     := ALIM_veh_optionspricings( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := EXPORT_veh_optionspricings(  NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME  );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
 			END IF;            
             
          -------------------11
-			V_ERR     := ALIM_veh_baseEquipments( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			V_ERR     := EXPORT_veh_baseEquipments( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
-			END IF;       */    
- 
+			END IF;        
+
+         -------------------12
+			V_ERR     := EXPORT_transco( NOMLOG, P_DATE_TRAI, P_PATH, P_FILENAME );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;    
             
 			
 			RETURN V_RET;
 
 		/* AJOUTER APRES end; */
 		
-	END MAIN_ALIM_veh;
-
+	END MAIN_EXPORT_veh;
 
 
 
