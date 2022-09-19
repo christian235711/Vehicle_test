@@ -15,6 +15,7 @@ create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
       len := length(chars2)+1;
       while quotient > 0
       loop
+          if quotient > 35 then return '  ';   end if;   ------------- AJOUT LUNDI 19 SEPTEMBRE
           ret := substr(chars2,mod(quotient,len2),1) || ret;
           quotient := floor(quotient/len2);
       end loop ;
@@ -169,10 +170,9 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-        
-        V_NUM := V_NUM +1;
-        
+                        
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_MODEL_GEN
@@ -265,9 +265,9 @@ REC_veh_VP.CROSSREF_CODE     -- AJOUT VENDREDI
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-        
-        V_NUM := V_NUM +1;
+               
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
         END IF;
         
         INSERT INTO MKTREF.MKTQT_MODEL_GEN
@@ -472,10 +472,9 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-        
-        V_NUM := V_NUM +1;
-        
+                      
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_TRIM
@@ -575,10 +574,10 @@ REC_veh_VP.CROSSREF_CODE   -- AJOUT VENDREDI
          ;
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
-        END;
-        
-        V_NUM := V_NUM +1;
+        END;       
+
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;           
         END IF;
         
         INSERT INTO MKTREF.MKTQT_TRIM
@@ -684,7 +683,8 @@ BEGIN
      select distinct  brand.code as brandCode,
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
+            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  (case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end)  || '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD 
+            --(maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
  
      from    MKTREF.MKTQT_CapDer_VP CAPDER,
              MKTQT_CAPMAN_VP   CAPMAN,
@@ -796,11 +796,10 @@ BEGIN
          ;
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
-        END;
-        
-        V_NUM := V_NUM +1;
+        END;         
         
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_MOTORISATIONBLVD
@@ -897,10 +896,10 @@ V_SEQ
          ;
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
-        END;
+        END;       
         
-        V_NUM := V_NUM +1;
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
         END IF;
         
         INSERT INTO MKTREF.MKTQT_MOTORISATIONBLVD
@@ -1129,11 +1128,11 @@ BEGIN
          ;
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
-        END;
-        
-        V_NUM := V_NUM +1;
+        END;    
         
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;
+           
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_DIMENSIONS
@@ -1231,9 +1230,10 @@ V_SEQ
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-        
-        V_NUM := V_NUM +1;
+               
            V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_NUM := V_NUM +1;            
+           
         END IF;
         
         INSERT INTO MKTREF.MKTQT_DIMENSIONS
@@ -1367,7 +1367,8 @@ NULL as motorisationComb    ,
 cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
 transmission.code as transmissionTypeCode    ,
 gearbox.code as gearBoxTypeCode ,
-( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , ----------------------- 66 
+--( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , ----------------------- 66 
+(case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end) as nbRapports  , ----------------------- 66 
 NULL as typeVariantVersion  ,
 CAPTRIM.Name   as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
 seatNumber.valuefloat as seatNumber  , ----------------------- 47
@@ -1511,7 +1512,7 @@ AND MG.CROSSREF_CODE (+) =  A.RANCODE || 'GEN' || NVD.valuestring -- AJOUT VENDR
     AND A.RANCODE = CAPRAN.CODE
     AND     NVD.ID(+) = A.ID
     AND     NVD.techcode(+) = 471
--- MODEL GEN
+
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
 AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
@@ -1520,12 +1521,12 @@ AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPT
 AND TRIM.CROSSREF_CODE (+) = concat('C', A.TrimCode)   -- AJOUT VENDREDI
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
--- TRIM
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE = brand.code
 AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VP'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  =  (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  (case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end)  || '/' || batteryCapacity.valuefloat)
+--AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat)
     AND   maximumPowerDin.ID(+) = A.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
@@ -1533,9 +1534,8 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  |
    -- AND   nbRapports.TECHCODE(+) = 66
     --AND   batteryCapacity.ID(+) = A.ID
     --AND   batteryCapacity.TECHCODE(+) = 163 
--- MOTORISATION
--- DIMENSION
 
+-- DIMENSION
 AND DIMENSIONS.BRAND_CODE = brand.code
 AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE  = 'VP'
@@ -1689,7 +1689,6 @@ where A.id = B.id
 and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
-
 --and c.status(+) = 'S'   ----
 --and c.genericcode(+) = '9'  ----
 and brand.Entity(+) = 'brand'
@@ -1750,7 +1749,7 @@ AND MG.CROSSREF_CODE (+) =  A.RANCODE || 'GEN' || NVD.valuestring -- AJOUT VENDR
     AND A.RANCODE = CAPRAN.CODE
     AND     NVD.ID(+) = A.ID
     AND     NVD.techcode(+) = 477
--- MODEL GEN
+
 -- TRIM
 AND TRIM.BRAND_CODE(+) = brand.code
 AND TRIM.VEHICULE_NAME (+) = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
@@ -1759,7 +1758,7 @@ AND TRIM.VEHICULE_TRIM (+) = (case when CAPTRIM.NAME is null then ' ' else  CAPT
 AND TRIM.CROSSREF_CODE (+) = concat('L', A.TrimCode)   -- AJOUT VENDREDI
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
--- TRIM
+
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE = brand.code
 AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
@@ -1772,9 +1771,8 @@ AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  |
    -- AND   nbRapports.TECHCODE(+) = 66
     --AND   batteryCapacity.ID(+) = A.ID
     --AND   batteryCapacity.TECHCODE(+) = 152 
--- MOTORISATION
--- DIMENSION
 
+-- DIMENSION
 AND DIMENSIONS.BRAND_CODE = brand.code
 AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || NVD.valuestring
 AND DIMENSIONS.VEHICULE_TYPE  = 'VU'
@@ -2502,6 +2500,8 @@ and maximumPowerDin is not null
 and transmissionTypeCode is not null 
 and gearBoxTypeCode is not null 
 and year_trimester is not null
+
+and DIMENSIONS != '  '   ------ AJOUT 19 SEPTEMBRE
 ;
 
 
@@ -4535,6 +4535,8 @@ BEGIN
   where dimensions.BRAND_CODE = model_gen.BRAND_CODE 
  and dimensions.VEHICULE_NAME = model_gen.VEHICULE_NAME
  and dimensions.VEHICULE_TYPE = model_gen.VEHICULE_TYPE
+ 
+ and dimensions.dimensions_id != '  '  --- AJOUT 19 SEPTEMBRE
 
 ; 
 
@@ -5010,6 +5012,8 @@ or maximumPowerDin is  null
 or transmissionTypeCode is  null 
 or gearBoxTypeCode is  null 
 or year_trimester is  null
+
+or DIMENSIONS = '  '  ---- AJOUT 19 SEPTEMBRE
 ;
 
 
