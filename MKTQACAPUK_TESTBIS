@@ -1,628 +1,121 @@
 create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
 
-/*
+
 FUNCTION FONC_EXPORT_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
-    V_ERR       number:=0;
+   V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
     FILE_ID     UTL_FILE.FILE_TYPE;
     FILE_ID_CVS UTL_FILE.FILE_TYPE;
     V_LIGNE     VARCHAR2(4000);
     RES         NUMBER := 0;
     file_name   VARCHAR2(30);
-   -- V_NB_ENREG  NUMBER(10) := 0;
-   -- V_NB_ENREG_TRAITE NUMBER(10) := 0;
-   -- V_NB_ADDRESS      NUMBER(3) := 0;
-   -- V_NB_PHONE      NUMBER(3) := 0;
-    --V_NB_MAIL      NUMBER(3) := 0;
-    --V_NB_BANKING      NUMBER(3) := 0;
+    
+    V_NB_ENREG  NUMBER := 0;
+    V_NB_CROSSREFS NUMBER(2);
+    V_NB_PRICINGS NUMBER(2);
+    V_NB_OPTIONS NUMBER(2);
+    V_NB_OPTIONSLABELS NUMBER(2);
+    V_NB_OPTIONSPRICINGS NUMBER(2);
+    V_NB_BASEEQUIPMENTS NUMBER(2);
+    
+    V_NB_ENREG_TRAITE NUMBER := 0;
+    V_NB_CROSSREFS_TRAITE NUMBER := 0;
+    V_NB_PRICINGS_TRAITE NUMBER := 0;
+    V_NB_OPTIONS_TRAITE NUMBER := 0;
+    V_NB_OPTIONSLABELS_TRAITE NUMBER := 0;
+    V_NB_OPTIONSPRICINGS_TRAITE NUMBER := 0;
+    V_NB_BASEEQUIPMENTS_TRAITE NUMBER := 0;
+    
 
+-----------------------------------VEHICLE-----------------------------
 CURSOR C_mktqt_vehicle IS
-select  
-
-veh.tech_id  as tech_id ,
-veh.tech_dateExtraction  as tech_dateExtraction ,
-veh.tech_dateInsertion   as tech_dateInsertion  ,
-veh.countryCode  as countryCode ,
-veh.itemDirectoryVehicleRef  as itemDirectoryVehicleRef ,
-veh.versionState     as versionState    ,
-veh.validityStartDate    as validityStartDate   ,
-veh.validityEndDate  as validityEndDate ,
-veh.corporateGroupCode   as corporateGroupCode  ,
-veh.corporateGroupLabel  as corporateGroupLabel ,
-veh.brandCode    as brandCode   ,
-veh.brandLabel   as brandLabel  ,
-veh.familyCode   as familyCode  ,
-veh.familyLabel  as familyLabel ,
-veh.generation   as generation  ,
-veh.versionYear  as versionYear ,
-veh.versionTrimester     as versionTrimester    ,
-veh.segmentMarketingCode    as segmentMarketingCode   ,
-veh.faceLiftGeneration   as faceLiftGeneration  ,
-veh.kindCode     as kindCode    ,
-veh.bodyCode     as bodyCode    ,
-veh.height   as height  ,
-veh.length   as length  ,
-veh.sportinessFlag   as sportinessFlag  ,
-veh.co2EmissionNEDC  as co2EmissionNEDC ,
-veh.co2EmissionWLTP  as co2EmissionWLTP ,
-veh.co2ClassCode     as co2ClassCode    ,
-veh.fiscalHorsePower     as fiscalHorsePower    ,
-veh.maximumPowerDin  as maximumPowerDin ,
-veh.maximumPowerKW   as maximumPowerKW  ,
-veh.energy1Code  as energy1Code ,
-veh.energy1DetailCode    as energy1DetailCode   ,
-veh.energy2Code  as energy2Code ,
-veh.energy2DetailCode    as energy2DetailCode   ,
-veh.energyCombCode   as energyCombCode  ,
-veh.motorisation     as motorisation    ,
-veh.motorisationComb     as motorisationComb    ,
-veh.cubicCapacity    as cubicCapacity   ,
-veh.transmissionTypeCode     as transmissionTypeCode    ,
-veh.gearBoxTypeCode  as gearBoxTypeCode ,
-veh.nbRapports   as nbRapports  ,
-veh.typeVariantVersion   as typeVariantVersion  ,
-veh.trimLevel    as trimLevel   ,
-veh.seatNumber   as seatNumber  ,
-veh.doorNumber   as doorNumber  ,
-veh.nedcCombineFuelConsumption   as nedcCombineFuelConsumption  ,
-veh.nedcExtraUrbanFuelConsumption    as nedcExtraUrbanFuelConsumption   ,
-veh.nedcUrbanFuelConsumption     as nedcUrbanFuelConsumption    ,
-veh.wltpLowFuelConsumption   as wltpLowFuelConsumption  ,
-veh.wltpMediumFuelConsumption    as wltpMediumFuelConsumption   ,
-veh.wltpHighFuelConsumption  as wltpHighFuelConsumption ,
-veh.wltpExtraHighConsumption     as wltpExtraHighConsumption    ,
-veh.wltpCombinedFuelConsumption  as wltpCombinedFuelConsumption ,
-veh.wltpElectricConsumption  as wltpElectricConsumption ,
-veh.wltpElectricRange    as wltpElectricRange   ,
-veh.batteryCapacity  as batteryCapacity ,
-veh.maxLadenWeight   as maxLadenWeight  ,
-veh.kerbWeight   as kerbWeight  ,
-veh.payLoad  as payLoad ,
-veh.hasTelematicBox  as hasTelematicBox ,
-veh.catalogueDetail  as catalogueDetail ,
-veh.tsnNumber    as tsnNumber   ,
-veh.wltpFlag     as wltpFlag    ,
-veh.completenessFlag     as completenessFlag    ,
-veh.validationUser   as validationUser  ,
-veh.validationDate   as validationDate  ,
-veh.updateUser   as updateUser  ,
-veh.updateDate   as updateDate  ,
-veh.purchaseCondition    as purchaseCondition   ,
-veh.designBases  as designBases ,
-veh.designCustomerShip   as designCustomerShip  ,
-veh.versionLabelGlobalShort  as versionLabelGlobalShort ,
-veh.versionLabeGlobalLong    as versionLabeGlobalLong   ,
-veh.versionLabelLocalShort   as versionLabelLocalShort  ,
-veh.versionLabelLocalLong    as versionLabelLocalLong   ,
-veh.VEHICULE_TYPE as VEHICULE_TYPE,
-veh.MODEL_GEN_ID as MODEL_GEN,
-veh.DIMENSIONS_ID as DIMENSIONS,
-veh.door_seat as door_seat,
-veh.year_trimester as year_trimester,
-veh.effectivefrom as effectivefrom,
-veh.capcode as capcode,
-
-------,
-(case when   veh.brandcode is not null 
-and veh.brandLabel is not null 
-and veh.familyLabel is not null 
-and veh.KINDCODE is not null 
-and veh.bodyCode is not null 
-and veh.TRIM_ID is not null 
-and veh.energyCombCode is not null 
-and veh.maximumPowerDin is not null 
-and veh.transmissionTypeCode is not null 
-and veh.gearBoxTypeCode is not null 
-and veh.year_trimester is not null
-and veh.DIMENSIONS_ID != '  '  then
-veh.BRANDCODE || veh.MODEL_GEN_ID || veh.KINDCODE || veh.DIMENSIONS_ID || veh.door_seat || veh.TRIM_ID || veh.energyCombCode || veh.MOTORISATIONBLVD_ID || veh.year_trimester else null end) AS BLVD,
-------,
-NULL AS tariffAreaCode,
-NULL AS priceCode,
-NULL AS priceType,
-NULL AS priceTypeCustomer,
-prices.EffectiveFrom as priceStartDate,
-prices.EffectiveTo as priceEndDate,
-NULL AS vatAmount,
-prices.Basic AS priceET,
-NULL AS priceIT,
-NULL AS priceIncludeVAT,
-'GBP' AS currency,
-NULL AS immAmount,
-NULL AS immRate,
-NULL AS novaAmount,
-NULL AS novaRate,
-prices.Basic AS priceWithoutOtrCostIT,
-NULL AS priceWithoutOtrCostET,
-NULL AS priceWithoutOtrCostIncludeVAT,
--------,
-A.optioncode as code,
-NULL as constructorCode,
-(case when B.catcode in (44, 45, 73, 74, 75, 76, 81, 82, 86, 90, 97) then 'C' else 'O' end) as typeCode,
---(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
-(case when D.periodcode is not null then 'True' else 'False' end) as isPack,
-NULL as isAgregated,
-NULL as startDate,
-NULL as endDate,
-
-'en_GB' as option_language,
-B.description as option_description,
-B.longdescription as option_longdescription,
-
-NULL as option_territorialityCode,
-NULL as option_pricebookCode,
-NULL as option_pricebookType,
-NULL as option_pricebookTypeCustomer,
-A.effectivefrom as option_pricebookStartDate,
-A.effectiveto as option_pricebookEndDate,
-NULL as  option_vatAmount,
-'GBP' as option_currency,
-A.basic as option_priceET,
-NULL as  option_priceIT,
-NULL as  option_priceIncludeVAT,
-NULL as  option_basePriceWithChargesET,
-NULL as  option_basePriceWithChargesIT,
-NULL as  basePriceWithChargesIncludeVAT,
---------------------------------------------
-AAA.optioncode as externalRef, 
-NULL as typeCategoryCode,
-'en_GB' as language,
-BBB.description as label
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-from (
-
-select distinct
-
-A.Id as tech_id,
-NULL as tech_dateExtraction ,
-NULL as tech_dateInsertion  ,
-'UK' as countryCode,
-concat(concat('P', A.Id), TO_CHAR(A.Introduced, 'YYYYMMDD')) as itemDirectoryVehicleRef , 
-NULL as versionState   ,
-A.Introduced as validityStartDate   ,
-A.Discontinued as validityEndDate , 
-NULL  as corporateGroupCode  ,
-brand.parent as corporateGroupLabel ,
-brand.code as brandCode   ,
-brand.description_label  as brandLabel  ,
-model.code as familyCode  ,
-model.description_label as familyLabel ,
-(case when generation.valuestring is null  then ' ' else generation.valuestring  end)  as generation  , ----------------------- 471
-substr(B.refe, 0,4)  as versionYear ,
-( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
-segment.code segmentMarketingCode    ,
-NULL as faceLiftGeneration  ,
-(case when substr(A.CAPCODE,20,1) is null then 'P' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   -- OK
-body.code as bodyCode    ,
-height.valuefloat as height  ,  ----------------------- 34
-length.valuefloat as length  , ----------------------- 4
-NULL as sportinessFlag  ,
-NULL as co2EmissionNEDC ,
-co2EmissionWLTP.valuefloat as co2EmissionWLTP , ----------------------- 173
-NULL as co2ClassCode    ,
-NULL as fiscalHorsePower    ,
-maximumPowerDin.valuefloat as maximumPowerDin , ----------------------- 21
-maximumPowerKW.valuefloat  as maximumPowerKW  , ----------------------- 48
-substr(A.capcode, 12, 1) as energy1Code ,
-NULL as energy1DetailCode   ,
-NULL as energy2Code ,
-NULL as energy2DetailCode   ,
-energyComb.code as energyCombCode  , --
-NULL as motorisation    ,
-NULL as motorisationComb    ,
-cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
-transmission.code as transmissionTypeCode    ,
-gearbox.code as gearBoxTypeCode ,
---( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , ----------------------- 66 
-(case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end) as nbRapports  , ----------------------- 66 
-NULL as typeVariantVersion  ,
-CAPTRIM.Name   as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
-seatNumber.valuefloat as seatNumber  , ----------------------- 47
-A.doors as doorNumber  ,
-NULL as nedcCombineFuelConsumption  ,
-NULL as nedcExtraUrbanFuelConsumption   ,
-NULL as nedcUrbanFuelConsumption    ,
-wltpLowFuelConsumption.valuefloat  as wltpLowFuelConsumption  ,  ----------------------- 184
-wltpMediumFuelConsumption.valuefloat  as wltpMediumFuelConsumption   , ----------------------- 185
-wltpHighFuelConsumption.valuefloat  as wltpHighFuelConsumption , ----------------------- 186
-wltpExtraHighConsumption.valuefloat  as wltpExtraHighConsumption    , -----------------------187
-wltpCombinedFuelConsumption.valuefloat  as wltpCombinedFuelConsumption ,-----------------------188
-wltpElectricConsumption.valuefloat  as wltpElectricConsumption ,-----------------------164
-wltpElectricRange.valuefloat  as wltpElectricRange   ,-----------------------165
-batteryCapacity.valuefloat  as batteryCapacity ,-----------------------163
-maxLadenWeight.valuefloat  as maxLadenWeight  ,-----------------------14
-kerbWeight.valuefloat  as kerbWeight  ,-----------------------3 
-NULL as payLoad ,
-(case when C.status = 'S' and C.genericcode =9 then 'True' else 'False' end  ) as hasTelematicBox ,
-NULL as catalogueDetail ,
-NULL as tsnNumber   ,
-NULL as wltpFlag    ,
-NULL as completenessFlag    ,
-NULL as  validationUser  ,
-NULL as validationDate  ,
-NULL as updateUser  ,
-NULL as updateDate  ,
-NULL as purchaseCondition   ,
-NULL as designBases ,
-NULL as designCustomerShip  ,
-NULL as versionLabelGlobalShort ,
-NULL as versionLabeGlobalLong   ,
-model.description_label as versionLabelLocalShort  ,
-concat(model.description_label, A.name) as versionLabelLocalLong,
-'VP' as VEHICULE_TYPE,
-MG.MODEL_GEN_ID as MODEL_GEN_ID,
-TRIM.TRIM_ID as TRIM_ID,
-MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
-DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
-(case when door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3') then door_seat.code else 'Z' end) as door_seat,
-year_trimester.code as year_trimester,
-B.effectivefrom as effectivefrom,
-A.Capcode as capcode
-
-
-from MKTREF.MKTQT_CapDer_VP A,
-     MKTREF.MKTQT_NVDModelYear_VP B,
-     MKTREF.MKTQT_NVDGenericStatus_VP C,
-     MKTREF.MKTQT_nomenclature brand,
-     MKTREF.MKTQT_nomenclature model,
-     MKTREF.MKTQT_nomenclature segment,
-     MKTREF.MKTQT_nomenclature body,
-     MKTREF.MKTQT_nomenclature energyComb,
-     MKTREF.MKTQT_nomenclature transmission,
-     MKTREF.MKTQT_nomenclature gearbox,
-     MKTREF.MKTQT_nomenclature door_seat, --add
-     MKTREF.MKTQT_nomenclature year_trimester, --add
-     MKTREF.MKTQT_NVDTechnical_VP generation,
-     MKTREF.MKTQT_NVDTechnical_VP height,
-     MKTREF.MKTQT_NVDTechnical_VP length,
-     MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP,
-     MKTREF.MKTQT_NVDTechnical_VP maximumPowerDin,
-     MKTREF.MKTQT_NVDTechnical_VP maximumPowerKW,
-     
-     MKTQT_NVDTechnical_VP  cubicCapacity,-- MKTQT_NVDTechnical_VP nbRapports,
-     MKTQT_NVDTechnical_VP seatNumber, 
-    MKTQT_NVDTechnical_VP wltpLowFuelConsumption, MKTQT_NVDTechnical_VP wltpMediumFuelConsumption, MKTQT_NVDTechnical_VP wltpHighFuelConsumption,
-    MKTQT_NVDTechnical_VP wltpExtraHighConsumption, MKTQT_NVDTechnical_VP wltpCombinedFuelConsumption ,MKTQT_NVDTechnical_VP wltpElectricConsumption,
-    MKTQT_NVDTechnical_VP wltpElectricRange, -- MKTQT_NVDTechnical_VP batteryCapacity, --MKTQT_NVDTechnical_VP maxLadenWeight,
-    MKTQT_NVDTechnical_VP kerbWeight,
-     
-     MKTREF.MKTQT_MODEL_GEN MG,
-     MKTQT_CAPMAN_VP   CAPMAN,
-     MKTQT_CAPRANGE_VP CAPRAN,
-     MKTQT_NVDTechnical_VP generation,
-     MKTREF.MKTQT_TRIM  TRIM,
-     MKTREF.MKTQT_CapTrim_VP CAPTRIM,  -- add trim
-     MKTREF.MKTQT_MOTORISATIONBLVD MOTORISATIONBLVD,
-     --MKTQT_NVDTECHNICAL_VP maximumPowerDin,
-     MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity,  -- add MOTORISATIONBLVD
-     MKTREF.MKTQT_DIMENSIONS DIMENSIONS, -- add DIMENSIONS
-     MKTQT_NVDTECHNICAL_VP height, MKTQT_NVDTECHNICAL_VP length,MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
-where A.id = B.id 
-and A.id = C.id (+)
-and B.effectivefrom = C.effectivefrom (+)
-and B.effectiveto = C.effectiveto (+)
---and c.status(+) = 'S'            --- 
---and c.genericcode(+) = '9'        ---
-and brand.Entity(+) = 'brand'
-and brand.crossref_code(+) = concat('C',A.MANCODE)
-and model.Entity(+) = 'model'
-and model.crossref_code(+) = concat('C',A.RANCODE)
-and segment.Entity(+) = 'segment'
-and segment.crossref_code(+) = A.VEHICLESECTOR
-and body.Entity(+) = 'body'
-and body.crossref_code(+) = concat('C',substr(A.capcode, 11,1))
-and energyComb.crossref_typecode (+)= 'CAP'
-and energyComb.entity (+)= 'energyComb'
-and energyComb.crossref_code(+) = substr(A.capcode, 12, 1)
-and transmission.entity (+)= 'transmission'
-and transmission.crossref_code(+) = A.drivetrain
-and gearbox.entity (+) = 'gearbox'
-and gearbox.crossref_code(+) = A.transmission
-and generation.id(+) = B.id
-and generation.effectivefrom(+) = B.effectivefrom
-and generation.techcode(+) = 471
-and height.id(+) = B.id
-and height.effectivefrom(+) = B.effectivefrom
-and height.techcode (+) = 34
-and length.id(+) = B.id
-and length.effectivefrom(+) = B.effectivefrom
-and length.techcode(+) = 4
-and co2EmissionWLTP.id(+) = B.id
-and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
-and co2EmissionWLTP.techcode(+) = 173
-and maximumPowerDin.id (+) = B.id
-and maximumPowerDin.effectivefrom(+) = B.effectivefrom
-and maximumPowerDin.techcode(+) = 21 
-and maximumPowerKW.id(+) = B.id
-and maximumPowerKW.effectivefrom(+) = B.effectivefrom
-and maximumPowerKW.techcode(+) = 48
-
-and  cubicCapacity.ID(+) = B.ID and cubicCapacity.effectivefrom(+) = B.effectivefrom and cubicCapacity.techcode(+) = 20
-and  nbRapports.ID(+) = B.ID and nbRapports.effectivefrom(+) = B.effectivefrom and nbRapports.techcode(+) = 66
-and  seatNumber.ID(+) = B.ID and seatNumber.effectivefrom(+) = B.effectivefrom and seatNumber.techcode(+) = 47
-and  wltpLowFuelConsumption.ID(+) = B.ID and wltpLowFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpLowFuelConsumption.techcode(+) = 184
-and  wltpMediumFuelConsumption.ID(+) = B.ID and wltpMediumFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpMediumFuelConsumption.techcode(+) = 185
-and  wltpHighFuelConsumption.ID(+) = B.ID and wltpHighFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpHighFuelConsumption.techcode(+) = 186
-and  wltpExtraHighConsumption.ID(+) = B.ID and wltpExtraHighConsumption.effectivefrom(+) = B.effectivefrom and wltpExtraHighConsumption.techcode(+) = 187
-and  wltpCombinedFuelConsumption.ID(+) = B.ID and wltpCombinedFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpCombinedFuelConsumption.techcode(+) = 188
-and  wltpElectricConsumption.ID(+) = B.ID and wltpElectricConsumption.effectivefrom(+) = B.effectivefrom and wltpElectricConsumption.techcode(+) = 164
-and  wltpElectricRange.ID(+) = B.ID and wltpElectricRange.effectivefrom(+) = B.effectivefrom and wltpElectricRange.techcode(+) = 165
-and  batteryCapacity.ID(+) = B.ID and batteryCapacity.effectivefrom(+) = B.effectivefrom and batteryCapacity.techcode(+) = 163
-and  maxLadenWeight.ID(+) = B.ID and maxLadenWeight.effectivefrom(+) = B.effectivefrom and maxLadenWeight.techcode(+) = 14
-and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom and kerbWeight.techcode(+) = 3
-
--- MODEL GEN
-AND MG.BRAND_CODE  = brand.code
-and MG.VEHICULE_NAME  = CAPMAN.NAME || '| ' || CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
-AND MG.VEHICULE_TYPE  = 'VP'
-AND MG.CROSSREF_CODE  =  A.RANCODE || 'GEN' || generation.valuestring -- AJOUT VENDREDI
-    AND A.MANCODE = CAPMAN.CODE
-    AND A.RANCODE = CAPRAN.CODE
-    AND     generation.ID(+) = A.ID
-    AND     generation.techcode(+) = 471
-
--- TRIM
-AND TRIM.BRAND_CODE = brand.code
-AND TRIM.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
-AND TRIM.VEHICULE_TYPE  = 'VP'
-AND TRIM.VEHICULE_TRIM  = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
-AND TRIM.CROSSREF_CODE  = concat('C', A.TrimCode)   -- AJOUT VENDREDI
-    AND  CAPTRIM.CODE(+) =  A.TrimCode
-
--- MOTORISATION
-AND MOTORISATIONBLVD.BRAND_CODE = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
-AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VP'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  =  (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  (case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end)  || '/' || batteryCapacity.valuefloat)
---AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
---AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat)
-    AND   maximumPowerDin.ID(+) = A.ID
-    AND   maximumPowerDin.TECHCODE(+) = 21
-   -- AND   nbRapports.ID(+) = A.ID
-   -- AND   nbRapports.TECHCODE(+) = 66
-    --AND   batteryCapacity.ID(+) = A.ID
-    --AND   batteryCapacity.TECHCODE(+) = 163 
-
--- DIMENSION
-AND DIMENSIONS.BRAND_CODE = brand.code
-AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
-AND DIMENSIONS.VEHICULE_TYPE  = 'VP'
-AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || height.valuefloat || ':' || length.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   ---  interne
-    AND   height.ID(+) = A.ID
-    AND   height.TECHCODE(+) = 34 
-    AND   length.ID(+) = A.ID
-    AND   length.TECHCODE(+) = 4    
-  --  AND   maxLadenWeight.ID(+) = A.ID
-   -- AND   maxLadenWeight.TECHCODE(+) = 14;
-   
-and door_seat.entity(+) ='door_seat' and door_seat.crossref_typecode(+) ='CAP'
---and door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3')
-and door_seat.crossref_code(+) = concat(concat(A.doors,'-'),seatNumber.valuefloat)
-
-and year_trimester.entity(+) ='year_trimester'  
-and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
-
-----------ajout vendredi 23 septembre pour extraction partielle
-and brand.code in ('AB')
-and B.effectivefrom > '01/01/2020'
-
-) veh, MKTREF.MKTQT_NVDPrices_VP prices,
-mktref.mktqt_NVDOption_VP A, mktref.mktqt_NVDDictionaryOption_VP B, mktref.mktqt_NVDPackContents_VP C, MKTQT_NVDPackPeriods_VP D, 
-MKTREF.MKTQT_NVDStandardEquipment_VP AAA, MKTREF.MKTQT_NVDDictionaryOption_VP BBB
-
-where   veh.tech_id = prices.Id --and veh.VEHICULE_TYPE = 'VP'
-and veh.validityStartDate <= prices.effectivefrom and (veh.validityEndDate >= prices.effectiveto or prices.effectiveto is null ) 
-
-and veh.tech_id = A.id and veh.effectivefrom = A.effectivefrom --and veh.VEHICULE_TYPE = 'VP'
-and A.optioncode = B.optioncode (+) 
-and A.optioncode = C.optioncode (+) 
-and C.periodcode = D.periodcode (+)
-
-and veh.tech_id = AAA.Id --and veh.VEHICULE_TYPE = 'VP'
-and veh.effectivefrom = AAA.effectivefrom
-and AAA.optioncode = BBB.optioncode  (+)
-
-;
-
-/*
-select 
-veh.tech_id  as tech_id ,
-veh.tech_dateExtraction  as tech_dateExtraction ,
-veh.tech_dateInsertion   as tech_dateInsertion  ,
-veh.countryCode  as countryCode ,
-veh.itemDirectoryVehicleRef  as itemDirectoryVehicleRef ,
-veh.versionState     as versionState    ,
-veh.validityStartDate    as validityStartDate   ,
-veh.validityEndDate  as validityEndDate ,
-veh.corporateGroupCode   as corporateGroupCode  ,
-veh.corporateGroupLabel  as corporateGroupLabel ,
-veh.brandCode    as brandCode   ,
-veh.brandLabel   as brandLabel  ,
-veh.familyCode   as familyCode  ,
-veh.familyLabel  as familyLabel ,
-veh.generation   as generation  ,
-veh.versionYear  as versionYear ,
-veh.versionTrimester     as versionTrimester    ,
-veh.segmentMarketingCode    as segmentMarketingCode   ,
-veh.faceLiftGeneration   as faceLiftGeneration  ,
-veh.kindCode     as kindCode    ,
-veh.bodyCode     as bodyCode    ,
-veh.height   as height  ,
-veh.length   as length  ,
-veh.sportinessFlag   as sportinessFlag  ,
-veh.co2EmissionNEDC  as co2EmissionNEDC ,
-veh.co2EmissionWLTP  as co2EmissionWLTP ,
-veh.co2ClassCode     as co2ClassCode    ,
-veh.fiscalHorsePower     as fiscalHorsePower    ,
-veh.maximumPowerDin  as maximumPowerDin ,
-veh.maximumPowerKW   as maximumPowerKW  ,
-veh.energy1Code  as energy1Code ,
-veh.energy1DetailCode    as energy1DetailCode   ,
-veh.energy2Code  as energy2Code ,
-veh.energy2DetailCode    as energy2DetailCode   ,
-veh.energyCombCode   as energyCombCode  ,
-veh.motorisation     as motorisation    ,
-veh.motorisationComb     as motorisationComb    ,
-veh.cubicCapacity    as cubicCapacity   ,
-veh.transmissionTypeCode     as transmissionTypeCode    ,
-veh.gearBoxTypeCode  as gearBoxTypeCode ,
-veh.nbRapports   as nbRapports  ,
-veh.typeVariantVersion   as typeVariantVersion  ,
-veh.trimLevel    as trimLevel   ,
-veh.seatNumber   as seatNumber  ,
-veh.doorNumber   as doorNumber  ,
-veh.nedcCombineFuelConsumption   as nedcCombineFuelConsumption  ,
-veh.nedcExtraUrbanFuelConsumption    as nedcExtraUrbanFuelConsumption   ,
-veh.nedcUrbanFuelConsumption     as nedcUrbanFuelConsumption    ,
-veh.wltpLowFuelConsumption   as wltpLowFuelConsumption  ,
-veh.wltpMediumFuelConsumption    as wltpMediumFuelConsumption   ,
-veh.wltpHighFuelConsumption  as wltpHighFuelConsumption ,
-veh.wltpExtraHighConsumption     as wltpExtraHighConsumption    ,
-veh.wltpCombinedFuelConsumption  as wltpCombinedFuelConsumption ,
-veh.wltpElectricConsumption  as wltpElectricConsumption ,
-veh.wltpElectricRange    as wltpElectricRange   ,
-veh.batteryCapacity  as batteryCapacity ,
-veh.maxLadenWeight   as maxLadenWeight  ,
-veh.kerbWeight   as kerbWeight  ,
-veh.payLoad  as payLoad ,
-veh.hasTelematicBox  as hasTelematicBox ,
-veh.catalogueDetail  as catalogueDetail ,
-veh.tsnNumber    as tsnNumber   ,
-veh.wltpFlag     as wltpFlag    ,
-veh.completenessFlag     as completenessFlag    ,
-veh.validationUser   as validationUser  ,
-veh.validationDate   as validationDate  ,
-veh.updateUser   as updateUser  ,
-veh.updateDate   as updateDate  ,
-veh.purchaseCondition    as purchaseCondition   ,
-veh.designBases  as designBases ,
-veh.designCustomerShip   as designCustomerShip  ,
-veh.versionLabelGlobalShort  as versionLabelGlobalShort ,
-veh.versionLabeGlobalLong    as versionLabeGlobalLong   ,
-veh.versionLabelLocalShort   as versionLabelLocalShort  ,
-veh.versionLabelLocalLong    as versionLabelLocalLong   ,
-veh.VEHICULE_TYPE as VEHICULE_TYPE,
-veh.MODEL_GEN as MODEL_GEN,
-veh.DIMENSIONS as DIMENSIONS,
-------,
-crossRefs.capcode as capcode,
-crossRefs.BLVD as BLVD,
-------,
-null as tariffAreaCode,
-null as priceCode,
-null as priceType,
-null as priceTypeCustomer,
-pricings.priceStartDate as priceStartDate,
-pricings.priceEndDate as priceEndDate,
-null as vatAmount,
-pricings.priceET as priceET,
-null as priceIT,
-null as priceIncludeVAT,
-pricings.currency as currency,
-null as immAmount,
-null as immRate,
-null as novaAmount,
-null as novaRate,
-pricings.priceWithoutOtrCostIT as priceWithoutOtrCostIT,
-null as priceWithoutOtrCostET,
-null  as priceWithoutOtrCostIncludeVAT,
--------,
-options.code as code,
-NULL as constructorCode,
-options.typeCode as typeCode,
-options.isPack as isPack,
-NULL as isAgregated,
-NULL as startDate,
-NULL as endDate,
---------------------------------------------
-'en_GB' as language,
-options.description as labelShort,
-options.longdescription as labelLong,
-------,
-NULL as territorialityCode,
-NULL as pricebookCode,
-NULL as pricebookType,
-NULL as pricebookTypeCustomer,
-options.EffectiveFrom as pricebookStartDate,
-options.EffectiveTo as pricebookEndDate,
-NULL as options_vatAmount,  -------add
-'GBP' as options_currency,   --------add
-options.Basic as options_priceET,  ------add
-NULL as options_priceIT, ------add
-NULL as options_priceIncludeVAT, ------add
-NULL as basePriceWithChargesET,
-NULL as basePriceWithChargesIT,
-NULL as basePriceWithChargesIncludeVAT,
---------------------------------------------------
-------
-baseEquipments.externalRef as externalRef,
-NULL as typeCategoryCode,
-baseEquipments.language as baseEquipments_language, ------add
-baseEquipments.label as label
-
-
-from mktqt_vehicle veh, MKTQT_vehicle_crossRefs crossRefs, MKTQT_vehicle_options options, MKTQT_vehicle_pricings pricings , MKTQT_vehicle_baseEquipments baseEquipments
-
-where veh.itemDirectoryVehicleRef = crossRefs.itemDirectoryVehicleRef
-and veh.versionYear=crossRefs.versionYear
-and veh.versionTrimester=crossRefs.versionTrimester
-and veh.generation=crossRefs.generation
-and veh.DIMENSIONS =crossRefs.DIMENSIONS
-and veh.MODEL_GEN=crossRefs.MODEL_GEN
-and veh.VEHICULE_TYPE = crossRefs.VEHICULE_TYPE
---and veh.VEHICULE_TYPE='VP' and crossRefs.VEHICULE_TYPE='VP'
-and veh.tech_id=crossRefs.tech_id
-
-and veh.itemDirectoryVehicleRef = options.itemDirectoryVehicleRef
-and veh.versionYear=options.versionYear
-and veh.versionTrimester=options.versionTrimester
-and veh.generation=options.generation
-and veh.DIMENSIONS =options.DIMENSIONS
-and veh.MODEL_GEN=options.MODEL_GEN
-and veh.VEHICULE_TYPE = options.VEHICULE_TYPE
---and veh.VEHICULE_TYPE='VP' and options.VEHICULE_TYPE='VP'
-and veh.tech_id=options.tech_id
-
-and veh.itemDirectoryVehicleRef = pricings.itemDirectoryVehicleRef
-and veh.versionYear=pricings.versionYear
-and veh.versionTrimester=pricings.versionTrimester
-and veh.generation=pricings.generation
-and veh.DIMENSIONS =pricings.DIMENSIONS
-and veh.MODEL_GEN=pricings.MODEL_GEN
-and veh.VEHICULE_TYPE=pricings.VEHICULE_TYPE
----and veh.VEHICULE_TYPE='VP' and pricings.VEHICULE_TYPE='VP'
-and veh.tech_id=pricings.tech_id
-
-and veh.itemDirectoryVehicleRef = baseEquipments.itemDirectoryVehicleRef
-and veh.versionYear=baseEquipments.versionYear
-and veh.versionTrimester=baseEquipments.versionTrimester
-and veh.generation=baseEquipments.generation
-and veh.DIMENSIONS =baseEquipments.DIMENSIONS
-and veh.MODEL_GEN=baseEquipments.MODEL_GEN
-and veh.VEHICULE_TYPE=baseEquipments.VEHICULE_TYPE
---and veh.VEHICULE_TYPE='VP' and baseEquipments.VEHICULE_TYPE='VP'
-and veh.tech_id=baseEquipments.tech_id
-
-;
-
+select * from MKTREF.MKTQT_vehicle;
+-----------------------------------CROSSREFS-----------------------------
+CURSOR C_MKTQT_VEHICLE_CROSSREFS (P_itemDirectoryVehicleRef  VARCHAR2) IS
+SELECT * FROM MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
+WHERE CROSSREFS.identifier = P_itemDirectoryVehicleRef ;
+-----------------------------------PRICINGS-----------------------------
+CURSOR C_MKTQT_VEHICLE_PRICINGS (P_itemDirectoryVehicleRef  VARCHAR2) IS 
+select * from MKTREF.MKTQT_VEHICLE_PRICINGS PRICINGS
+WHERE PRICINGS.itemDirectoryVehicleRef =  P_itemDirectoryVehicleRef ;
+-----------------------------------OPTIONS-----------------------------
+CURSOR C_MKTQT_VEHICLE_OPTIONS(P_itemDirectoryVehicleRef VARCHAR2 ) IS
+SELECT distinct
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+code as code,
+constructorCode as constructorCode,
+typeCode as typeCode,
+isPack as isPack,
+isAgregated as isAgregated,
+startDate as startDate,
+endDate as endDate
+from MKTREF.MKTQT_VEHICLE_OPTIONS OPTIONS
+WHERE OPTIONS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef;
+-----------------------------------OPTIONSLABELS-----------------------------
+CURSOR C_MKTQT_OPTIONSLABELS(P_Code VARCHAR2, P_itemDirectoryVehicleRef VARCHAR2 ) IS
+SELECT 
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+code as code,
+language as language,
+labelShort as labelShort,
+labelLong as labelLong
+FROM MKTREF.MKTQT_VEHICLE_OPTIONSLABELS OPTIONSLABELS
+WHERE OPTIONSLABELS.Code = P_Code 
+AND   OPTIONSLABELS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef;
+-----------------------------------OPTIONSPRICINGS-----------------------------
+CURSOR C_MKTQT_OPTIONSPRICINGS (P_Code VARCHAR2, P_itemDirectoryVehicleRef VARCHAR2  ) IS 
+SELECT 
+itemDirectoryVehicleRef as itemDirectoryVehicleRef,
+code as code,
+territorialityCode as territorialityCode,
+pricebookCode as pricebookCode,
+pricebookType as pricebookType,
+pricebookTypeCustomer as pricebookTypeCustomer,
+pricebookStartDate as pricebookStartDate,
+pricebookEndDate as pricebookEndDate,
+vatAmount as vatAmount,
+currency as currency,
+priceET as priceET,
+priceIT as priceIT,
+priceIncludeVAT as priceIncludeVAT,
+basePriceWithChargesET as basePriceWithChargesET,
+basePriceWithChargesIT as basePriceWithChargesIT,
+basePriceWithChargesIncludeVAT as basePriceWithChargesIncludeVAT
+FROM MKTREF.MKTQT_VEHICLE_OPTIONSPRICINGS OPTIONSPRICINGS
+WHERE OPTIONSPRICINGS.Code = P_Code
+AND OPTIONSPRICINGS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef;
+-----------------------------------BASEEQUIPMENTS-----------------------------
+CURSOR C_MKTQT_VEHICLE_BASEEQUIPMENTS (P_itemDirectoryVehicleRef VARCHAR2) IS
+SELECT * FROM MKTREF.MKTQT_VEHICLE_BASEEQUIPMENTS BASEEQUIPMENTS
+WHERE  BASEEQUIPMENTS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef;
 
 
 
 BEGIN
   file_name := p_filename;
   FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
-  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_PARTIE_JSON', ' ## EXPORT COLLECTION PARTIE JSON ' ||  ' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_JSON', ' ## EXPORT VEHICULE ' ||  ' ##');
   file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
 
+  BEGIN
+       SELECT COUNT(*)
+       INTO   V_NB_ENREG
+       FROM   MKTREF.MKTQT_vehicle;
+  EXCEPTION WHEN OTHERS THEN
+       V_NB_ENREG := 0;
+  END;
 
       V_LIGNE := '[';
-      res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
-      
+      res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
       FOR S_mktqt_vehicle IN C_mktqt_vehicle LOOP
-      BEGIN
-         
+      
+      V_NB_CROSSREFS_TRAITE := 0;
+      V_NB_PRICINGS_TRAITE := 0;
+      V_NB_OPTIONS_TRAITE := 0;
+      V_NB_BASEEQUIPMENTS_TRAITE := 0;
+      
+      BEGIN   
+              V_NB_ENREG := V_NB_ENREG+1;
               V_LIGNE := '{
 "tech_id":"' || S_mktqt_vehicle.tech_id || '", 
 "tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
@@ -698,34 +191,272 @@ BEGIN
 "versionLabelGlobalShort":"' || S_mktqt_vehicle.versionLabelGlobalShort || '", 
 "versionLabeGlobalLong":"' || S_mktqt_vehicle.versionLabeGlobalLong || '", 
 "versionLabelLocalShort":"' || S_mktqt_vehicle.versionLabelLocalShort || '", 
-"versionLabelLocalLong":"' || S_mktqt_vehicle.versionLabelLocalLong  || '", 
-"MODEL_GEN":"' || S_mktqt_vehicle.MODEL_GEN || '", 
-"DIMENSIONS":"' || S_mktqt_vehicle.DIMENSIONS  || '",
-"crossRefs":
-{
-"capcode":"' || S_mktqt_vehicle.capcode  || '",
-"BLVD":"' || S_mktqt_vehicle.BLVD  || '"
-},
-"pricings":
-[{
-"tariffAreaCode":"' || S_mktqt_vehicle.tariffAreaCode || '",
-"priceCode":"' || S_mktqt_vehicle.priceCode || '",
-"priceType":"' || S_mktqt_vehicle.priceType || '",
-"priceTypeCustomer":"' || S_mktqt_vehicle.priceTypeCustomer || '",
-"priceStartDate":"' || S_mktqt_vehicle.priceStartDate || '",
-"priceEndDate":"' || S_mktqt_vehicle.priceEndDate || '",
-"vatAmount":"' || S_mktqt_vehicle.vatAmount || '",
-"priceET":"' || S_mktqt_vehicle.priceET || '",
-"priceIT":"' || S_mktqt_vehicle.priceIT || '",
-"priceIncludeVAT":"' || S_mktqt_vehicle.priceIncludeVAT || '",
-"currency":"' || S_mktqt_vehicle.currency || '",
-"immAmount":"' || S_mktqt_vehicle.immAmount || '",
-"immRate":"' || S_mktqt_vehicle.immRate || '",
-"novaAmount":"' || S_mktqt_vehicle.novaAmount || '",
-"novaRate":"' || S_mktqt_vehicle.novaRate || '",
-"priceWithoutOtrCostIT":"' || S_mktqt_vehicle.priceWithoutOtrCostIT || '",
-"priceWithoutOtrCostET":"' || S_mktqt_vehicle.priceWithoutOtrCostET || '",
-"priceWithoutOtrCostIncludeVAT":"' || S_mktqt_vehicle.priceWithoutOtrCostIncludeVAT || '",
+"versionLabelLocalLong":"' || S_mktqt_vehicle.versionLabelLocalLong  || '",';
+
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_CROSSREFS
+         FROM   MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
+         WHERE  CROSSREFS.identifier = S_mktqt_vehicle.itemDirectoryVehicleRef;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_CROSSREFS := NULL;
+    END;
+
+    IF NVL(V_NB_CROSSREFS, 0) > 0 THEN
+       V_LIGNE := '    "crossRefs": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
+       
+       FOR S_MKTQT_VEHICLE_CROSSREFS IN C_MKTQT_VEHICLE_CROSSREFS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            V_LIGNE := '        {
+                "identifierType":"' || S_MKTQT_VEHICLE_CROSSREFS.identifierType  || '",
+                "identifier":"' || S_MKTQT_VEHICLE_CROSSREFS.identifier  || '"';
+
+                if V_NB_CROSSREFS_TRAITE = V_NB_CROSSREFS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       END LOOP;
+       V_LIGNE := '    ],';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+
+
+    BEGIN
+         SELECT  COUNT(*)
+         INTO   V_NB_PRICINGS
+         FROM   MKTREF.MKTQT_VEHICLE_PRICINGS PRICINGS
+         WHERE  PRICINGS.itemDirectoryVehicleRef =  S_mktqt_vehicle.itemDirectoryVehicleRef;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_PRICINGS := NULL;
+    END;
+    
+    IF NVL(V_NB_PRICINGS, 0) > 0 THEN
+        V_LIGNE := '"pricings": [';
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        
+        FOR S_MKTQT_VEHICLE_PRICINGS IN C_MKTQT_VEHICLE_PRICINGS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            V_NB_PRICINGS_TRAITE := V_NB_PRICINGS_TRAITE+1;   ---- A REVOIR 
+            V_LIGNE := '        {
+                "tariffAreaCode":"' || S_MKTQT_VEHICLE_PRICINGS.tariffAreaCode || '",
+                "priceCode":"' || S_MKTQT_VEHICLE_PRICINGS.priceCode || '",
+                "priceType":"' || S_MKTQT_VEHICLE_PRICINGS.priceType || '",
+                "priceTypeCustomer":"' || S_MKTQT_VEHICLE_PRICINGS.priceTypeCustomer || '",
+                "priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",
+                "priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",
+                "vatAmount":"' || S_MKTQT_VEHICLE_PRICINGS.vatAmount || '",
+                "priceET":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",
+                "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIT || '",
+                "priceIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIncludeVAT || '",
+                "currency":"' || S_MKTQT_VEHICLE_PRICINGS.currency || '",
+                "immAmount":"' || S_MKTQT_VEHICLE_PRICINGS.immAmount || '",
+                "immRate":"' || S_MKTQT_VEHICLE_PRICINGS.immRate || '",
+                "novaAmount":"' || S_MKTQT_VEHICLE_PRICINGS.novaAmount || '",
+                "novaRate":"' || S_MKTQT_VEHICLE_PRICINGS.novaRate || '",
+                "priceWithoutOtrCostIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT || '",
+                "priceWithoutOtrCostET":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostET || '",
+                "priceWithoutOtrCostIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIncludeVAT || '",';
+                
+                if V_NB_PRICINGS_TRAITE = V_NB_PRICINGS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        END LOOP;
+        V_LIGNE := '	    ],';
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;                
+                
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_OPTIONS
+         FROM   MKTREF.MKTQT_VEHICLE_OPTIONS OPTIONS
+         WHERE  OPTIONS.itemDirectoryVehicleRef =  S_mktqt_vehicle.itemDirectoryVehicleRef;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_OPTIONS := NULL;
+    END;                
+
+    IF NVL(V_NB_OPTIONS, 0) > 0 THEN
+        V_LIGNE := '"options": [';
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        
+        FOR S_MKTQT_VEHICLE_OPTIONS IN C_MKTQT_VEHICLE_OPTIONS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            V_NB_OPTIONSLABELS_TRAITE := 0; --------- POUR LA BOUCLE OPTIONSLABELS
+            V_NB_OPTIONSPRICINGS_TRAITE := 0;-------- POUR LA BOUCLE OPTIONSPRICINGS
+        
+            V_NB_OPTIONS_TRAITE := V_NB_OPTIONS_TRAITE+1;   ---- A REVOIR 
+            V_LIGNE := '        {        
+                "code":"' || S_MKTQT_VEHICLE_OPTIONS.code || '",
+                "constructorCode":"' || S_MKTQT_VEHICLE_OPTIONS.constructorCode || '",
+                "typeCode":"' || S_MKTQT_VEHICLE_OPTIONS.typeCode || '",
+                "isPack":"' || S_MKTQT_VEHICLE_OPTIONS.isPack || '",
+                "isAgregated":"' || S_MKTQT_VEHICLE_OPTIONS.isAgregated || '",
+                "startDate":"' || S_MKTQT_VEHICLE_OPTIONS.startDate || '",
+                "endDate":"' || S_MKTQT_VEHICLE_OPTIONS.endDate || '",';
+
+                ---------------------------------------------------------------------------------------------------------------
+                ----------------------------------------------------------------------------------------------------------------
+                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+                    BEGIN
+                        SELECT  COUNT(*)
+                        INTO   V_NB_OPTIONSLABELS
+                        FROM   MKTREF.MKTQT_VEHICLE_OPTIONSLABELS OPTIONSLABELS
+                        WHERE  OPTIONSLABELS.Code = S_MKTQT_VEHICLE_OPTIONS.code
+                        AND    OPTIONSLABELS.itemDirectoryVehicleRef = S_MKTQT_VEHICLE_OPTIONS.itemDirectoryVehicleRef;
+                        
+                    EXCEPTION WHEN OTHERS THEN
+                            V_NB_OPTIONSLABELS := NULL;
+                    END;
+                
+                    IF NVL(V_NB_OPTIONSLABELS, 0) > 0 THEN
+                        V_LIGNE := '    "crossRefs": [';
+                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_NB_OPTIONSLABELS_TRAITE := V_NB_OPTIONSLABELS_TRAITE+1;   ---- A REVOIR 
+       
+                        FOR S_MKTQT_OPTIONSLABELS IN C_MKTQT_OPTIONSLABELS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+                            V_LIGNE := '        {
+                                "language":"' || S_MKTQT_OPTIONSLABELS.language || '",
+                                "labelShort":"' || S_MKTQT_OPTIONSLABELS.labelShort || '",
+                                "labelLong":"' || S_MKTQT_OPTIONSLABELS.labelLong || '",';
+
+                            if V_NB_OPTIONSLABELS_TRAITE = V_NB_OPTIONSLABELS THEN V_LIGNE := V_LIGNE || '}';
+                            else V_LIGNE := V_LIGNE || '},';
+                            end if;
+
+                            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        END LOOP;
+                        V_LIGNE := '    ],';
+                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                    END IF;
+                    
+                    ---------  ---------- --------  ---------   ---------   ---------   ---------  ---------   ---------  ---------  ---------  
+                    
+                    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+                    BEGIN
+                        SELECT  COUNT(*)
+                        INTO   V_NB_OPTIONSPRICINGS
+                        FROM   MKTREF.MKTQT_VEHICLE_OPTIONSPRICINGS OPTIONSPRICINGS
+                        WHERE  OPTIONSPRICINGS.Code = S_MKTQT_VEHICLE_OPTIONS.code
+                        AND    OPTIONSPRICINGS.itemDirectoryVehicleRef = S_MKTQT_VEHICLE_OPTIONS.itemDirectoryVehicleRef;
+                        
+                    EXCEPTION WHEN OTHERS THEN
+                            V_NB_OPTIONSPRICINGS := NULL;
+                    END;
+                
+                    IF NVL(V_NB_OPTIONSPRICINGS, 0) > 0 THEN
+                        V_LIGNE := '    "pricings": [';
+                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
+       
+                        FOR S_MKTQT_OPTIONSPRICINGS IN C_MKTQT_OPTIONSPRICINGS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+                            V_LIGNE := '        {
+                                "territorialityCode":"' || S_MKTQT_OPTIONSPRICINGS.territorialityCode || '",
+                                "pricebookCode":"' || S_MKTQT_OPTIONSPRICINGS.pricebookCode || '",
+                                "pricebookType":"' || S_MKTQT_OPTIONSPRICINGS.pricebookType || '",
+                                "pricebookTypeCustomer":"' || S_MKTQT_OPTIONSPRICINGS.pricebookTypeCustomer || '",
+                                "pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",
+                                "pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",
+                                "vatAmount":"' || S_MKTQT_OPTIONSPRICINGS.vatAmount || '",
+                                "currency":"' || S_MKTQT_OPTIONSPRICINGS.currency || '",
+                                "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '",
+                                "priceIT":"' || S_MKTQT_OPTIONSPRICINGS.priceIT || '",
+                                "priceIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.priceIncludeVAT || '",
+                                "basePriceWithChargesET":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesET || '",
+                                "basePriceWithChargesIT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIT || '",
+                                "basePriceWithChargesIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIncludeVAT || '",';
+
+                            if V_NB_OPTIONSPRICINGS_TRAITE = V_NB_OPTIONSPRICINGS THEN V_LIGNE := V_LIGNE || '}';
+                            else V_LIGNE := V_LIGNE || '},';
+                            end if;
+
+                            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        END LOOP;
+                        V_LIGNE := '    ],';
+                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                    END IF;
+
+          ----------------------------------------------------------------------------------------------------------------
+                ----------------------------------------------------------------------------------------------------------------
+        
+                if V_NB_OPTIONS_TRAITE = V_NB_OPTIONS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        END LOOP;
+        V_LIGNE := '	    ],';
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;         
+        
+    
+    
+     BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_BASEEQUIPMENTS
+         FROM   MKTREF.MKTQT_VEHICLE_BASEEQUIPMENTS BASEEQUIPMENTS
+         WHERE  BASEEQUIPMENTS.itemDirectoryVehicleRef =  S_mktqt_vehicle.itemDirectoryVehicleRef;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_BASEEQUIPMENTS := NULL;
+    END;
+    
+    IF NVL(V_NB_BASEEQUIPMENTS, 0) > 0 THEN
+        V_LIGNE := '"baseEquipments": [';
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        
+        FOR S_MKTQT_VEHICLE_BASEEQUIPMENTS IN C_MKTQT_VEHICLE_BASEEQUIPMENTS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            V_NB_BASEEQUIPMENTS_TRAITE := V_NB_BASEEQUIPMENTS_TRAITE+1;   ---- A REVOIR 
+            V_LIGNE := '        {
+                "externalRef":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef || '",
+                "typeCategoryCode":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.typeCategoryCode || '",
+                "language":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.language || '",
+                "label":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.label || '",';
+                
+                if V_NB_BASEEQUIPMENTS_TRAITE = V_NB_BASEEQUIPMENTS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        END LOOP;
+        V_LIGNE := '	    ],';
+        if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   --------------------------------------- A REVOIR
+        else V_LIGNE := V_LIGNE || '},';    -------------------------------------------------------------------- A REVOIR
+        end if;  -------------------------------------------------------------------- A REVOIR
+        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;                           
+               
+
+    N_SAUV := N_SAUV +1;
+       EXCEPTION WHEN OTHERS THEN COMMIT;
+                V_ERR  := 1;
+                 RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_mktqt_vehicle.itemDirectoryVehicleRef);
+       --RETURN V_ERR;
+       RETURN V_ERR;
+  END;
+  END LOOP;
+   V_LIGNE := ']';
+   res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+   UTL_FILE.FCLOSE(file_id_cvs);
+  res := MKT.MKTQAUT.F_WRITE(file_id,
+                               'FONC_EXPORT_JSON',
+                               'Nombre de sauvegarde :' || N_SAUV);
+    res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
+    UTL_FILE.FCLOSE(file_id);
+
+  --RETURN V_ERR;
+  RETURN V_ERR;
+EXCEPTION WHEN OTHERS THEN COMMIT;
+          V_ERR  := 1;
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          --RETURN V_ERR;
+          RETURN V_ERR;          
+               
+               
+END FONC_EXPORT_JSON;    
+
+
+ /*               
 "taxes":
 {
 "typeCode":"' || ' ' || '",
@@ -741,38 +472,9 @@ BEGIN
 "vatAmount":"' || ' ' || '"
 }
 }],
-"options":
-[{
-"code":"' || S_mktqt_vehicle.code || '",
-"constructorCode":"' || S_mktqt_vehicle.constructorCode || '",
-"typeCode":"' || S_mktqt_vehicle.typeCode || '",
-"isPack":"' || S_mktqt_vehicle.isPack || '",
-"isAgregated":"' || S_mktqt_vehicle.isAgregated || '",
-"startDate":"' || S_mktqt_vehicle.startDate || '",
-"endDate":"' || S_mktqt_vehicle.endDate || '",
-"labels":
-{
-"language":"' || S_mktqt_vehicle.option_language || '",
-"labelShort":"' || S_mktqt_vehicle.option_description || '",
-"labelLong":"' || S_mktqt_vehicle.option_longdescription || '"
-},
-"pricings":
-{
-"territorialityCode":"' || S_mktqt_vehicle.option_territorialityCode || '",
-"pricebookCode":"' || S_mktqt_vehicle.option_pricebookCode || '",
-"pricebookType":"' || S_mktqt_vehicle.option_pricebookType || '",
-"pricebookTypeCustomer":"' || S_mktqt_vehicle.option_pricebookTypeCustomer || '",
-"pricebookStartDate":"' || S_mktqt_vehicle.option_pricebookStartDate || '",
-"pricebookEndDate":"' || S_mktqt_vehicle.option_pricebookEndDate || '",
-"vatAmount":"' || S_mktqt_vehicle.option_vatAmount || '",
-"currency":"' || S_mktqt_vehicle.option_currency || '",
-"priceET":"' || S_mktqt_vehicle.option_priceET || '",
-"priceIT":"' || S_mktqt_vehicle.option_priceIT || '",
-"priceIncludeVAT":"' || S_mktqt_vehicle.option_priceIncludeVAT || '",
-"basePriceWithChargesET":"' || S_mktqt_vehicle.option_basePriceWithChargesET || '",
-"basePriceWithChargesIT":"' || S_mktqt_vehicle.option_basePriceWithChargesIT || '",
-"basePriceWithChargesIncludeVAT":"' || S_mktqt_vehicle.basePriceWithChargesIncludeVAT || '"
-},
+
+
+
 "addeds":
 {
 "optionAddedRef":"' || ' ' || '"
@@ -805,45 +507,13 @@ BEGIN
 "aggregatedCode":"' || ' ' || '"
 }
 }],
-"baseEquipments":
-{
-"externalRef":"' || S_mktqt_vehicle.externalRef || '",
-"typeCategoryCode":"' || S_mktqt_vehicle.typeCategoryCode || '",
-"language":"' || S_mktqt_vehicle.language || '",
-"label":"' || S_mktqt_vehicle.label || '"
-}
-}';
-
-               res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
-               N_SAUV := N_SAUV +1;
-           
-       EXCEPTION WHEN OTHERS THEN COMMIT;
-                V_ERR  := 1;
-                 RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_mktqt_vehicle.itemDirectoryVehicleRef);
-       --RETURN V_ERR;
-       RETURN V_ERR;
-  END;
-  END LOOP;
-   V_LIGNE := ']';
-   res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, V_LIGNE);
-   UTL_FILE.FCLOSE(file_id_cvs);
-  res := MKT.MKTQAUT.F_WRITE(file_id,
-                               'FONC_EXPORT_JSON',
-                               'Nombre de sauvegarde :' || N_SAUV);
-    res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
-    UTL_FILE.FCLOSE(file_id);
-
-  --RETURN V_ERR;
-  RETURN V_ERR;
-EXCEPTION WHEN OTHERS THEN COMMIT;
-          V_ERR  := 1;
-          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
-          --RETURN V_ERR;
-          RETURN V_ERR;
-END FONC_EXPORT_JSON;
-
-
 */
+
+        
+
+
+
+
 
 
 
@@ -1056,19 +726,23 @@ BEGIN
 
  Cursor C_vehicle_VP Is
      select distinct brand.code as brandCode   ,
-                    CAPMAN.NAME || '| ' || CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+                    CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME, --CAPMAN.NAME || '| ' || 
+                    CAPMAN.NAME as CAPMAN_NAME,
                     'VP' AS VEHICULE_TYPE,
-                    CAPDER.RANCODE || 'GEN' || generation.valuestring AS crossref_code    ---- AJOUT VENDREDI 
+                    CAPDER.RANCODE || 'GEN' || B.generation AS crossref_code   
      
-     from    MKTREF.MKTQT_CapDer_VP CAPDER,
-             MKTQT_CAPMAN_VP   CAPMAN,
-             MKTQT_CAPRANGE_VP CAPRAN,
-             MKTQT_NVDTechnical_VP generation,
+     from    MKTREF.MKTQT_NVDModelYear_VP B,
+             MKTREF.MKTQT_CapDer_VP CAPDER, 
+             MKTREF.MKTQT_CAPMAN_VP   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VP CAPRAN,
+             --MKTQT_NVDTechnical_VP generation,
              MKTREF.MKTQT_nomenclature brand
-     where   CAPDER.MANCODE = CAPMAN.CODE
-     AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 471
+             
+     where   B.ID = CAPDER.ID  
+     and     CAPDER.MANCODE  = CAPMAN.CODE
+     AND     CAPDER.RANCODE  = CAPRAN.CODE
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 471
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE);
 
@@ -1079,18 +753,21 @@ BEGIN
     
  Cursor C_vehicle_VU Is
      select distinct brand.code as brandCode   ,
-                     CAPMAN.NAME || '| ' || CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME, 
+                      CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME, --CAPMAN.NAME || '| ' || 
+                      CAPMAN.NAME as CAPMAN_NAME,
                      'VU' AS VEHICULE_TYPE,
-                     CAPDER.RANCODE || 'GEN' || generation.valuestring AS crossref_code    ---- AJOUT VENDREDI 
-     from    MKTREF.MKTQT_CapDer_VU CAPDER,
-             MKTQT_CAPMAN_VU   CAPMAN,
-             MKTQT_CAPRANGE_VU CAPRAN,
-             MKTQT_NVDTechnical_VU generation,
+                     CAPDER.RANCODE || 'GEN' || B.generation AS crossref_code    ---- AJOUT VENDREDI 
+     from    MKTREF.MKTQT_NVDModelYear_VU B,
+             MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTREF.MKTQT_CAPMAN_VU   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VU CAPRAN,
+            -- MKTREF.MKTQT_NVDTechnical_VU generation,
              MKTREF.MKTQT_nomenclature brand
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where    B.ID = CAPDER.ID  
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 477
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 477
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE);
 
@@ -1155,6 +832,7 @@ BEGIN
               (  
                 BRAND_CODE,
                 VEHICULE_NAME,
+                CAPMAN_NAME, -- add
                 VEHICULE_TYPE,
                 model_gen_num,
                 MODEL_GEN_ID,
@@ -1164,6 +842,7 @@ BEGIN
               (  
 REC_vehicle_VP.brandCode ,
 REC_vehicle_VP.VEHICULE_NAME ,
+REC_vehicle_VP.CAPMAN_NAME, --add
 REC_vehicle_VP.VEHICULE_TYPE  ,
 NVL(V_NUM_2, V_NUM),
 V_SEQ,
@@ -1176,7 +855,8 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_MODEL_GEN
         Set     model_gen_num =   NVL(V_NUM_2, V_NUM),
-                MODEL_GEN_ID = V_SEQ
+                MODEL_GEN_ID = V_SEQ,
+                CAPMAN_NAME = REC_vehicle_VP.CAPMAN_NAME
         where  BRAND_CODE          =   REC_vehicle_VP.brandCode
         and    VEHICULE_NAME  = REC_vehicle_VP.VEHICULE_NAME
         and    VEHICULE_TYPE  = REC_vehicle_VP.VEHICULE_TYPE 
@@ -1250,6 +930,7 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
               (  
                 BRAND_CODE,
                 VEHICULE_NAME,
+                CAPMAN_NAME, -- add
                 VEHICULE_TYPE,
                 model_gen_num,
                 MODEL_GEN_ID,
@@ -1259,6 +940,7 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
               (  
 REC_vehicle_VU.brandCode ,
 REC_vehicle_VU.VEHICULE_NAME ,
+REC_vehicle_VU.CAPMAN_NAME, -- add
 REC_vehicle_VU.VEHICULE_TYPE  ,
 NVL(V_NUM_2, V_NUM),
 V_SEQ,
@@ -1271,7 +953,8 @@ REC_vehicle_VU.CROSSREF_CODE     -- AJOUT VENDREDI
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_MODEL_GEN
         Set    model_gen_num =   NVL(V_NUM_2, V_NUM) ,
-                MODEL_GEN_ID = V_SEQ
+                MODEL_GEN_ID = V_SEQ,
+                CAPMAN_NAME = REC_vehicle_VU.CAPMAN_NAME
         where  BRAND_CODE          =   REC_vehicle_VU.brandCode
         and    VEHICULE_NAME  = REC_vehicle_VU.VEHICULE_NAME
         and    VEHICULE_TYPE  = REC_vehicle_VU.VEHICULE_TYPE
@@ -1344,22 +1027,24 @@ BEGIN
 
  Cursor C_vehicle_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
             concat('C', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
      
-     from    MKTREF.MKTQT_CapDer_VP CAPDER,
-             MKTQT_CAPMAN_VP   CAPMAN,
-             MKTQT_CAPRANGE_VP CAPRAN,
-             MKTQT_NVDTechnical_VP generation,
+     from    MKTREF.MKTQT_NVDModelYear_VP B,
+             MKTREF.MKTQT_CapDer_VP CAPDER,
+             MKTREF.MKTQT_CAPMAN_VP   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VP CAPRAN,
+             --MKTQT_NVDTechnical_VP generation,
              MKTREF.MKTQT_nomenclature brand,
              MKTREF.MKTQT_CapTrim_VP CAPTRIM -- add trim
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where   B.ID = CAPDER.ID  
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 471
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 471
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE)
      
@@ -1371,22 +1056,24 @@ BEGIN
     
  Cursor C_vehicle_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
             concat('L', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
      
-     from    MKTREF.MKTQT_CapDer_VU CAPDER,
-             MKTQT_CAPMAN_VU   CAPMAN,
-             MKTQT_CAPRANGE_VU CAPRAN,
-             MKTQT_NVDTechnical_VU generation,
+     from    MKTREF.MKTQT_NVDModelYear_VU B,
+             MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTREF.MKTQT_CAPMAN_VU   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VU CAPRAN,
+             --MKTQT_NVDTechnical_VU generation,
              MKTREF.MKTQT_nomenclature brand,
              MKTREF.MKTQT_CapTrim_VU CAPTRIM    -- add trim
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where   B.ID = CAPDER.ID 
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 477
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 477
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE)
      and     CAPTRIM.CODE(+) =  CAPDER.TrimCode;  ---mapping trim name  MKTQT_CapTrim_VU where Code = CAPDER.TrimCode
@@ -1657,33 +1344,35 @@ BEGIN
 
  Cursor C_vehicle_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  (case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end)  || '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD 
+            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  B.nbRapports  || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD 
             --(maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
  
-     from    MKTREF.MKTQT_CapDer_VP CAPDER,
-             MKTQT_CAPMAN_VP   CAPMAN,
-             MKTQT_CAPRANGE_VP CAPRAN,
-             MKTQT_NVDTechnical_VP generation,
-             MKTREF.MKTQT_nomenclature brand,
-             MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity  -- add MOTORISATIONBLVD
+     from    MKTREF.MKTQT_NVDModelYear_VP B,
+             MKTREF.MKTQT_CapDer_VP CAPDER,
+             MKTREF.MKTQT_CAPMAN_VP   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VP CAPRAN,
+             --MKTQT_NVDTechnical_VP generation,
+             MKTREF.MKTQT_nomenclature brand
+             --MKTQT_NVDTECHNICAL_VP maximumPowerDin, MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity  -- add MOTORISATIONBLVD
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where   B.ID = CAPDER.ID
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 471
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 471
      and     brand.Entity(+) = 'brand'
-     and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE)
+     and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE);
      
         
-    AND   maximumPowerDin.ID(+) = CAPDER.ID
+   /* AND   maximumPowerDin.ID(+) = CAPDER.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
     AND   nbRapports.ID(+) = CAPDER.ID
     AND   nbRapports.TECHCODE(+) = 66
     AND   batteryCapacity.ID(+) = CAPDER.ID
     AND   batteryCapacity.TECHCODE(+) = 163 ;
-     
+     */
     
 
     ----------------------------------------------------------------------
@@ -1692,31 +1381,33 @@ BEGIN
     
  Cursor C_vehicle_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
+            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' || B.nbRapports || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD
      
-     from    MKTREF.MKTQT_CapDer_VU CAPDER,
-             MKTQT_CAPMAN_VU   CAPMAN,
-             MKTQT_CAPRANGE_VU CAPRAN,
-             MKTQT_NVDTechnical_VU generation,
-             MKTREF.MKTQT_nomenclature brand,
-             MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity  -- add MOTORISATIONBLVD
+     from    MKTREF.MKTQT_NVDModelYear_VU B,
+             MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTREF.MKTQT_CAPMAN_VU   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VU CAPRAN,
+             --MKTQT_NVDTechnical_VU generation,
+             MKTREF.MKTQT_nomenclature brand
+             --MKTQT_NVDTECHNICAL_VU maximumPowerDin, MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity  -- add MOTORISATIONBLVD
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where   B.ID = CAPDER.ID
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 477
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 477
      and     brand.Entity(+) = 'brand'
-     and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE)
+     and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE);
      
-    AND   maximumPowerDin.ID(+) = CAPDER.ID
+/*    AND   maximumPowerDin.ID(+) = CAPDER.ID
     AND   maximumPowerDin.TECHCODE(+) = 21
     AND   nbRapports.ID(+) = CAPDER.ID
     AND   nbRapports.TECHCODE(+) = 66
     AND   batteryCapacity.ID(+) = CAPDER.ID
     AND   batteryCapacity.TECHCODE(+) = 152;
-
+*/
 
  /*******************************************************************************/
   BEGIN
@@ -1975,36 +1666,38 @@ BEGIN
 
  Cursor C_vehicle_VP Is
      select distinct  brand.code as brandCode,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (body.code || ':' || height.valuefloat || ':' || length.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   as  VEHICULE_DIMENSIONS --mercredi
+            (body.code || ':' || B.height || ':' || B.length || ':' || ':' || B.maxLadenWeight)   as  VEHICULE_DIMENSIONS --mercredi
             --(substr(CAPDER.capcode,11,1) || height.valuefloat || length.valuefloat || maxLadenWeight.valuefloat  ) as  VEHICULE_DIMENSIONS -- avant
  
-     from    MKTREF.MKTQT_CapDer_VP CAPDER,
-             MKTQT_CAPMAN_VP   CAPMAN,
-             MKTQT_CAPRANGE_VP CAPRAN,
-             MKTQT_NVDTechnical_VP generation,
+     from    MKTREF.MKTQT_NVDModelYear_VP B,
+             MKTREF.MKTQT_CapDer_VP CAPDER,
+             MKTREF.MKTQT_CAPMAN_VP   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VP CAPRAN,
+            -- MKTQT_NVDTechnical_VP generation,
              MKTREF.MKTQT_nomenclature brand,
-             MKTREF.MKTQT_nomenclature body , --mercredi
-             MKTQT_NVDTECHNICAL_VP height, MKTQT_NVDTECHNICAL_VP length,MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
+             MKTREF.MKTQT_nomenclature body  --mercredi
+            -- MKTQT_NVDTECHNICAL_VP height, MKTQT_NVDTECHNICAL_VP length,MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where   B.ID = CAPDER.ID
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 471
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 471
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('C',CAPDER.MANCODE)
      
      and     body.entity (+) = 'body'    --mercredi
-     and     body.crossref_code(+) = 'C' || substr(CAPDER.capcode,11,1)   --mercredi
+     and     body.crossref_code(+) = 'C' || substr(CAPDER.capcode,11,1) ;  --mercredi
           
-    AND   height.ID(+) = CAPDER.ID
+   /* AND   height.ID(+) = CAPDER.ID
     AND   height.TECHCODE(+) = 34 
     AND   length.ID(+) = CAPDER.ID
     AND   length.TECHCODE(+) = 4    
     AND   maxLadenWeight.ID(+) = CAPDER.ID
     AND   maxLadenWeight.TECHCODE(+) = 14;
-     
+     */
 
 
     ----------------------------------------------------------------------
@@ -2013,30 +1706,32 @@ BEGIN
     
  Cursor C_vehicle_VU Is
      select distinct brand.code as brandCode   ,
-            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring AS VEHICULE_NAME,
+            CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (body.code || ':' || height.valuefloat || ':' || length.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS  --mercredi
+            (body.code || ':' || B.height || ':' || B.length  || ':' || B.payLoad || ':' || B.maxLadenWeight) as  VEHICULE_DIMENSIONS  --mercredi
             --(substr(CAPDER.capcode,11,1) || height.valuefloat || length.valuefloat  ||  payLoad.valuefloat || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS --avant     
             
-     from    MKTREF.MKTQT_CapDer_VU CAPDER,
-             MKTQT_CAPMAN_VU   CAPMAN,
-             MKTQT_CAPRANGE_VU CAPRAN,
-             MKTQT_NVDTechnical_VU generation,
+     from    MKTREF.MKTQT_NVDModelYear_VU B,
+             MKTREF.MKTQT_CapDer_VU CAPDER,
+             MKTREF.MKTQT_CAPMAN_VU   CAPMAN,
+             MKTREF.MKTQT_CAPRANGE_VU CAPRAN,
+            -- MKTREF.MKTQT_NVDTechnical_VU generation,
              MKTREF.MKTQT_nomenclature brand,
-             MKTREF.MKTQT_nomenclature body , --mercredi 
-            MKTQT_NVDTECHNICAL_VU height, MKTQT_NVDTECHNICAL_VU length,MKTQT_NVDTECHNICAL_VU  maxLadenWeight, MKTQT_NVDTECHNICAL_VU payLoad
+             MKTREF.MKTQT_nomenclature body  --mercredi 
+            --MKTQT_NVDTECHNICAL_VU height, MKTQT_NVDTECHNICAL_VU length,MKTQT_NVDTECHNICAL_VU  maxLadenWeight, MKTQT_NVDTECHNICAL_VU payLoad
              
-     where   CAPDER.MANCODE = CAPMAN.CODE
+     where     B.ID = CAPDER.ID
+     AND     CAPDER.MANCODE = CAPMAN.CODE
      AND     CAPDER.RANCODE = CAPRAN.CODE
-     AND     generation.ID(+) = CAPDER.ID
-     AND     generation.techcode(+) = 477
+     --AND     generation.ID(+) = CAPDER.ID
+     --AND     generation.techcode(+) = 477
      and     brand.Entity(+) = 'brand'
      and     brand.crossref_code(+) = concat('L',CAPDER.MANCODE)
      
      and     body.entity (+) = 'body'    --mercredi
-     and     body.crossref_code(+) = 'L' || substr(CAPDER.capcode,11,1)   --mercredi     
+     and     body.crossref_code(+) = 'L' || substr(CAPDER.capcode,11,1);   --mercredi     
      
-    AND   height.ID(+) = CAPDER.ID
+/*    AND   height.ID(+) = CAPDER.ID
     AND   height.TECHCODE(+) = 34 
     AND   length.ID(+) = CAPDER.ID
     AND   length.TECHCODE(+) = 4    
@@ -2044,8 +1739,7 @@ BEGIN
     AND   maxLadenWeight.TECHCODE(+) = 14 
     AND   payLoad.ID(+) = CAPDER.ID
     AND   payLoad.TECHCODE(+) = 32 ;
-
-
+*/
 
 
 
@@ -2318,22 +2012,22 @@ brand.code as brandCode   ,
 brand.description_label  as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-(case when generation.valuestring is null  then ' ' else generation.valuestring  end)  as generation  , ----------------------- 471
+B.generation  as generation  , ----------------------- 471
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code segmentMarketingCode    ,
 NULL as faceLiftGeneration  ,
 (case when substr(A.CAPCODE,20,1) is null then 'P' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   -- OK
 body.code as bodyCode    ,
-height.valuefloat as height  ,  ----------------------- 34
-length.valuefloat as length  , ----------------------- 4
+B.height as height  ,  ----------------------- 34
+B.length as length  , ----------------------- 4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-co2EmissionWLTP.valuefloat as co2EmissionWLTP , ----------------------- 173
+B.co2EmissionWLTP as co2EmissionWLTP , ----------------------- 173
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
-maximumPowerDin.valuefloat as maximumPowerDin , ----------------------- 21
-maximumPowerKW.valuefloat  as maximumPowerKW  , ----------------------- 48
+B.maximumPowerDin as maximumPowerDin , ----------------------- 21
+B.maximumPowerKW  as maximumPowerKW  , ----------------------- 48
 substr(A.capcode, 12, 1) as energy1Code ,
 NULL as energy1DetailCode   ,
 NULL as energy2Code ,
@@ -2341,28 +2035,28 @@ NULL as energy2DetailCode   ,
 energyComb.code as energyCombCode  , --
 NULL as motorisation    ,
 NULL as motorisationComb    ,
-cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
+B.cubicCapacity as cubicCapacity   , ----------------------- 20
 transmission.code as transmissionTypeCode    ,
 gearbox.code as gearBoxTypeCode ,
 --( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , ----------------------- 66 
-(case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end) as nbRapports  , ----------------------- 66 
+B.nbRapports as nbRapports  , ----------------------- 66 
 NULL as typeVariantVersion  ,
 CAPTRIM.Name   as trimLevel,  --select distinct Name from Cars_CapTrim where Cars_CapTrim.Code = Cars_CapDer.TrimCode  
-seatNumber.valuefloat as seatNumber  , ----------------------- 47
+B.seatNumber as seatNumber  , ----------------------- 47
 A.doors as doorNumber  ,
 NULL as nedcCombineFuelConsumption  ,
 NULL as nedcExtraUrbanFuelConsumption   ,
 NULL as nedcUrbanFuelConsumption    ,
-wltpLowFuelConsumption.valuefloat  as wltpLowFuelConsumption  ,  ----------------------- 184
-wltpMediumFuelConsumption.valuefloat  as wltpMediumFuelConsumption   , ----------------------- 185
-wltpHighFuelConsumption.valuefloat  as wltpHighFuelConsumption , ----------------------- 186
-wltpExtraHighConsumption.valuefloat  as wltpExtraHighConsumption    , -----------------------187
-wltpCombinedFuelConsumption.valuefloat  as wltpCombinedFuelConsumption ,-----------------------188
-wltpElectricConsumption.valuefloat  as wltpElectricConsumption ,-----------------------164
-wltpElectricRange.valuefloat  as wltpElectricRange   ,-----------------------165
-batteryCapacity.valuefloat  as batteryCapacity ,-----------------------163
-maxLadenWeight.valuefloat  as maxLadenWeight  ,-----------------------14
-kerbWeight.valuefloat  as kerbWeight  ,-----------------------3 
+B.wltpLowFuelConsumption  as wltpLowFuelConsumption  ,  ----------------------- 184
+B.wltpMediumFuelConsumption  as wltpMediumFuelConsumption   , ----------------------- 185
+B.wltpHighFuelConsumption  as wltpHighFuelConsumption , ----------------------- 186
+B.wltpExtraHighConsumption as wltpExtraHighConsumption    , -----------------------187
+B.wltpCombinedFuelConsumption as wltpCombinedFuelConsumption ,-----------------------188
+B.wltpElectricConsumption  as wltpElectricConsumption ,-----------------------164
+B.wltpElectricRange  as wltpElectricRange   ,-----------------------165
+B.batteryCapacity  as batteryCapacity ,-----------------------163
+B.maxLadenWeight  as maxLadenWeight  ,-----------------------14
+B.kerbWeight as kerbWeight  ,-----------------------3 
 NULL as payLoad ,
 (case when C.status = 'S' and C.genericcode =9 then 'True' else 'False' end  ) as hasTelematicBox ,
 NULL as catalogueDetail ,
@@ -2402,19 +2096,8 @@ from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_nomenclature gearbox,
      MKTREF.MKTQT_nomenclature door_seat, --add
      MKTREF.MKTQT_nomenclature year_trimester, --add
-     MKTREF.MKTQT_NVDTechnical_VP generation,
-     MKTREF.MKTQT_NVDTechnical_VP height,
-     MKTREF.MKTQT_NVDTechnical_VP length,
-     MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP,
-     MKTREF.MKTQT_NVDTechnical_VP maximumPowerDin,
-     MKTREF.MKTQT_NVDTechnical_VP maximumPowerKW,
-     
-     MKTQT_NVDTechnical_VP  cubicCapacity,-- MKTQT_NVDTechnical_VP nbRapports,
-     MKTQT_NVDTechnical_VP seatNumber, 
-    MKTQT_NVDTechnical_VP wltpLowFuelConsumption, MKTQT_NVDTechnical_VP wltpMediumFuelConsumption, MKTQT_NVDTechnical_VP wltpHighFuelConsumption,
-    MKTQT_NVDTechnical_VP wltpExtraHighConsumption, MKTQT_NVDTechnical_VP wltpCombinedFuelConsumption ,MKTQT_NVDTechnical_VP wltpElectricConsumption,
-    MKTQT_NVDTechnical_VP wltpElectricRange, -- MKTQT_NVDTechnical_VP batteryCapacity, --MKTQT_NVDTechnical_VP maxLadenWeight,
-    MKTQT_NVDTechnical_VP kerbWeight,
+
+
      
      MKTREF.MKTQT_MODEL_GEN MG,
      MKTQT_CAPMAN_VP   CAPMAN,
@@ -2423,16 +2106,15 @@ from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_TRIM  TRIM,
      MKTREF.MKTQT_CapTrim_VP CAPTRIM,  -- add trim
      MKTREF.MKTQT_MOTORISATIONBLVD MOTORISATIONBLVD,
-     --MKTQT_NVDTECHNICAL_VP maximumPowerDin,
-     MKTQT_NVDTECHNICAL_VP nbRapports, MKTQT_NVDTECHNICAL_VP batteryCapacity,  -- add MOTORISATIONBLVD
-     MKTREF.MKTQT_DIMENSIONS DIMENSIONS, -- add DIMENSIONS
-     MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
+
+     MKTREF.MKTQT_DIMENSIONS DIMENSIONS
+
 where A.id = B.id 
 and A.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
-and c.status(+) = 'S'            --- 
-and c.genericcode(+) = '9'        ---
+--and c.status(+) = 'S'            --- 
+--and c.genericcode(+) = '9'        ---
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('C',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -2449,83 +2131,42 @@ and transmission.crossref_code(+) = A.drivetrain
 and gearbox.entity (+) = 'gearbox'
 and gearbox.crossref_code(+) = A.transmission
 
-and generation.id(+) = B.id and generation.effectivefrom(+) = B.effectivefrom
-and generation.techcode(+) = 471
-and height.id(+) = B.id and height.effectivefrom(+) = B.effectivefrom
-and height.techcode (+) = 34
-and length.id(+) = B.id and length.effectivefrom(+) = B.effectivefrom
-and length.techcode(+) = 4
-and co2EmissionWLTP.id(+) = B.id and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
-and co2EmissionWLTP.techcode(+) = 173
-and maximumPowerDin.id (+) = B.id and maximumPowerDin.effectivefrom(+) = B.effectivefrom
-and maximumPowerDin.techcode(+) = 21 
-and maximumPowerKW.id(+) = B.id and maximumPowerKW.effectivefrom(+) = B.effectivefrom
-and maximumPowerKW.techcode(+) = 48
-
-and  cubicCapacity.ID(+) = B.ID and cubicCapacity.effectivefrom(+) = B.effectivefrom and cubicCapacity.techcode(+) = 20
-and  nbRapports.ID(+) = B.ID and nbRapports.effectivefrom(+) = B.effectivefrom and nbRapports.techcode(+) = 66
-and  seatNumber.ID(+) = B.ID and seatNumber.effectivefrom(+) = B.effectivefrom and seatNumber.techcode(+) = 47
-and  wltpLowFuelConsumption.ID(+) = B.ID and wltpLowFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpLowFuelConsumption.techcode(+) = 184
-and  wltpMediumFuelConsumption.ID(+) = B.ID and wltpMediumFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpMediumFuelConsumption.techcode(+) = 185
-and  wltpHighFuelConsumption.ID(+) = B.ID and wltpHighFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpHighFuelConsumption.techcode(+) = 186
-and  wltpExtraHighConsumption.ID(+) = B.ID and wltpExtraHighConsumption.effectivefrom(+) = B.effectivefrom and wltpExtraHighConsumption.techcode(+) = 187
-and  wltpCombinedFuelConsumption.ID(+) = B.ID and wltpCombinedFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpCombinedFuelConsumption.techcode(+) = 188
-and  wltpElectricConsumption.ID(+) = B.ID and wltpElectricConsumption.effectivefrom(+) = B.effectivefrom and wltpElectricConsumption.techcode(+) = 164
-and  wltpElectricRange.ID(+) = B.ID and wltpElectricRange.effectivefrom(+) = B.effectivefrom and wltpElectricRange.techcode(+) = 165
-and  batteryCapacity.ID(+) = B.ID and batteryCapacity.effectivefrom(+) = B.effectivefrom and batteryCapacity.techcode(+) = 163
-and  maxLadenWeight.ID(+) = B.ID and maxLadenWeight.effectivefrom(+) = B.effectivefrom and maxLadenWeight.techcode(+) = 14
-and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom and kerbWeight.techcode(+) = 3
-
-
-
 
 -- MODEL GEN
 AND MG.BRAND_CODE  = brand.code
-and MG.VEHICULE_NAME  = CAPMAN.NAME || '| ' || CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+and MG.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation  --CAPMAN.NAME || '| ' || 
 AND MG.VEHICULE_TYPE  = 'VP'
-AND MG.CROSSREF_CODE  =  A.RANCODE || 'GEN' || generation.valuestring -- AJOUT VENDREDI
+AND MG.CROSSREF_CODE  =  A.RANCODE || 'GEN' || B.generation 
     AND A.MANCODE = CAPMAN.CODE
     AND A.RANCODE = CAPRAN.CODE
-    --AND     generation.ID(+) = A.ID
-   -- AND     generation.techcode(+) = 471
-   -- and B.effectivefrom = generation.effectivefrom  ----- pour ne pas avoir fausses generations
+
 
 -- TRIM
 AND TRIM.BRAND_CODE = brand.code
-AND TRIM.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND TRIM.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND TRIM.VEHICULE_TYPE  = 'VP'
 AND TRIM.VEHICULE_TRIM  = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
-AND TRIM.CROSSREF_CODE  = concat('C', A.TrimCode)   -- AJOUT VENDREDI
+AND TRIM.CROSSREF_CODE  = concat('C', A.TrimCode)   
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VP'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  =  (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  (case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end)  || '/' || batteryCapacity.valuefloat)
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  =  (B.maximumPowerDin  || '/' || A.Transmission || '/' || A.DriveTrain || '/' || B.nbRapports  || '/' || B.batteryCapacity)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat)
-  -----  AND   maximumPowerDin.ID(+) = A.ID
-  -------  AND   maximumPowerDin.TECHCODE(+) = 21
-   -- AND   nbRapports.ID(+) = A.ID
-   -- AND   nbRapports.TECHCODE(+) = 66
-    --AND   batteryCapacity.ID(+) = A.ID
-    --AND   batteryCapacity.TECHCODE(+) = 163 
+
 
 -- DIMENSION
 AND DIMENSIONS.BRAND_CODE = brand.code
-AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND DIMENSIONS.VEHICULE_TYPE  = 'VP'
-AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || height.valuefloat || ':' || length.valuefloat || ':' || ':' || maxLadenWeight.valuefloat)   ---  interne
-   ----- AND   height.ID(+) = A.ID
-   ----- AND   height.TECHCODE(+) = 34 
-   ----- AND   length.ID(+) = A.ID
-   ----- AND   length.TECHCODE(+) = 4    
-  --  AND   maxLadenWeight.ID(+) = A.ID
-   -- AND   maxLadenWeight.TECHCODE(+) = 14;
+AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || B.height || ':' || B.length || ':' || ':' || B.maxLadenWeight)  
+
    
 and door_seat.entity(+) ='door_seat' and door_seat.crossref_typecode(+) ='CAP'
-and door_seat.crossref_code(+) = concat(concat(A.doors,'-'),seatNumber.valuefloat)
+and door_seat.crossref_code(+) = concat(concat(A.doors,'-'),B.seatNumber)
 
 and year_trimester.entity(+) ='year_trimester'  
 and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
@@ -2538,6 +2179,7 @@ and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace
     ----------------------------------------------------------------------
     
  Cursor C_vehicle_VU Is
+
 
     select distinct
 A.Id as tech_id,
@@ -2554,22 +2196,22 @@ brand.code as brandCode   ,
 brand.description_label as brandLabel  ,
 model.code as familyCode  ,
 model.description_label as familyLabel ,
-(case when generation.valuestring is null  then ' ' else generation.valuestring  end) as generation  ,   ---------477
+B.generation as generation  ,   ---------477
 substr(B.refe, 0,4)  as versionYear ,
 ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) )*4+1 as versionTrimester    , --OK
 segment.code as segmentMarketingCode    ,
 NULL as faceLiftGeneration  ,
 (case when substr(CAPCODE,20,1) ='L' then 'C' else substr(A.CAPCODE,20,1) end  ) as kindCode    ,   --OK
 body.code as bodyCode    ,
-height.valuefloat as height, --34 as height  , ---34
-length.valuefloat as length, --4  as length  , ---4
+B.height as height, --34 as height  , ---34
+B.length as length, --4  as length  , ---4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-co2EmissionWLTP.valuefloat as co2EmissionWLTP, -- 239 as co2EmissionWLTP , --239
+B.co2EmissionWLTP as co2EmissionWLTP, -- 239 as co2EmissionWLTP , --239
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
-maximumPowerDin.valuefloat as maximumPowerDin, -- 21 as maximumPowerDin ,  --21
-maximumPowerKW.valuefloat as maximumPowerKW, --48 as maximumPowerKW  , --48
+B.maximumPowerDin as maximumPowerDin, -- 21 as maximumPowerDin ,  --21
+B.maximumPowerKW as maximumPowerKW, --48 as maximumPowerKW  , --48
 substr(A.capcode, 12, 1) as energy1Code ,
 NULL as energy1DetailCode   ,
 NULL as energy2Code ,
@@ -2577,28 +2219,28 @@ NULL as energy2DetailCode   ,
 energyComb.code as energyCombCode  , --
 NULL as motorisation    ,
 NULL as motorisationComb    ,
-cubicCapacity.valuefloat as cubicCapacity, --20 as cubicCapacity   , --20
+B.cubicCapacity as cubicCapacity, --20 as cubicCapacity   , --20
 transmission.code as transmissionTypeCode    ,
 gearbox.code as gearBoxTypeCode ,
-( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end) as nbRapports  , -----OK
+B.nbRapports as nbRapports  , -----OK
 NULL as typeVariantVersion  ,
 CAPTRIM.Name as trimLevel,  --select distinct Name from Lights_CapTrim where Lights_CapTrim.Code = Lights_CapDer.TrimCode 
-seatNumber.valuefloat as seatNumber, --47 as seatNumber  ,  ---47
+B.seatNumber as seatNumber, --47 as seatNumber  ,  ---47
 NULL as doorNumber  , -- doors en  VP, null en vu
 NULL as nedcCombineFuelConsumption  ,
 NULL as nedcExtraUrbanFuelConsumption   ,
 NULL as nedcUrbanFuelConsumption    ,
-wltpLowFuelConsumption.valuefloat as wltpLowFuelConsumption, --299 as wltpLowFuelConsumption  ,
-wltpMediumFuelConsumption.valuefloat as wltpMediumFuelConsumption,--302 as wltpMediumFuelConsumption   ,
-wltpHighFuelConsumption.valuefloat as wltpHighFuelConsumption, --296 as wltpHighFuelConsumption ,
-wltpExtraHighConsumption.valuefloat as wltpExtraHighConsumption,--293 as wltpExtraHighConsumption    ,
-wltpCombinedFuelConsumption.valuefloat as wltpCombinedFuelConsumption,--290 as wltpCombinedFuelConsumption ,
-wltpElectricConsumption.valuefloat as wltpElectricConsumption,--166 as wltpElectricConsumption ,
-wltpElectricRange.valuefloat as wltpElectricRange,--167 as wltpElectricRange   ,
-batteryCapacity.valuefloat as batteryCapacity,--152 as batteryCapacity ,
-maxLadenWeight.valuefloat as maxLadenWeight,--14 as maxLadenWeight  ,
-kerbWeight.valuefloat as kerbWeight,--3 as kerbWeight  ,
-payLoad.valuefloat as payLoad,--32 as payLoad , -- VU : DIFFERENCE
+B.wltpLowFuelConsumption as wltpLowFuelConsumption, --299 as wltpLowFuelConsumption  ,
+B.wltpMediumFuelConsumption as wltpMediumFuelConsumption,--302 as wltpMediumFuelConsumption   ,
+B.wltpHighFuelConsumption as wltpHighFuelConsumption, --296 as wltpHighFuelConsumption ,
+B.wltpExtraHighConsumption as wltpExtraHighConsumption,--293 as wltpExtraHighConsumption    ,
+B.wltpCombinedFuelConsumption as wltpCombinedFuelConsumption,--290 as wltpCombinedFuelConsumption ,
+B.wltpElectricConsumption as wltpElectricConsumption,--166 as wltpElectricConsumption ,
+B.wltpElectricRange as wltpElectricRange,--167 as wltpElectricRange   ,
+B.batteryCapacity as batteryCapacity,--152 as batteryCapacity ,
+B.maxLadenWeight as maxLadenWeight,--14 as maxLadenWeight  ,
+B.kerbWeight as kerbWeight,--3 as kerbWeight  ,
+B.payLoad as payLoad,--32 as payLoad , -- VU : DIFFERENCE
 (case when C.status = 'S' and C.genericcode =9 then 'True' else 'False' end  ) as hasTelematicBox ,
 NULL as catalogueDetail ,
 NULL as tsnNumber   ,
@@ -2636,38 +2278,25 @@ from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_N
      MKTREF.MKTQT_nomenclature door_seat, --add
      MKTREF.MKTQT_nomenclature year_trimester, --add
      
-     MKTREF.MKTQT_NVDTechnical_VU height,
-     MKTREF.MKTQT_NVDTechnical_VU length,
-     MKTREF.MKTQT_NVDTechnical_VU co2EmissionWLTP,
-     MKTREF.MKTQT_NVDTechnical_VU maximumPowerDin,
-     MKTREF.MKTQT_NVDTechnical_VU maximumPowerKW,
 
-     MKTQT_NVDTechnical_VU  cubicCapacity,-- MKTQT_NVDTechnical_VU nbRapports,
-     MKTQT_NVDTechnical_VU seatNumber, 
-    MKTQT_NVDTechnical_VU wltpLowFuelConsumption, MKTQT_NVDTechnical_VU wltpMediumFuelConsumption, MKTQT_NVDTechnical_VU wltpHighFuelConsumption,
-    MKTQT_NVDTechnical_VU wltpExtraHighConsumption, MKTQT_NVDTechnical_VU wltpCombinedFuelConsumption ,MKTQT_NVDTechnical_VU wltpElectricConsumption,
-    MKTQT_NVDTechnical_VU wltpElectricRange, -- MKTQT_NVDTechnical_VU batteryCapacity, --MKTQT_NVDTechnical_VU maxLadenWeight,
-    MKTQT_NVDTechnical_VU kerbWeight,
-    MKTQT_NVDTechnical_VU payLoad,
      
      MKTREF.MKTQT_MODEL_GEN MG,
      MKTQT_CAPMAN_VU   CAPMAN,
      MKTQT_CAPRANGE_VU CAPRAN,
-     MKTQT_NVDTechnical_VU generation,
+   
      MKTREF.MKTQT_TRIM  TRIM,
      MKTREF.MKTQT_CapTrim_VU CAPTRIM,  -- add trim
      MKTREF.MKTQT_MOTORISATIONBLVD MOTORISATIONBLVD,
-     --MKTQT_NVDTECHNICAL_VU maximumPowerDin,
-     MKTQT_NVDTECHNICAL_VU nbRapports, MKTQT_NVDTECHNICAL_VU batteryCapacity,  -- add MOTORISATIONBLVD
-     MKTREF.MKTQT_DIMENSIONS DIMENSIONS, -- add DIMENSIONS
-     MKTQT_NVDTECHNICAL_VU  maxLadenWeight  
+
+     MKTREF.MKTQT_DIMENSIONS DIMENSIONS
+
 
 where A.id = B.id 
 and B.id = C.id (+)
 and B.effectivefrom = C.effectivefrom (+)
 and B.effectiveto = C.effectiveto (+)
-and c.status(+) = 'S'   ----
-and c.genericcode(+) = '9'  ----
+--and c.status(+) = 'S'   ----
+--and c.genericcode(+) = '9'  ----
 and brand.Entity(+) = 'brand'
 and brand.crossref_code(+) = concat('L',A.MANCODE)
 and model.Entity(+) = 'model'
@@ -2684,89 +2313,46 @@ and transmission.crossref_code(+) = A.drivetrain
 and gearbox.entity (+) = 'gearbox'
 and gearbox.crossref_code(+) = A.transmission
 
-and generation.id(+) = B.id and generation.effectivefrom(+) = B.effectivefrom
-and generation.techcode(+) = 477
-and height.id(+) = B.id and height.effectivefrom(+) = B.effectivefrom
-and height.techcode (+) = 34
-and length.id(+) = B.id and length.effectivefrom(+) = B.effectivefrom
-and length.techcode(+) = 4
-and co2EmissionWLTP.id(+) = B.id and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
-and co2EmissionWLTP.techcode(+) = 239
-and maximumPowerDin.id (+) = B.id and maximumPowerDin.effectivefrom(+) = B.effectivefrom
-and maximumPowerDin.techcode(+) = 21 
-and maximumPowerKW.id(+) = B.id and maximumPowerKW.effectivefrom(+) = B.effectivefrom
-and maximumPowerKW.techcode(+) = 48
-
-and  cubicCapacity.ID(+) = B.ID and cubicCapacity.effectivefrom(+) = B.effectivefrom and cubicCapacity.techcode(+) = 20
-and  nbRapports.ID(+) = B.ID and nbRapports.effectivefrom(+) = B.effectivefrom and nbRapports.techcode(+) = 66
-and  seatNumber.ID(+) = B.ID and seatNumber.effectivefrom(+) = B.effectivefrom and seatNumber.techcode(+) = 47
-and  wltpLowFuelConsumption.ID(+) = B.ID and wltpLowFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpLowFuelConsumption.techcode(+) = 299
-and  wltpMediumFuelConsumption.ID(+) = B.ID and wltpMediumFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpMediumFuelConsumption.techcode(+) = 302
-and  wltpHighFuelConsumption.ID(+) = B.ID and wltpHighFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpHighFuelConsumption.techcode(+) = 296
-and  wltpExtraHighConsumption.ID(+) = B.ID and wltpExtraHighConsumption.effectivefrom(+) = B.effectivefrom and wltpExtraHighConsumption.techcode(+) = 293
-and  wltpCombinedFuelConsumption.ID(+) = B.ID and wltpCombinedFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpCombinedFuelConsumption.techcode(+) = 290
-and  wltpElectricConsumption.ID(+) = B.ID and wltpElectricConsumption.effectivefrom(+) = B.effectivefrom and wltpElectricConsumption.techcode(+) = 166
-and  wltpElectricRange.ID(+) = B.ID and wltpElectricRange.effectivefrom(+) = B.effectivefrom and wltpElectricRange.techcode(+) = 167
-and  batteryCapacity.ID(+) = B.ID and batteryCapacity.effectivefrom(+) = B.effectivefrom and batteryCapacity.techcode(+) = 152
-and  maxLadenWeight.ID(+) = B.ID and maxLadenWeight.effectivefrom(+) = B.effectivefrom and maxLadenWeight.techcode(+) = 14
-and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom and kerbWeight.techcode(+) = 3
-and  payLoad.ID(+) = B.ID and payLoad.effectivefrom(+) = B.effectivefrom and payLoad.techcode(+) = 32  -- DIFFERENCE
-
 
 -- MODEL GEN
 AND MG.BRAND_CODE  = brand.code
-and MG.VEHICULE_NAME  = CAPMAN.NAME || '| ' || CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+and MG.VEHICULE_NAME  =  CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation  --CAPMAN.NAME || '| ' || 
 AND MG.VEHICULE_TYPE  = 'VU'
-AND MG.CROSSREF_CODE  =  A.RANCODE || 'GEN' || generation.valuestring -- AJOUT VENDREDI
+AND MG.CROSSREF_CODE  =  A.RANCODE || 'GEN' || B.generation 
     AND A.MANCODE = CAPMAN.CODE
     AND A.RANCODE = CAPRAN.CODE
-   ----- AND     generation.ID(+) = A.ID
-  -----  AND     generation.techcode(+) = 477
+
 
 -- TRIM
 AND TRIM.BRAND_CODE = brand.code
-AND TRIM.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND TRIM.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND TRIM.VEHICULE_TYPE  = 'VU'
 AND TRIM.VEHICULE_TRIM  = (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end)
-AND TRIM.CROSSREF_CODE  = concat('L', A.TrimCode)   -- AJOUT VENDREDI
+AND TRIM.CROSSREF_CODE  = concat('L', A.TrimCode)   
     AND  CAPTRIM.CODE(+) =  A.TrimCode
 
 
 -- MOTORISATION
 AND MOTORISATIONBLVD.BRAND_CODE = brand.code
-AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND MOTORISATIONBLVD.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND MOTORISATIONBLVD.VEHICULE_TYPE  = 'VU'
-AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (maximumPowerDin.valuefloat  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat)
+AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD  = (B.maximumPowerDin  || '/' || A.Transmission || '/' || A.DriveTrain || '/' ||  B.nbRapports || '/' || B.batteryCapacity)
 --AND MOTORISATIONBLVD.VEHICULE_MOTORISATIONBLVD (+) = (maximumPowerDin.valuefloat || ' ' || A.DriveTrain || ' ' || A.Transmission || ' ' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else substr(nbRapports.valuestring, 1,2) end )|| ' ' || batteryCapacity.valuefloat) 
-    ------AND   maximumPowerDin.ID(+) = A.ID
-    ------AND   maximumPowerDin.TECHCODE(+) = 21
-   -- AND   nbRapports.ID(+) = A.ID
-   -- AND   nbRapports.TECHCODE(+) = 66
-    --AND   batteryCapacity.ID(+) = A.ID
-    --AND   batteryCapacity.TECHCODE(+) = 152 
+
 
 -- DIMENSION
 AND DIMENSIONS.BRAND_CODE = brand.code
-AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || generation.valuestring
+AND DIMENSIONS.VEHICULE_NAME  = CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation
 AND DIMENSIONS.VEHICULE_TYPE  = 'VU'
-AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || height.valuefloat || ':' || length.valuefloat  || ':' ||  payLoad.valuefloat || ':' || maxLadenWeight.valuefloat)  --interne
-   ---- AND   height.ID(+) = A.ID
-   ---- AND   height.TECHCODE(+) = 34 
-  ----  AND   length.ID(+) = A.ID
-  ----  AND   length.TECHCODE(+) = 4    
-  --  AND   maxLadenWeight.ID(+) = A.ID
-   -- AND   maxLadenWeight.TECHCODE(+) = 14;
+AND DIMENSIONS.VEHICULE_DIMENSIONS =  (body.code || ':' || B.height || ':' || B.length  || ':' ||  B.payLoad || ':' || B.maxLadenWeight)  
 
-  --  AND   payLoad.ID(+) = CAPDER.ID
-  --  AND   payLoad.TECHCODE(+) = 32 ;
   
 and door_seat.entity(+) ='door_seat' and door_seat.crossref_typecode(+)='CAP'
---and door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17')
-and door_seat.crossref_code(+) = concat('-',seatNumber.valuefloat)
+
+and door_seat.crossref_code(+) = concat('-',B.seatNumber)
 
 and year_trimester.entity(+) ='year_trimester'  
 and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
-
 
 ;
 
@@ -3451,20 +3037,11 @@ BEGIN
   Cursor C_vehicle_crossRefs Is
   
 select  distinct
---TECH_ID as TECH_ID, 
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,
---versionYear	as versionYear,
---versionTrimester as versionTrimester,
---generation,-- add
---DIMENSIONS,  -- add
---MODEL_GEN,-- add
---VEHICULE_TYPE as VEHICULE_TYPE,
-'BLVD' as identifierType,
-BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester AS identifier
---capcode
---BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || DOORNUMBER || TRIM || energyCombCode ||MOTORISATIONBLVD || versionTrimester AS BLVD
-from MKTQT_vehicle
-where  brandcode is not null 
+'BLVD' as identifierType_BLVD,
+'CONSTR' as identifierType_CONSTR,
+(case when 
+brandcode is not null 
 and brandLabel is not null 
 and familyLabel is not null 
 and KINDCODE is not null 
@@ -3475,8 +3052,11 @@ and maximumPowerDin is not null
 and transmissionTypeCode is not null 
 and gearBoxTypeCode is not null 
 and year_trimester is not null
-
-and DIMENSIONS != '  '   ------ AJOUT 19 SEPTEMBRE
+and DIMENSIONS != '  '   
+then (BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester) 
+else null end) AS identifier_BLVD,
+'' AS identifier_CONSTR
+from MKTQT_vehicle
 ;
 
 
@@ -3494,7 +3074,7 @@ and DIMENSIONS != '  '   ------ AJOUT 19 SEPTEMBRE
         SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
         SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
 
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'Pour VP + VU : ',' ');  
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'BLVD: ',' ');  
 
   FOR REC_vehicle_crossRefs IN C_vehicle_crossRefs
   LOOP
@@ -3528,8 +3108,8 @@ identifier
               (  
 --REC_vehicle_crossRefs.tech_id,
 REC_vehicle_crossRefs.itemDirectoryVehicleRef,
-REC_vehicle_crossRefs.identifierType,
-REC_vehicle_crossRefs.identifier
+REC_vehicle_crossRefs.identifierType_BLVD,
+REC_vehicle_crossRefs.identifier_BLVD
 --REC_vehicle_crossRefs.versionYear,
 --REC_vehicle_crossRefs.versionTrimester,
 --REC_vehicle_crossRefs.generation,-- add
@@ -3545,10 +3125,11 @@ REC_vehicle_crossRefs.identifier
         WHEN DUP_VAL_ON_INDEX THEN
 				Update  MKTREF.MKTQT_vehicle_crossRefs
         Set       
-identifierType = REC_vehicle_crossRefs.identifierType,
-identifier = REC_vehicle_crossRefs.identifier
 
-        where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef;
+        identifier = REC_vehicle_crossRefs.identifier_BLVD
+
+        where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
+        and identifierType = REC_vehicle_crossRefs.identifierType_BLVD;
       ---  and     versionYear = REC_vehicle_crossRefs.versionYear
       ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
       ---  and     generation = REC_vehicle_crossRefs.generation
@@ -3574,6 +3155,94 @@ identifier = REC_vehicle_crossRefs.identifier
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   V_INS :=0;
+   V_Upd :=0;
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'CONSTR : ',' ');  
+
+  FOR REC_vehicle_crossRefs IN C_vehicle_crossRefs
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_vehicle_crossRefs
+              (   
+--tech_id, 
+itemDirectoryVehicleRef,
+identifierType,
+identifier
+--versionYear,
+--versionTrimester,
+--generation,-- add
+--DIMENSIONS,  -- add
+--MODEL_GEN,-- add
+--VEHICULE_TYPE,
+--BLVD,
+--capcode
+              )
+        VALUES
+              (  
+--REC_vehicle_crossRefs.tech_id,
+REC_vehicle_crossRefs.itemDirectoryVehicleRef,
+REC_vehicle_crossRefs.identifierType_CONSTR,
+REC_vehicle_crossRefs.identifier_CONSTR
+--REC_vehicle_crossRefs.versionYear,
+--REC_vehicle_crossRefs.versionTrimester,
+--REC_vehicle_crossRefs.generation,-- add
+--REC_vehicle_crossRefs.DIMENSIONS,-- add
+--REC_vehicle_crossRefs.MODEL_GEN,-- add
+--REC_vehicle_crossRefs.VEHICULE_TYPE,
+--REC_vehicle_crossRefs.capcode
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_vehicle_crossRefs
+        Set       
+
+        identifier = REC_vehicle_crossRefs.identifier_CONSTR
+
+        where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
+        and identifierType = REC_vehicle_crossRefs.identifierType_CONSTR;
+      ---  and     versionYear = REC_vehicle_crossRefs.versionYear
+      ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
+      ---  and     generation = REC_vehicle_crossRefs.generation
+      ---  and     DIMENSIONS = REC_vehicle_crossRefs.DIMENSIONS
+      --  and     MODEL_GEN = REC_vehicle_crossRefs.MODEL_GEN
+      ---  and     BLVD = REC_vehicle_crossRefs.BLVD ;
+        
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle_crossRefs','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   
+   
+   
+   
    
 
           
@@ -4648,13 +4317,13 @@ BEGIN
  select  distinct
  
                  BRAND_CODE     as  parent,  -- brandCode
-                VEHICULE_NAME   as  description_label,
+                CAPMAN_NAME || ' | ' || VEHICULE_NAME   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 MODEL_GEN_ID    as code,
                 CROSSREF_CODE   as CROSSREF_CODE
 
- from  MKTREF.MKTQT_MODEL_GEN   MODEL_GEN
+ from  MKTREF.MKTQT_MODEL_GEN   
 ; 
  
  
@@ -4815,7 +4484,7 @@ BEGIN
   
  select  distinct
                 TRIM.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
-                TRIM.VEHICULE_TRIM   as  description_label,
+               TRIM.VEHICULE_NAME  || ' | '  || TRIM.VEHICULE_TRIM as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 TRIM.TRIM_ID    as code,
@@ -5096,7 +4765,7 @@ BEGIN
 
  select  distinct
                 motorisationBLVD.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
-                motorisationBLVD.VEHICULE_motorisationBLVD   as  description_label,
+                motorisationBLVD.VEHICULE_NAME || ' | ' ||  motorisationBLVD.VEHICULE_motorisationBLVD   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 motorisationBLVD.motorisationBLVD_ID    as code,
@@ -5377,7 +5046,7 @@ BEGIN
 
  select  distinct
                 dimensions.BRAND_CODE || model_gen.model_gen_id     as  parent,  -- brandCode
-                dimensions.VEHICULE_dimensions   as  description_label,
+                dimensions.VEHICULE_NAME || ' | ' || dimensions.VEHICULE_dimensions   as  description_label,
                 --VEHICULE_TYPE,
                 --model_gen_num,
                 dimensions.dimensions_ID    as code,
