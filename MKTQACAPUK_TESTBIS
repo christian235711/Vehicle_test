@@ -2,7 +2,7 @@ create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
 
 
 FUNCTION FONC_EXPORT_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
-   V_ERR       number:=0;
+    V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
     FILE_ID     UTL_FILE.FILE_TYPE;
     FILE_ID_CVS UTL_FILE.FILE_TYPE;
@@ -29,16 +29,126 @@ FUNCTION FONC_EXPORT_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_
 
 -----------------------------------VEHICLE-----------------------------
 CURSOR C_mktqt_vehicle IS
-select * from MKTREF.MKTQT_vehicle;
+select 
+tech_id as tech_id ,
+tech_dateExtraction as tech_dateExtraction ,
+tech_dateInsertion as tech_dateInsertion ,
+countryCode as countryCode ,
+itemDirectoryVehicleRef as itemDirectoryVehicleRef ,
+versionState as versionState ,
+TO_CHAR(validityStartDate,'YYYY-MM-DD') as validityStartDate,
+TO_CHAR(validityEndDate,'YYYY-MM-DD') as validityEndDate,
+corporateGroupCode as corporateGroupCode ,
+corporateGroupLabel as corporateGroupLabel ,
+brandCode as brandCode ,
+brandLabel as brandLabel ,
+familyCode as familyCode ,
+familyLabel as familyLabel ,
+generation as generation ,
+versionYear as versionYear ,
+versionTrimester as versionTrimester ,
+segmentMarketingCode as segmentMarketingCode ,
+faceLiftGeneration as faceLiftGeneration ,
+kindCode as kindCode ,
+bodyCode as bodyCode ,
+height as height ,
+length as length ,
+sportinessFlag as sportinessFlag ,
+co2EmissionNEDC as co2EmissionNEDC ,
+co2EmissionWLTP as co2EmissionWLTP ,
+co2ClassCode as co2ClassCode ,
+fiscalHorsePower as fiscalHorsePower ,
+maximumPowerDin as maximumPowerDin ,
+maximumPowerKW as maximumPowerKW ,
+energy1Code as energy1Code ,
+energy1DetailCode as energy1DetailCode ,
+energy2Code as energy2Code ,
+energy2DetailCode as energy2DetailCode ,
+energyCombCode as energyCombCode ,
+motorisation as motorisation ,
+motorisationComb as motorisationComb ,
+cubicCapacity as cubicCapacity ,
+transmissionTypeCode as transmissionTypeCode ,
+gearBoxTypeCode as gearBoxTypeCode ,
+nbRapports as nbRapports ,
+typeVariantVersion as typeVariantVersion ,
+trimLevel as trimLevel ,
+seatNumber as seatNumber ,
+doorNumber as doorNumber ,
+nedcCombineFuelConsumption as nedcCombineFuelConsumption ,
+nedcExtraUrbanFuelConsumption as nedcExtraUrbanFuelConsumption ,
+nedcUrbanFuelConsumption as nedcUrbanFuelConsumption ,
+wltpLowFuelConsumption as wltpLowFuelConsumption ,
+wltpMediumFuelConsumption as wltpMediumFuelConsumption ,
+wltpHighFuelConsumption as wltpHighFuelConsumption ,
+wltpExtraHighConsumption as wltpExtraHighConsumption ,
+wltpCombinedFuelConsumption as wltpCombinedFuelConsumption ,
+wltpElectricConsumption as wltpElectricConsumption ,
+wltpElectricRange as wltpElectricRange ,
+batteryCapacity as batteryCapacity ,
+maxLadenWeight as maxLadenWeight ,
+kerbWeight as kerbWeight ,
+payLoad as payLoad ,
+hasTelematicBox as hasTelematicBox ,
+catalogueDetail as catalogueDetail ,
+tsnNumber as tsnNumber ,
+wltpFlag as wltpFlag ,
+completenessFlag as completenessFlag ,
+validationUser as validationUser ,
+validationDate as validationDate ,
+updateUser as updateUser ,
+updateDate as updateDate ,
+purchaseCondition as purchaseCondition ,
+designBases as designBases ,
+designCustomerShip as designCustomerShip ,
+versionLabelGlobalShort as versionLabelGlobalShort ,
+versionLabeGlobalLong as versionLabeGlobalLong ,
+versionLabelLocalShort as versionLabelLocalShort ,
+versionLabelLocalLong as versionLabelLocalLong 
+
+from MKTREF.MKTQT_vehicle
+where rownum <= 50;
+--where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' )  ;
 -----------------------------------CROSSREFS-----------------------------
 CURSOR C_MKTQT_VEHICLE_CROSSREFS (P_itemDirectoryVehicleRef  VARCHAR2) IS
+
+select * from MKTQT_vehicle_crossrefs CROSSREFS
+where exists 
+(select * 
+from MKTQT_vehicle_crossrefs CROSSREFS_EXISTS 
+where CROSSREFS_EXISTS.identifierType = 'BLVD' and CROSSREFS_EXISTS.identifier is not null and CROSSREFS_EXISTS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef)
+and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
+
+/*
 SELECT * FROM MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
-WHERE CROSSREFS.identifier = P_itemDirectoryVehicleRef ;
+WHERE CROSSREFS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef 
+AND CROSSREFS.identifierType = 'BLVD'
+AND CROSSREFS.identifier is not null;*/
 -----------------------------------PRICINGS-----------------------------
 CURSOR C_MKTQT_VEHICLE_PRICINGS (P_itemDirectoryVehicleRef  VARCHAR2) IS 
-select * from MKTREF.MKTQT_VEHICLE_PRICINGS PRICINGS
+select 
+tariffAreaCode as tariffAreaCode,
+priceCode as priceCode,
+priceType as priceType,
+priceTypeCustomer as priceTypeCustomer,
+TO_CHAR(priceStartDate,'YYYY-MM-DD') as priceStartDate,
+TO_CHAR(priceEndDate,'YYYY-MM-DD') as priceEndDate,
+vatAmount as vatAmount,
+priceET as priceET,
+priceIT as priceIT,
+priceIncludeVAT as priceIncludeVAT,
+currency as currency,
+immAmount as immAmount,
+immRate as immRate,
+novaAmount as novaAmount,
+novaRate as novaRate,
+priceWithoutOtrCostIT as priceWithoutOtrCostIT,
+priceWithoutOtrCostET as priceWithoutOtrCostET,
+priceWithoutOtrCostIncludeVAT as priceWithoutOtrCostIncludeVAT
+
+from MKTREF.MKTQT_VEHICLE_PRICINGS PRICINGS
 WHERE PRICINGS.itemDirectoryVehicleRef =  P_itemDirectoryVehicleRef ;
------------------------------------OPTIONS-----------------------------
+-----------------------------------OPTIONS-----------------------------  DANS LA TABLE MKTQT_VEHICLE_OPTIONS, ON A AUSSI LES DONNEES de OPTIONSLABELS et OPTIONSPRICINGS
 CURSOR C_MKTQT_VEHICLE_OPTIONS(P_itemDirectoryVehicleRef VARCHAR2 ) IS
 SELECT distinct
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,
@@ -71,8 +181,8 @@ territorialityCode as territorialityCode,
 pricebookCode as pricebookCode,
 pricebookType as pricebookType,
 pricebookTypeCustomer as pricebookTypeCustomer,
-pricebookStartDate as pricebookStartDate,
-pricebookEndDate as pricebookEndDate,
+TO_CHAR(pricebookStartDate, 'YYYY-MM-DD') as pricebookStartDate,
+TO_CHAR(pricebookEndDate, 'YYYY-MM-DD') as pricebookEndDate,
 vatAmount as vatAmount,
 currency as currency,
 priceET as priceET,
@@ -95,19 +205,22 @@ BEGIN
   file_name := p_filename;
   FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
   RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_JSON', ' ## EXPORT VEHICULE ' ||  ' ##');
-  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
 
-  BEGIN
+ -----------------------------------VEHICLE-----------------------------
+  BEGIN 
        SELECT COUNT(*)
        INTO   V_NB_ENREG
-       FROM   MKTREF.MKTQT_vehicle;
+       FROM   MKTREF.MKTQT_vehicle ;
   EXCEPTION WHEN OTHERS THEN
        V_NB_ENREG := 0;
   END;
-
-      V_LIGNE := '[';
+        
+      V_LIGNE := '[';   
       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
       FOR S_mktqt_vehicle IN C_mktqt_vehicle LOOP
+      
+      IF  V_NB_ENREG_TRAITE > 0 THEN  V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); END IF; ---ajout a la fin de la boucle apres le 1 element
       
       V_NB_CROSSREFS_TRAITE := 0;
       V_NB_PRICINGS_TRAITE := 0;
@@ -115,7 +228,7 @@ BEGIN
       V_NB_BASEEQUIPMENTS_TRAITE := 0;
       
       BEGIN   
-              V_NB_ENREG := V_NB_ENREG+1;
+              V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE+1;
               V_LIGNE := '{
 "tech_id":"' || S_mktqt_vehicle.tech_id || '", 
 "tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
@@ -191,24 +304,44 @@ BEGIN
 "versionLabelGlobalShort":"' || S_mktqt_vehicle.versionLabelGlobalShort || '", 
 "versionLabeGlobalLong":"' || S_mktqt_vehicle.versionLabeGlobalLong || '", 
 "versionLabelLocalShort":"' || S_mktqt_vehicle.versionLabelLocalShort || '", 
-"versionLabelLocalLong":"' || S_mktqt_vehicle.versionLabelLocalLong  || '",';
+"versionLabelLocalLong":"' || S_mktqt_vehicle.versionLabelLocalLong  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+    -----------------------------------CROSSREFS-----------------------------
+    /*
+    select * from MKTQT_vehicle_crossrefs CROSSREFS
+where exists 
+(select * 
+from MKTQT_vehicle_crossrefs CROSSREFS_EXISTS 
+where CROSSREFS_EXISTS.identifierType = 'BLVD' and CROSSREFS_EXISTS.identifier is not null and CROSSREFS_EXISTS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef)
+and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
+    */
     BEGIN
          SELECT COUNT(*)
          INTO   V_NB_CROSSREFS
-         FROM   MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
-         WHERE  CROSSREFS.identifier = S_mktqt_vehicle.itemDirectoryVehicleRef;
+         FROM   MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS 
+         WHERE 
+         EXISTS     --------------DEBUT AJOUT CAR 3 lignes par itemDirectoryVehicleRef (pas de crossrefs : [] dans le fichier d'export)
+            (select * 
+            from MKTQT_vehicle_crossrefs CROSSREFS_EXISTS 
+            where CROSSREFS_EXISTS.identifierType = 'BLVD'
+            and CROSSREFS_EXISTS.identifier is not null 
+            and CROSSREFS_EXISTS.itemDirectoryVehicleRef=S_mktqt_vehicle.itemDirectoryVehicleRef) --------------FIN AJOUT
+         AND CROSSREFS.itemDirectoryVehicleRef = S_mktqt_vehicle.itemDirectoryVehicleRef;
     EXCEPTION WHEN OTHERS THEN
               V_NB_CROSSREFS := NULL;
     END;
 
     IF NVL(V_NB_CROSSREFS, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour vehicle
+    
        V_LIGNE := '    "crossRefs": [';
        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-       V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
+       
        
        FOR S_MKTQT_VEHICLE_CROSSREFS IN C_MKTQT_VEHICLE_CROSSREFS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
                 "identifierType":"' || S_MKTQT_VEHICLE_CROSSREFS.identifierType  || '",
                 "identifier":"' || S_MKTQT_VEHICLE_CROSSREFS.identifier  || '"';
@@ -219,11 +352,12 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
        END LOOP;
-       V_LIGNE := '    ],';
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;
+    V_LIGNE := '';  -------- null
 
-
+    -----------------------------------PRICINGS-----------------------------
     BEGIN
          SELECT  COUNT(*)
          INTO   V_NB_PRICINGS
@@ -234,6 +368,8 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END;
     
     IF NVL(V_NB_PRICINGS, 0) > 0 THEN
+        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour crossrefs
+        
         V_LIGNE := '"pricings": [';
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
@@ -257,7 +393,7 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 "novaRate":"' || S_MKTQT_VEHICLE_PRICINGS.novaRate || '",
                 "priceWithoutOtrCostIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT || '",
                 "priceWithoutOtrCostET":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostET || '",
-                "priceWithoutOtrCostIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIncludeVAT || '",';
+                "priceWithoutOtrCostIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIncludeVAT || '"';
                 
                 if V_NB_PRICINGS_TRAITE = V_NB_PRICINGS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
@@ -265,10 +401,12 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         END LOOP;
-        V_LIGNE := '	    ],';
+        V_LIGNE := '	    ]'; ---------   virgule ajoutee dans la boucle suivant 
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;                
-                
+    V_LIGNE := '';  -------- null
+    
+    -----------------------------------OPTIONS-----------------------------            
     BEGIN
          SELECT COUNT(*)
          INTO   V_NB_OPTIONS
@@ -277,16 +415,21 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     EXCEPTION WHEN OTHERS THEN
               V_NB_OPTIONS := NULL;
     END;                
-
+ --RES := MKT.MKTQAUT.F_WRITE(FILE_ID, to_char(V_NB_OPTIONS), ' ## AVANT IF options ' ||  ' ##');
     IF NVL(V_NB_OPTIONS, 0) > 0 THEN
+        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);--------- virgule ajoutee pour pricings
+        
         V_LIGNE := '"options": [';
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
+        
         FOR S_MKTQT_VEHICLE_OPTIONS IN C_MKTQT_VEHICLE_OPTIONS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+        
+            V_NB_OPTIONS_TRAITE := V_NB_OPTIONS_TRAITE+1;   ---- A REVOIR 
             V_NB_OPTIONSLABELS_TRAITE := 0; --------- POUR LA BOUCLE OPTIONSLABELS
             V_NB_OPTIONSPRICINGS_TRAITE := 0;-------- POUR LA BOUCLE OPTIONSPRICINGS
         
-            V_NB_OPTIONS_TRAITE := V_NB_OPTIONS_TRAITE+1;   ---- A REVOIR 
+            
             V_LIGNE := '        {        
                 "code":"' || S_MKTQT_VEHICLE_OPTIONS.code || '",
                 "constructorCode":"' || S_MKTQT_VEHICLE_OPTIONS.constructorCode || '",
@@ -296,9 +439,13 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 "startDate":"' || S_MKTQT_VEHICLE_OPTIONS.startDate || '",
                 "endDate":"' || S_MKTQT_VEHICLE_OPTIONS.endDate || '",';
 
+                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+                      
+
                 ---------------------------------------------------------------------------------------------------------------
                 ----------------------------------------------------------------------------------------------------------------
-                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+            
+                    -----------------------------------OPTIONSLABELS-----------------------------
                     BEGIN
                         SELECT  COUNT(*)
                         INTO   V_NB_OPTIONSLABELS
@@ -311,15 +458,16 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     END;
                 
                     IF NVL(V_NB_OPTIONSLABELS, 0) > 0 THEN
-                        V_LIGNE := '    "crossRefs": [';
+                        V_LIGNE := '    "labels": [';
                         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-                        V_NB_OPTIONSLABELS_TRAITE := V_NB_OPTIONSLABELS_TRAITE+1;   ---- A REVOIR 
+                        
        
                         FOR S_MKTQT_OPTIONSLABELS IN C_MKTQT_OPTIONSLABELS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+                            V_NB_OPTIONSLABELS_TRAITE := V_NB_OPTIONSLABELS_TRAITE+1;   ---- A REVOIR 
                             V_LIGNE := '        {
                                 "language":"' || S_MKTQT_OPTIONSLABELS.language || '",
                                 "labelShort":"' || S_MKTQT_OPTIONSLABELS.labelShort || '",
-                                "labelLong":"' || S_MKTQT_OPTIONSLABELS.labelLong || '",';
+                                "labelLong":"' || S_MKTQT_OPTIONSLABELS.labelLong || '"';
 
                             if V_NB_OPTIONSLABELS_TRAITE = V_NB_OPTIONSLABELS THEN V_LIGNE := V_LIGNE || '}';
                             else V_LIGNE := V_LIGNE || '},';
@@ -333,7 +481,8 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     
                     ---------  ---------- --------  ---------   ---------   ---------   ---------  ---------   ---------  ---------  ---------  
                     
-                    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+                   -- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
+                    -----------------------------------OPTIONSPRICINGS-----------------------------
                     BEGIN
                         SELECT  COUNT(*)
                         INTO   V_NB_OPTIONSPRICINGS
@@ -348,9 +497,10 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     IF NVL(V_NB_OPTIONSPRICINGS, 0) > 0 THEN
                         V_LIGNE := '    "pricings": [';
                         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-                        V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
+                        
        
                         FOR S_MKTQT_OPTIONSPRICINGS IN C_MKTQT_OPTIONSPRICINGS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+                            V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
                             V_LIGNE := '        {
                                 "territorialityCode":"' || S_MKTQT_OPTIONSPRICINGS.territorialityCode || '",
                                 "pricebookCode":"' || S_MKTQT_OPTIONSPRICINGS.pricebookCode || '",
@@ -365,7 +515,7 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                                 "priceIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.priceIncludeVAT || '",
                                 "basePriceWithChargesET":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesET || '",
                                 "basePriceWithChargesIT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIT || '",
-                                "basePriceWithChargesIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIncludeVAT || '",';
+                                "basePriceWithChargesIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIncludeVAT || '"';
 
                             if V_NB_OPTIONSPRICINGS_TRAITE = V_NB_OPTIONSPRICINGS THEN V_LIGNE := V_LIGNE || '}';
                             else V_LIGNE := V_LIGNE || '},';
@@ -373,25 +523,27 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
                             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                         END LOOP;
-                        V_LIGNE := '    ],';
+                        V_LIGNE := '    ]'; ----------MOI  AJOUT JEUDI   --- sans virgule a la fin
                         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     END IF;
 
           ----------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------
-        
-                if V_NB_OPTIONS_TRAITE = V_NB_OPTIONS THEN V_LIGNE := V_LIGNE || '}';
-                else V_LIGNE := V_LIGNE || '},';
-                end if;
+          ----------------------------------------------------------------------------------------------------------------
+            V_LIGNE := ''; ----------MOI  AJOUT JEUDI
+            if V_NB_OPTIONS_TRAITE = V_NB_OPTIONS THEN V_LIGNE := V_LIGNE || '}';
+            else V_LIGNE := V_LIGNE || '},';
+            end if;
 
             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
         END LOOP;
-        V_LIGNE := '	    ],';
+        V_LIGNE := '	    ]';---------   virgule ajoutee dans la boucle suivant 
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;         
-        
+    V_LIGNE := '';  -------- null 
     
-    
+     -----------------------------------BASEEQUIPMENTS-----------------------------
      BEGIN
          SELECT COUNT(*)
          INTO   V_NB_BASEEQUIPMENTS
@@ -402,6 +554,8 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END;
     
     IF NVL(V_NB_BASEEQUIPMENTS, 0) > 0 THEN
+        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour options (optionslabels et optionspricings et options sont dans la meme table)
+        
         V_LIGNE := '"baseEquipments": [';
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
@@ -411,7 +565,7 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 "externalRef":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef || '",
                 "typeCategoryCode":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.typeCategoryCode || '",
                 "language":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.language || '",
-                "label":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.label || '",';
+                "label":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.label || '"';
                 
                 if V_NB_BASEEQUIPMENTS_TRAITE = V_NB_BASEEQUIPMENTS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
@@ -419,21 +573,27 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         END LOOP;
-        V_LIGNE := '	    ],';
-        if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   --------------------------------------- A REVOIR
-        else V_LIGNE := V_LIGNE || '},';    -------------------------------------------------------------------- A REVOIR
-        end if;  -------------------------------------------------------------------- A REVOIR
+        V_LIGNE := '	    ]';    ------------ MOI PAS DE VIRGULE A LA FIN
+        --if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   --------------------------------------- A REVOIR
+        --else V_LIGNE := V_LIGNE || '},';    -------------------------------------------------------------------- A REVOIR
+        --end if;  -------------------------------------------------------------------- A REVOIR
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;                           
-               
+    V_LIGNE := '';  -------- null
+    ---if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := '}';   --------- AJOUT 
+    ---end if; 
+    if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   --------------------------------------- A REVOIR
+    else V_LIGNE := V_LIGNE || '}';    ------------------------------ ajout en debut de la boucle
+    end if;  -------------------------------------------------------------------- A REVOIR
+    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
     N_SAUV := N_SAUV +1;
-       EXCEPTION WHEN OTHERS THEN COMMIT;
+    EXCEPTION WHEN OTHERS THEN COMMIT;
                 V_ERR  := 1;
                  RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_mktqt_vehicle.itemDirectoryVehicleRef);
-       --RETURN V_ERR;
-       RETURN V_ERR;
-  END;
+                --RETURN V_ERR;
+                RETURN V_ERR;
+    END;
   END LOOP;
    V_LIGNE := ']';
    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
@@ -526,8 +686,8 @@ FUNCTION FONC_EXPORT_TRANSCO_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARC
     V_LIGNE     VARCHAR2(4000);
     RES         NUMBER := 0;
     file_name   VARCHAR2(30);
-   -- V_NB_ENREG  NUMBER(10) := 0;
-   -- V_NB_ENREG_TRAITE NUMBER(10) := 0;
+    V_NB_ENREG  NUMBER(10) := 0;  
+    V_NB_ENREG_TRAITE NUMBER(10) := 0;
    -- V_NB_ADDRESS      NUMBER(3) := 0;
    -- V_NB_PHONE      NUMBER(3) := 0;
     --V_NB_MAIL      NUMBER(3) := 0;
@@ -538,8 +698,8 @@ CURSOR C_MKTQT_nomenclature IS
 select 
 Entity as Entity,
 code as code,
-startValidityDate as startValidityDate,
-endValidityDate as endValidityDate,
+TO_CHAR(startValidityDate, 'YYYY-MM-DD') as startValidityDate,
+TO_CHAR(endValidityDate, 'YYYY-MM-DD') as endValidityDate,
 parent as parent,
 parent_details_entity as parent_details_entity,
 parent_details_code as parent_details_code,
@@ -565,12 +725,20 @@ BEGIN
   file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
 
 
+  BEGIN 
+       SELECT COUNT(*)
+       INTO   V_NB_ENREG
+       FROM   MKTREF.MKTQT_nomenclature ;
+  EXCEPTION WHEN OTHERS THEN
+       V_NB_ENREG := 0;
+  END;
+
       V_LIGNE := '[';
       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
       
       FOR S_MKTQT_nomenclature IN C_MKTQT_nomenclature LOOP
       BEGIN
-         
+         V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
               V_LIGNE := '{
 "entity":"' || S_MKTQT_nomenclature.entity || '",
 "code":"' || S_MKTQT_nomenclature.code || '",
@@ -592,18 +760,23 @@ BEGIN
 [{
 "language":"' || S_MKTQT_nomenclature.translation_language || '",
 "label":"' || S_MKTQT_nomenclature.translation_label || '"
-}]
-}';
+}]';
+---------}';
 
-               res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-               N_SAUV := N_SAUV +1;
+
+    if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   
+    else V_LIGNE := V_LIGNE || '},';    ------------------------------ ajout fin balise
+    end if;  
+    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+    N_SAUV := N_SAUV +1;
            
-       EXCEPTION WHEN OTHERS THEN COMMIT;
+    EXCEPTION WHEN OTHERS THEN COMMIT;
                 V_ERR  := 1;
-                 RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_TRANSCO_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_nomenclature.entity);
-       --RETURN V_ERR;
-       RETURN V_ERR;
-  END;
+                RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_TRANSCO_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_nomenclature.entity);
+                --RETURN V_ERR;
+                RETURN V_ERR;
+    END;
   END LOOP;
    V_LIGNE := ']';
    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
@@ -2080,9 +2253,10 @@ TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
 DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
 (case when door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3') then door_seat.code else 'Z' end) as door_seat,
-year_trimester.code as year_trimester
+year_trimester.code as year_trimester,
+A.Capcode as capcode
 --B.effectivefrom as effectivefrom,
---A.Capcode as capcode
+
 
 from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_NVDModelYear_VP B,
@@ -2263,9 +2437,10 @@ TRIM.TRIM_ID as TRIM_ID,
 MOTORISATIONBLVD.MOTORISATIONBLVD_ID as MOTORISATIONBLVD_ID,
 DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
 (case when door_seat.crossref_code in ('-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-17') then door_seat.code else 'Z' end) as door_seat,
-year_trimester.code as year_trimester
+year_trimester.code as year_trimester,
+A.Capcode as capcode
 --B.effectivefrom as effectivefrom,
----A.Capcode as capcode
+
 
 from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_NVDGenericStatus_VU C,
      MKTREF.MKTQT_nomenclature brand,
@@ -2473,9 +2648,9 @@ TRIM,
 MOTORISATIONBLVD,
 DIMENSIONS,
 door_seat,
-year_trimester
+year_trimester,
+capcode
 --effectivefrom,
---capcode
               )
         VALUES
               (  
@@ -2560,9 +2735,9 @@ REC_vehicle_VP.TRIM_ID,
 REC_vehicle_VP.MOTORISATIONBLVD_ID,
 REC_vehicle_VP.DIMENSIONS_ID,
 REC_vehicle_VP.door_seat,
-REC_vehicle_VP.year_trimester
+REC_vehicle_VP.year_trimester,
+REC_vehicle_VP.capcode
 --REC_vehicle_VP.effectivefrom,
---REC_vehicle_VP.capcode
               );
          
         V_INS := V_INS + 1;
@@ -2652,7 +2827,8 @@ TRIM                 =  REC_vehicle_VP.TRIM_ID,
 MOTORISATIONBLVD    = REC_vehicle_VP.MOTORISATIONBLVD_ID,
 DIMENSIONS       = REC_vehicle_VP.DIMENSIONS_ID,
 door_seat = REC_vehicle_VP.door_seat,
-year_trimester = REC_vehicle_VP.year_trimester
+year_trimester = REC_vehicle_VP.year_trimester,
+capcode = REC_vehicle_VP.capcode
 
 
 
@@ -2792,7 +2968,8 @@ TRIM,
 MOTORISATIONBLVD,
 DIMENSIONS,
 door_seat,
-year_trimester
+year_trimester,
+capcode
               )
         VALUES
               (  
@@ -2877,7 +3054,8 @@ REC_vehicle_Vu.TRIM_ID,
 REC_vehicle_Vu.MOTORISATIONBLVD_ID,
 REC_vehicle_Vu.DIMENSIONS_ID,
 REC_vehicle_Vu.door_seat,
-REC_vehicle_Vu.year_trimester
+REC_vehicle_Vu.year_trimester,
+REC_vehicle_VU.capcode
               );
          
         V_INS := V_INS + 1;
@@ -2967,8 +3145,8 @@ TRIM = REC_vehicle_Vu.TRIM_ID,
 MOTORISATIONBLVD = REC_vehicle_Vu.MOTORISATIONBLVD_ID,
 DIMENSIONS = REC_vehicle_Vu.DIMENSIONS_ID,
 door_seat = REC_vehicle_Vu.door_seat,
-year_trimester = REC_vehicle_Vu.year_trimester
-
+year_trimester = REC_vehicle_Vu.year_trimester,
+capcode = REC_vehicle_VU.capcode
 
 
         where itemDirectoryVehicleRef  = REC_vehicle_VU.itemDirectoryVehicleRef ;
@@ -3040,6 +3218,7 @@ select  distinct
 itemDirectoryVehicleRef as itemDirectoryVehicleRef,
 'BLVD' as identifierType_BLVD,
 'CONSTR' as identifierType_CONSTR,
+'CapCode' as identifierType_CAPCODE,
 (case when 
 brandcode is not null 
 and brandLabel is not null 
@@ -3055,7 +3234,8 @@ and year_trimester is not null
 and DIMENSIONS != '  '   
 then (BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester) 
 else null end) AS identifier_BLVD,
-'' AS identifier_CONSTR
+'' AS identifier_CONSTR ,
+capcode AS identifier_CAPCODE
 from MKTQT_vehicle
 ;
 
@@ -3156,6 +3336,9 @@ REC_vehicle_crossRefs.identifier_BLVD
    V_Updates := V_Upd;
    RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
+   
+   
+   
    V_INS :=0;
    V_Upd :=0;
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'CONSTR : ',' ');  
@@ -3243,6 +3426,90 @@ REC_vehicle_crossRefs.identifier_CONSTR
    
    
    
+   
+   V_INS :=0;
+   V_Upd :=0;
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'CAPCODE : ',' ');  
+
+  FOR REC_vehicle_crossRefs IN C_vehicle_crossRefs
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_vehicle_crossRefs
+              (   
+--tech_id, 
+itemDirectoryVehicleRef,
+identifierType,
+identifier
+--versionYear,
+--versionTrimester,
+--generation,-- add
+--DIMENSIONS,  -- add
+--MODEL_GEN,-- add
+--VEHICULE_TYPE,
+--BLVD,
+--capcode
+              )
+        VALUES
+              (  
+--REC_vehicle_crossRefs.tech_id,
+REC_vehicle_crossRefs.itemDirectoryVehicleRef,
+REC_vehicle_crossRefs.identifierType_CAPCODE,
+REC_vehicle_crossRefs.identifier_CAPCODE
+--REC_vehicle_crossRefs.versionYear,
+--REC_vehicle_crossRefs.versionTrimester,
+--REC_vehicle_crossRefs.generation,-- add
+--REC_vehicle_crossRefs.DIMENSIONS,-- add
+--REC_vehicle_crossRefs.MODEL_GEN,-- add
+--REC_vehicle_crossRefs.VEHICULE_TYPE,
+--REC_vehicle_crossRefs.capcode
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_vehicle_crossRefs
+        Set       
+
+        identifier = REC_vehicle_crossRefs.identifier_CAPCODE
+
+        where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
+        and identifierType = REC_vehicle_crossRefs.identifierType_CAPCODE;
+      ---  and     versionYear = REC_vehicle_crossRefs.versionYear
+      ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
+      ---  and     generation = REC_vehicle_crossRefs.generation
+      ---  and     DIMENSIONS = REC_vehicle_crossRefs.DIMENSIONS
+      --  and     MODEL_GEN = REC_vehicle_crossRefs.MODEL_GEN
+      ---  and     BLVD = REC_vehicle_crossRefs.BLVD ;
+        
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle_crossRefs','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle_crossRefs','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
 
           
@@ -5364,7 +5631,7 @@ countryScope	as countryScope
 
     File_Id := mkt.mktqaut.F_Open(Nomlog);
 
-  Res := mkt.mktqaut.F_Write(File_Id, 'UPDATE_transco_model','## Alimentation de la table MKTREF.MKTQT_nomenclature ##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'UPDATE_transco_model','## MAPPING : ajout de brandCode dans parent_details_code ##');
   RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'UPDATE_transco_model','## Flux BILAN   ##');
   
           
