@@ -1,7 +1,210 @@
-create or replace PACKAGE BODY MKTQA_CAP_UK_TEST_BIS AS
+create or replace PACKAGE BODY MKTQA_CALCUL_CAP_UK AS
 
 
-FUNCTION FONC_EXPORT_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
+
+	
+FUNCTION EXPORT_VEHICLE_TXT(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+                               
+V_ERR                NUMBER := 0;
+N_SAUV               NUMBER:=0;
+v_ligne         VARCHAR2(4000);
+file_id_cvs     utl_file.file_type;
+file_name       VARCHAR2(30);
+
+FILE_ID   UTL_FILE.FILE_TYPE;
+RES       NUMBER := 0;
+--V_NB_BO_ATTENDU NUMBER(2) := 0;
+--V_NB_BO_PA      NUMBER(2) := 0;
+--V_PASSAGE        NUMBER(2)  := NULL;
+
+Cursor C_REC Is 
+     select 
+          null as Vehicle_id,
+          crossrefs.identifier as blvd,
+          veh.versionLabelLocalLong as label_blvd,
+          'GB' as country,
+          veh.brandCode as brand,
+          null as vehicle_manufacturer_code,
+          veh.capcode as cap_code ,
+          veh.tech_id as cap_id ,
+          null as option_code_manu,
+          null as option_code_jato,
+          null as option_label
+          from MKTREF.MKTQT_vehicle veh, MKTREF.MKTQT_vehicle_crossRefs crossrefs
+          where veh.itemDirectoryVehicleRef = crossrefs.itemDirectoryVehicleRef
+          and crossrefs.identifierType = 'BLVD'
+          and crossrefs.identifier is not null;
+        --  and  rownum <= 50   ---------
+        --  ; 
+
+	BEGIN
+  file_name := p_filename;
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+  RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_VEHICLE_TXT', ' ## MISE A DISPOSITION du fichier ##');
+
+ V_LIGNE := 'Vehicle_id;blvd;label_blvd;country;brand;vehicle_manufacturer_code;cap_code;cap_id;option_code_manu;option_code_jato;option_label';
+ 
+  RES := MKT.MKTQAUT.F_WRITE_CVS (file_id_cvs, V_LIGNE);
+  FOR REC IN C_REC LOOP 
+
+      BEGIN
+           IF V_ERR=1 THEN
+              EXIT;
+           END IF;
+                       V_LIGNE := 
+                              REC.Vehicle_id|| ';' ||
+                              REC.blvd|| ';' ||
+                              REC.label_blvd || ';' ||
+                              REC.country|| ';' ||
+                              REC.brand|| ';' ||
+                              REC.vehicle_manufacturer_code|| ';' ||
+                              REC.cap_code || ';' ||
+                              REC.cap_id || ';' ||
+                              REC.option_code_manu|| ';' ||
+                              REC.option_code_jato|| ';' ||
+                              REC.option_label ;
+                       
+  
+  res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+            N_SAUV := N_SAUV + 1;
+			EXCEPTION
+      WHEN OTHERS THEN
+                COMMIT;
+                V_ERR  := 1;
+                res     := MKT.MKTQAUT.F_WRITE(file_id,
+                                          'EXPORT_VEHCULE_TXT ',
+                                         'Message Erreur pl/sql : ' ||
+                                         SQLERRM );
+                                         RETURN V_ERR;
+      END;
+  END LOOP;
+
+      
+	UTL_FILE.FCLOSE(file_id_cvs);
+
+   res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_VEHICLE_TXT', 'Nombre de lignes ?crites :' || N_SAUV);
+
+
+                        UTL_FILE.FCLOSE(file_id);
+
+    RETURN V_ERR;
+
+EXCEPTION WHEN OTHERS THEN
+COMMIT;
+          V_ERR  := 1;
+
+          res     := MKT.MKTQAUT.F_WRITE(file_id,
+                                          'EXPORT_VEHCULE_TXT',
+                                         'Message Erreur pl/sql : ' ||
+                                         SQLERRM);
+          RETURN V_ERR;  
+    
+END EXPORT_VEHICLE_TXT;
+
+
+
+	
+FUNCTION EXPORT_NOMENCLATURE_TXT(NOMLOG	VARCHAR2, P_DATE_TRAI	DATE, P_PATH    VARCHAR2, P_FILENAME  VARCHAR2) RETURN NUMBER AS
+                               
+V_ERR                NUMBER := 0;
+N_SAUV               NUMBER:=0;
+v_ligne         VARCHAR2(4000);
+file_id_cvs     utl_file.file_type;
+file_name       VARCHAR2(30);
+
+FILE_ID   UTL_FILE.FILE_TYPE;
+RES       NUMBER := 0;
+--V_NB_BO_ATTENDU NUMBER(2) := 0;
+--V_NB_BO_PA      NUMBER(2) := 0;
+--V_PASSAGE        NUMBER(2)  := NULL;
+
+Cursor C_REC Is 
+     select 
+          ENTITY as entity,
+          CODE as code,
+          STARTVALIDITYDATE as validity_start_date ,
+          ENDVALIDITYDATE as validity_end_date,
+          (case when PARENT = ' ' then null else PARENT end) as parent,
+          (case when DESCRIPTION_LANGUAGE = ' ' then null else DESCRIPTION_LANGUAGE end) as description_language,
+          DESCRIPTION_LABEL as description_label,
+          NULL as crossref_type_code ,
+          NULL as crossref_country,
+          NULL as crossref_code,
+          (case when DESCRIPTION_LANGUAGE = ' ' then null else DESCRIPTION_LANGUAGE end) as translation_language,
+          DESCRIPTION_LABEL as translation
+          from mktqt_nomenclature;  
+           
+
+	BEGIN
+  file_name := p_filename;
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path,file_name);
+  RES     := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_NOMENCLATURE_TXT', ' ## MISE A DISPOSITION du fichier ##');
+
+ V_LIGNE := 'entity;code;validity_start_date ;validity_end_date;parent;description_language;description_label;crossref_type_code ;crossref_country;crossref_code;translation_language;translation';
+  RES := MKT.MKTQAUT.F_WRITE_CVS (file_id_cvs, V_LIGNE);
+  FOR REC IN C_REC LOOP 
+
+      BEGIN
+           IF V_ERR=1 THEN
+              EXIT;
+           END IF;
+                       V_LIGNE := 
+          REC.entity|| ';' ||
+          REC.code|| ';' ||
+          REC.validity_start_date || ';' ||
+          REC.validity_end_date|| ';' ||
+          REC.parent|| ';' ||
+          REC.description_language|| ';' ||
+          REC.description_label|| ';' ||
+          REC.crossref_type_code || ';' ||
+          REC.crossref_country|| ';' ||
+          REC.crossref_code|| ';' ||
+          REC.translation_language|| ';' ||
+          REC.translation ;
+                       
+  
+  res := MKT.MKTQAUT.F_WRITE_CVS(file_id_cvs, v_ligne);
+
+            N_SAUV := N_SAUV + 1;
+			EXCEPTION
+      WHEN OTHERS THEN
+                COMMIT;
+                V_ERR  := 1;
+                res     := MKT.MKTQAUT.F_WRITE(file_id,
+                                          'EXPORT_NOMENCLATURE_TXT ',
+                                         'Message Erreur pl/sql : ' ||
+                                         SQLERRM );
+                                         RETURN V_ERR;
+      END;
+  END LOOP;
+
+      
+	UTL_FILE.FCLOSE(file_id_cvs);
+
+   res := MKT.MKTQAUT.F_WRITE(file_id, 'EXPORT_NOMENCLATURE_TXT', 'Nombre de lignes ?crites :' || N_SAUV);
+
+
+                        UTL_FILE.FCLOSE(file_id);
+
+    RETURN V_ERR;
+
+EXCEPTION WHEN OTHERS THEN
+COMMIT;
+          V_ERR  := 1;
+
+          res     := MKT.MKTQAUT.F_WRITE(file_id,
+                                          'EXPORT_NOMENCLATURE_TXT',
+                                         'Message Erreur pl/sql : ' ||
+                                         SQLERRM);
+          RETURN V_ERR;   
+    
+END EXPORT_NOMENCLATURE_TXT;
+
+
+FUNCTION FONC_EXPORT_VEHICLE_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
     V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
     FILE_ID     UTL_FILE.FILE_TYPE;
@@ -107,7 +310,19 @@ versionLabelLocalShort as versionLabelLocalShort ,
 versionLabelLocalLong as versionLabelLocalLong 
 
 from MKTREF.MKTQT_vehicle
-where rownum <= 50;
+where  brandcode is not null 
+and brandLabel is not null 
+and familyLabel is not null 
+and KINDCODE is not null 
+and bodyCode is not null 
+and TRIM is not null 
+and energyCombCode is not null 
+and maximumPowerDin is not null 
+and transmissionTypeCode is not null 
+and gearBoxTypeCode is not null 
+and year_trimester is not null
+and DIMENSIONS != '  ' ;
+--and  rownum <= 50;   ---------
 --where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' )  ;
 -----------------------------------CROSSREFS-----------------------------
 CURSOR C_MKTQT_VEHICLE_CROSSREFS (P_itemDirectoryVehicleRef  VARCHAR2) IS
@@ -204,7 +419,7 @@ WHERE  BASEEQUIPMENTS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef;
 BEGIN
   file_name := p_filename;
   FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
-  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_JSON', ' ## EXPORT VEHICULE ' ||  ' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_VEHICLE_JSON', ' ## EXPORT VEHICULE ' ||  ' ##');
   file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
 
  -----------------------------------VEHICLE-----------------------------
@@ -230,49 +445,49 @@ BEGIN
       BEGIN   
               V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE+1;
               V_LIGNE := '{
-"tech_id":"' || S_mktqt_vehicle.tech_id || '", 
+"tech_id":"' || UPPER(REPLACE(S_mktqt_vehicle.tech_id, '"','')) || '", 
 "tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
 "tech_dateInsertion":"' || S_mktqt_vehicle.tech_dateInsertion || '", 
-"countryCode":"' || S_mktqt_vehicle.countryCode || '", 
-"itemDirectoryVehicleRef":"' || S_mktqt_vehicle.itemDirectoryVehicleRef || '", 
-"versionState":"' || S_mktqt_vehicle.versionState || '", 
+"countryCode":"' || UPPER(REPLACE(S_mktqt_vehicle.countryCode, '"','')) || '", 
+"itemDirectoryVehicleRef":"' || UPPER(REPLACE(S_mktqt_vehicle.itemDirectoryVehicleRef, '"','')) || '", 
+"versionState":"' || UPPER(REPLACE(S_mktqt_vehicle.versionState, '"','')) || '", 
 "validityStartDate":"' || S_mktqt_vehicle.validityStartDate || '", 
 "validityEndDate":"' || S_mktqt_vehicle.validityEndDate || '", 
-"corporateGroupCode":"' || S_mktqt_vehicle.corporateGroupCode || '", 
-"corporateGroupLabel":"' || S_mktqt_vehicle.corporateGroupLabel || '", 
-"brandCode":"' || S_mktqt_vehicle.brandCode || '", 
-"brandLabel":"' || S_mktqt_vehicle.brandLabel || '", 
-"familyCode":"' || S_mktqt_vehicle.familyCode || '", 
-"familyLabel":"' || S_mktqt_vehicle.familyLabel || '", 
+"corporateGroupCode":"' || UPPER(REPLACE(S_mktqt_vehicle.corporateGroupCode, '"','')) || '", 
+"corporateGroupLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.corporateGroupLabel, '"','')) || '", 
+"brandCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandCode, '"','')) || '", 
+"brandLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandLabel, '"','')) || '", 
+"familyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyCode, '"','')) || '", 
+"familyLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyLabel, '"','')) || '", 
 "generation":"' || S_mktqt_vehicle.generation || '", 
 "versionYear":"' || S_mktqt_vehicle.versionYear || '", 
 "versionTrimester":"' || S_mktqt_vehicle.versionTrimester || '", 
-"segmentMarketingCode":"' || S_mktqt_vehicle.segmentMarketingCode || '", 
+"segmentMarketingCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.segmentMarketingCode, '"','')) || '", 
 "faceLiftGeneration":"' || S_mktqt_vehicle.faceLiftGeneration || '", 
-"kindCode":"' || S_mktqt_vehicle.kindCode || '", 
-"bodyCode":"' || S_mktqt_vehicle.bodyCode || '", 
+"kindCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.kindCode, '"','')) || '", 
+"bodyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.bodyCode, '"','')) || '", 
 "height":"' || S_mktqt_vehicle.height || '", 
 "length":"' || S_mktqt_vehicle.length || '", 
-"sportinessFlag":"' || S_mktqt_vehicle.sportinessFlag || '", 
+"sportinessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.sportinessFlag, '"','')) || '", 
 "co2EmissionNEDC":"' || S_mktqt_vehicle.co2EmissionNEDC || '", 
 "co2EmissionWLTP":"' || S_mktqt_vehicle.co2EmissionWLTP || '", 
-"co2ClassCode":"' || S_mktqt_vehicle.co2ClassCode || '", 
+"co2ClassCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.co2ClassCode, '"','')) || '", 
 "fiscalHorsePower":"' || S_mktqt_vehicle.fiscalHorsePower || '", 
 "maximumPowerDin":"' || S_mktqt_vehicle.maximumPowerDin || '", 
 "maximumPowerKW":"' || S_mktqt_vehicle.maximumPowerKW || '", 
-"energy1Code":"' || S_mktqt_vehicle.energy1Code || '", 
-"energy1DetailCode":"' || S_mktqt_vehicle.energy1DetailCode || '", 
-"energy2Code":"' || S_mktqt_vehicle.energy2Code || '", 
-"energy2DetailCode":"' || S_mktqt_vehicle.energy2DetailCode || '", 
-"energyCombCode":"' || S_mktqt_vehicle.energyCombCode || '", 
-"motorisation":"' || S_mktqt_vehicle.motorisation || '", 
-"motorisationComb":"' || S_mktqt_vehicle.motorisationComb || '", 
+"energy1Code":"' || UPPER(REPLACE(S_mktqt_vehicle.energy1Code, '"','')) || '", 
+"energy1DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy1DetailCode, '"','')) || '", 
+"energy2Code":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2Code, '"','')) || '", 
+"energy2DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2DetailCode, '"','')) || '", 
+"energyCombCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energyCombCode, '"','')) || '", 
+"motorisation":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisation, '"','')) || '", 
+"motorisationComb":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisationComb, '"','')) || '", 
 "cubicCapacity":"' || S_mktqt_vehicle.cubicCapacity || '", 
-"transmissionTypeCode":"' || S_mktqt_vehicle.transmissionTypeCode || '", 
-"gearBoxTypeCode":"' || S_mktqt_vehicle.gearBoxTypeCode || '", 
+"transmissionTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.transmissionTypeCode, '"','')) || '", 
+"gearBoxTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.gearBoxTypeCode, '"','')) || '", 
 "nbRapports":"' || S_mktqt_vehicle.nbRapports || '", 
-"typeVariantVersion":"' || S_mktqt_vehicle.typeVariantVersion || '", 
-"trimLevel":"' || S_mktqt_vehicle.trimLevel || '", 
+"typeVariantVersion":"' ||  UPPER(REPLACE(S_mktqt_vehicle.typeVariantVersion, '"','')) || '", 
+"trimLevel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.trimLevel, '"','')) || '", 
 "seatNumber":"' || S_mktqt_vehicle.seatNumber || '", 
 "doorNumber":"' || S_mktqt_vehicle.doorNumber || '", 
 "nedcCombineFuelConsumption":"' || S_mktqt_vehicle.nedcCombineFuelConsumption || '", 
@@ -289,22 +504,22 @@ BEGIN
 "maxLadenWeight":"' || S_mktqt_vehicle.maxLadenWeight || '", 
 "kerbWeight":"' || S_mktqt_vehicle.kerbWeight || '", 
 "payLoad":"' || S_mktqt_vehicle.payLoad || '", 
-"hasTelematicBox":"' || S_mktqt_vehicle.hasTelematicBox || '", 
-"catalogueDetail":"' || S_mktqt_vehicle.catalogueDetail || '", 
-"tsnNumber":"' || S_mktqt_vehicle.tsnNumber || '", 
-"wltpFlag":"' || S_mktqt_vehicle.wltpFlag || '", 
-"completenessFlag":"' || S_mktqt_vehicle.completenessFlag || '", 
-"validationUser":"' || S_mktqt_vehicle.validationUser || '", 
+"hasTelematicBox":"' ||  UPPER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || '", 
+"catalogueDetail":"' ||  UPPER(REPLACE(S_mktqt_vehicle.catalogueDetail, '"','')) || '", 
+"tsnNumber":"' ||  UPPER(REPLACE(S_mktqt_vehicle.tsnNumber, '"','')) || '", 
+"wltpFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.wltpFlag, '"','')) || '", 
+"completenessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.completenessFlag, '"','')) || '", 
+"validationUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.validationUser, '"','')) || '", 
 "validationDate":"' || S_mktqt_vehicle.validationDate || '", 
-"updateUser":"' || S_mktqt_vehicle.updateUser || '", 
+"updateUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.updateUser, '"','')) || '", 
 "updateDate":"' || S_mktqt_vehicle.updateDate || '", 
-"purchaseCondition":"' || S_mktqt_vehicle.purchaseCondition || '", 
-"designBases":"' || S_mktqt_vehicle.designBases || '", 
-"designCustomerShip":"' || S_mktqt_vehicle.designCustomerShip || '", 
-"versionLabelGlobalShort":"' || S_mktqt_vehicle.versionLabelGlobalShort || '", 
-"versionLabeGlobalLong":"' || S_mktqt_vehicle.versionLabeGlobalLong || '", 
-"versionLabelLocalShort":"' || S_mktqt_vehicle.versionLabelLocalShort || '", 
-"versionLabelLocalLong":"' || S_mktqt_vehicle.versionLabelLocalLong  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
+"purchaseCondition":"' ||  UPPER(REPLACE(S_mktqt_vehicle.purchaseCondition, '"','')) || '", 
+"designBases":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designBases, '"','')) || '", 
+"designCustomerShip":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designCustomerShip, '"','')) || '", 
+"versionLabelGlobalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelGlobalShort, '"','')) || '", 
+"versionLabeGlobalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabeGlobalLong, '"','')) || '", 
+"versionLabelLocalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalShort, '"','')) || '", 
+"versionLabelLocalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalLong, '"',''))  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
@@ -343,8 +558,8 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
        FOR S_MKTQT_VEHICLE_CROSSREFS IN C_MKTQT_VEHICLE_CROSSREFS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
-                "identifierType":"' || S_MKTQT_VEHICLE_CROSSREFS.identifierType  || '",
-                "identifier":"' || S_MKTQT_VEHICLE_CROSSREFS.identifier  || '"';
+                "identifierType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifierType, '"',''))  || '",
+                "identifier":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifier, '"',''))  || '"';
 
                 if V_NB_CROSSREFS_TRAITE = V_NB_CROSSREFS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
@@ -376,17 +591,17 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
         FOR S_MKTQT_VEHICLE_PRICINGS IN C_MKTQT_VEHICLE_PRICINGS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_PRICINGS_TRAITE := V_NB_PRICINGS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
-                "tariffAreaCode":"' || S_MKTQT_VEHICLE_PRICINGS.tariffAreaCode || '",
-                "priceCode":"' || S_MKTQT_VEHICLE_PRICINGS.priceCode || '",
-                "priceType":"' || S_MKTQT_VEHICLE_PRICINGS.priceType || '",
-                "priceTypeCustomer":"' || S_MKTQT_VEHICLE_PRICINGS.priceTypeCustomer || '",
+                "tariffAreaCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.tariffAreaCode, '"','')) || '",
+                "priceCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceCode, '"','')) || '",
+                "priceType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceType, '"','')) || '",
+                "priceTypeCustomer":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceTypeCustomer, '"','')) || '",
                 "priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",
                 "priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",
                 "vatAmount":"' || S_MKTQT_VEHICLE_PRICINGS.vatAmount || '",
                 "priceET":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",
                 "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIT || '",
                 "priceIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIncludeVAT || '",
-                "currency":"' || S_MKTQT_VEHICLE_PRICINGS.currency || '",
+                "currency":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.currency, '"','')) || '",
                 "immAmount":"' || S_MKTQT_VEHICLE_PRICINGS.immAmount || '",
                 "immRate":"' || S_MKTQT_VEHICLE_PRICINGS.immRate || '",
                 "novaAmount":"' || S_MKTQT_VEHICLE_PRICINGS.novaAmount || '",
@@ -431,10 +646,10 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
         
             
             V_LIGNE := '        {        
-                "code":"' || S_MKTQT_VEHICLE_OPTIONS.code || '",
-                "constructorCode":"' || S_MKTQT_VEHICLE_OPTIONS.constructorCode || '",
-                "typeCode":"' || S_MKTQT_VEHICLE_OPTIONS.typeCode || '",
-                "isPack":"' || S_MKTQT_VEHICLE_OPTIONS.isPack || '",
+                "code":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.code, '"','')) || '",
+                "constructorCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.constructorCode, '"','')) || '",
+                "typeCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.typeCode, '"','')) || '",
+                "isPack":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || '",
                 "isAgregated":"' || S_MKTQT_VEHICLE_OPTIONS.isAgregated || '",
                 "startDate":"' || S_MKTQT_VEHICLE_OPTIONS.startDate || '",
                 "endDate":"' || S_MKTQT_VEHICLE_OPTIONS.endDate || '",';
@@ -465,9 +680,9 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                         FOR S_MKTQT_OPTIONSLABELS IN C_MKTQT_OPTIONSLABELS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
                             V_NB_OPTIONSLABELS_TRAITE := V_NB_OPTIONSLABELS_TRAITE+1;   ---- A REVOIR 
                             V_LIGNE := '        {
-                                "language":"' || S_MKTQT_OPTIONSLABELS.language || '",
-                                "labelShort":"' || S_MKTQT_OPTIONSLABELS.labelShort || '",
-                                "labelLong":"' || S_MKTQT_OPTIONSLABELS.labelLong || '"';
+                                "language":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSLABELS.language, '"','')) || '",
+                                "labelShort":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSLABELS.labelShort, '"','')) || '",
+                                "labelLong":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSLABELS.labelLong, '"','')) || '"';
 
                             if V_NB_OPTIONSLABELS_TRAITE = V_NB_OPTIONSLABELS THEN V_LIGNE := V_LIGNE || '}';
                             else V_LIGNE := V_LIGNE || '},';
@@ -502,14 +717,14 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                         FOR S_MKTQT_OPTIONSPRICINGS IN C_MKTQT_OPTIONSPRICINGS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
                             V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
                             V_LIGNE := '        {
-                                "territorialityCode":"' || S_MKTQT_OPTIONSPRICINGS.territorialityCode || '",
-                                "pricebookCode":"' || S_MKTQT_OPTIONSPRICINGS.pricebookCode || '",
-                                "pricebookType":"' || S_MKTQT_OPTIONSPRICINGS.pricebookType || '",
-                                "pricebookTypeCustomer":"' || S_MKTQT_OPTIONSPRICINGS.pricebookTypeCustomer || '",
+                                "territorialityCode":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.territorialityCode, '"','')) || '",
+                                "pricebookCode":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookCode, '"','')) || '",
+                                "pricebookType":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookType, '"','')) || '",
+                                "pricebookTypeCustomer":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookTypeCustomer, '"','')) || '",
                                 "pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",
                                 "pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",
                                 "vatAmount":"' || S_MKTQT_OPTIONSPRICINGS.vatAmount || '",
-                                "currency":"' || S_MKTQT_OPTIONSPRICINGS.currency || '",
+                                "currency":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.currency, '"','')) || '",
                                 "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '",
                                 "priceIT":"' || S_MKTQT_OPTIONSPRICINGS.priceIT || '",
                                 "priceIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.priceIncludeVAT || '",
@@ -562,10 +777,10 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
         FOR S_MKTQT_VEHICLE_BASEEQUIPMENTS IN C_MKTQT_VEHICLE_BASEEQUIPMENTS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_BASEEQUIPMENTS_TRAITE := V_NB_BASEEQUIPMENTS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
-                "externalRef":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef || '",
-                "typeCategoryCode":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.typeCategoryCode || '",
-                "language":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.language || '",
-                "label":"' || S_MKTQT_VEHICLE_BASEEQUIPMENTS.label || '"';
+                "externalRef":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef, '"','')) || '",
+                "typeCategoryCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.typeCategoryCode, '"','')) || '",
+                "language":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.language, '"','')) || '",
+                "label":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.label, '"','')) || '"';
                 
                 if V_NB_BASEEQUIPMENTS_TRAITE = V_NB_BASEEQUIPMENTS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
@@ -590,7 +805,7 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
     N_SAUV := N_SAUV +1;
     EXCEPTION WHEN OTHERS THEN COMMIT;
                 V_ERR  := 1;
-                 RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_mktqt_vehicle.itemDirectoryVehicleRef);
+                 RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_VEHICLE_JSON','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_mktqt_vehicle.itemDirectoryVehicleRef);
                 --RETURN V_ERR;
                 RETURN V_ERR;
     END;
@@ -599,7 +814,7 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
    UTL_FILE.FCLOSE(file_id_cvs);
   res := MKT.MKTQAUT.F_WRITE(file_id,
-                               'FONC_EXPORT_JSON',
+                               'FONC_EXPORT_VEHICLE_JSON',
                                'Nombre de sauvegarde :' || N_SAUV);
     res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
     UTL_FILE.FCLOSE(file_id);
@@ -608,68 +823,12 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
   RETURN V_ERR;
 EXCEPTION WHEN OTHERS THEN COMMIT;
           V_ERR  := 1;
-          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_VEHICLE_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
           --RETURN V_ERR;
           RETURN V_ERR;          
                
                
-END FONC_EXPORT_JSON;    
-
-
- /*               
-"taxes":
-{
-"typeCode":"' || ' ' || '",
-"amount":"' || ' ' || '",
-"rate":"' || ' ' || '"
-},
-"otrCosts":
-{
-"typeCode":"' || ' ' || '",
-"amountET":"' || ' ' || '",
-"amountIT":"' || ' ' || '",
-"amountIncludeVAT":"' || ' ' || '",
-"vatAmount":"' || ' ' || '"
-}
-}],
-
-
-
-"addeds":
-{
-"optionAddedRef":"' || ' ' || '"
-},
-"rejecteds":
-{
-"optionRejectedRef":"' || ' ' || '"
-},
-"includeds":
-{
-"optionIncludedRef":"' || ' ' || '"
-}
-}],
-"aggregatedOptions":
-[{
-"code":"' || ' ' || '",
-"categoryCode":"' || ' ' || '",
-"currency":"' || ' ' || '",
-"priceET":"' || ' ' || '",
-"priceIT":"' || ' ' || '",
-"priceIncludeVAT":"' || ' ' || '",
-"vatAmount":"' || ' ' || '",
-"labels":
-{
-"language":"' || ' ' || '",
-"label":"' || ' ' || '"
-},
-"components":
-{
-"aggregatedCode":"' || ' ' || '"
-}
-}],
-*/
-
-        
+END FONC_EXPORT_VEHICLE_JSON;    
 
 
 
@@ -678,7 +837,7 @@ END FONC_EXPORT_JSON;
 
 
 
-FUNCTION FONC_EXPORT_TRANSCO_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
+FUNCTION FONC_EXPORT_NOMENCLATURE_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_FILENAME VARCHAR2) return number IS
     V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
     FILE_ID     UTL_FILE.FILE_TYPE;
@@ -700,6 +859,7 @@ Entity as Entity,
 code as code,
 TO_CHAR(startValidityDate, 'YYYY-MM-DD') as startValidityDate,
 TO_CHAR(endValidityDate, 'YYYY-MM-DD') as endValidityDate,
+'GB' as countryCode,
 parent as parent,
 parent_details_entity as parent_details_entity,
 parent_details_code as parent_details_code,
@@ -721,7 +881,7 @@ from MKTREF.MKTQT_nomenclature
 BEGIN
   file_name := p_filename;
   FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
-  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_TRANSCO_JSON', ' ## EXPORT COLLECTION PARTIE JSON ' ||  ' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'FONC_EXPORT_NOMENCLATURE_JSON', ' ## EXPORT COLLECTION PARTIE JSON ' ||  ' ##');
   file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
 
 
@@ -740,29 +900,55 @@ BEGIN
       BEGIN
          V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
               V_LIGNE := '{
-"entity":"' || S_MKTQT_nomenclature.entity || '",
-"code":"' || S_MKTQT_nomenclature.code || '",
+"entity":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.entity, '"','')) || '",
+"code":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.code, '"','')) || '",
 "startValidityDate":"' || S_MKTQT_nomenclature.startValidityDate || '",
 "endValidityDate":"' || S_MKTQT_nomenclature.endValidityDate || '",
-"countryScope":"' || S_MKTQT_nomenclature.countryScope || '",
-"parent":"' || S_MKTQT_nomenclature.parent || '",
-"descriptions":
-[{
-"language":"' || S_MKTQT_nomenclature.description_language || '",
-"label":"' || S_MKTQT_nomenclature.description_label || '"
-}],
+"countryCode":"' || S_MKTQT_nomenclature.countryCode || '",
+"countryScope":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.countryScope, '"','')) || '",';
+
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
+
+IF S_MKTQT_nomenclature.parent != ' ' THEN
+V_LIGNE :='"parent":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.parent, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+END IF;
+
+
+V_LIGNE:='"descriptions":
+[{';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+----"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_language, '"','')) || '",
+----"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '
+
+IF S_MKTQT_nomenclature.description_language = ' ' THEN
+    V_LIGNE :='"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '"' ;
+ELSE V_LIGNE := '"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_language, '"','')) || '",
+"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '"';
+END IF;
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+
+
+V_LIGNE :='}],
 "crossrefs":
 [{
-"typeCode":"' || S_MKTQT_nomenclature.crossref_typecode || '",
-"code":"' || S_MKTQT_nomenclature.crossref_code || '"
+"typeCode":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.crossref_typecode, '"','')) || '",
+"code":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.crossref_code, '"','')) || '"
 }],
 "translations":
-[{
-"language":"' || S_MKTQT_nomenclature.translation_language || '",
-"label":"' || S_MKTQT_nomenclature.translation_label || '"
-}]';
----------}';
+[{';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
+--"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_language, '"','')) || '",
+--"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"
+IF S_MKTQT_nomenclature.translation_language = ' ' THEN
+    V_LIGNE :='"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"' ;
+ELSE V_LIGNE := '"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_language, '"','')) || '",
+"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"';
+END IF;
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE:='}]';
 
+---------}';
 
     if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   
     else V_LIGNE := V_LIGNE || '},';    ------------------------------ ajout fin balise
@@ -773,7 +959,7 @@ BEGIN
            
     EXCEPTION WHEN OTHERS THEN COMMIT;
                 V_ERR  := 1;
-                RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_TRANSCO_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_nomenclature.entity);
+                RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_NOMENCLATURE_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_nomenclature.entity);
                 --RETURN V_ERR;
                 RETURN V_ERR;
     END;
@@ -782,7 +968,7 @@ BEGIN
    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
    UTL_FILE.FCLOSE(file_id_cvs);
   res := MKT.MKTQAUT.F_WRITE(file_id,
-                               'FONC_EXPORT_TRANSCO_JSON',
+                               'FONC_EXPORT_NOMENCLATURE_JSON',
                                'Nombre de sauvegarde :' || N_SAUV);
     res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
     UTL_FILE.FCLOSE(file_id);
@@ -791,10 +977,10 @@ BEGIN
   RETURN V_ERR;
 EXCEPTION WHEN OTHERS THEN COMMIT;
           V_ERR  := 1;
-          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_TRANSCO_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'FONC_EXPORT_NOMENCLATURE_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
           --RETURN V_ERR;
           RETURN V_ERR;
-END FONC_EXPORT_TRANSCO_JSON;
+END FONC_EXPORT_NOMENCLATURE_JSON;
 
 
 
@@ -987,7 +1173,7 @@ BEGIN
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
            BEGIN 
          SELECT NVL(max(model_gen_num), 0) into V_NUM
@@ -997,7 +1183,7 @@ BEGIN
          V_NUM := 0;
         END;
                         
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
         END IF ;
         
@@ -1085,7 +1271,7 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
           BEGIN 
          SELECT NVL(max(model_gen_num), 0) into V_NUM
@@ -1095,7 +1281,7 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
          V_NUM := 0;
         END;
                
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
         END IF;
         
@@ -1296,7 +1482,7 @@ BEGIN
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
            BEGIN 
          SELECT NVL(max(trim_num), 0) into V_NUM
@@ -1309,7 +1495,7 @@ BEGIN
          V_NUM := 0;
         END;
                       
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
         END IF ;
         
@@ -1399,7 +1585,7 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
           BEGIN 
          SELECT NVL(max(trim_num), 0) into V_NUM
@@ -1412,7 +1598,7 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
          V_NUM := 0;
         END;       
 
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;           
         END IF;
         
@@ -1625,7 +1811,7 @@ BEGIN
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
            BEGIN 
          SELECT NVL(max(MOTORISATIONBLVD_num), 0) into V_NUM
@@ -1638,7 +1824,7 @@ BEGIN
          V_NUM := 0;
         END;         
         
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
         END IF ;
         
@@ -1725,7 +1911,7 @@ V_SEQ
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
           BEGIN 
          SELECT NVL(max(MOTORISATIONBLVD_num), 0) into V_NUM
@@ -1738,7 +1924,7 @@ V_SEQ
          V_NUM := 0;
         END;       
         
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
         END IF;
         
@@ -1960,7 +2146,7 @@ BEGIN
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
            BEGIN 
          SELECT NVL(max(DIMENSIONS_num), 0) into V_NUM
@@ -1973,7 +2159,7 @@ BEGIN
          V_NUM := 0;
         END;    
         
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;
            
         END IF ;
@@ -2061,7 +2247,7 @@ V_SEQ
         END;
         
         IF V_NUM_2 is not null then 
-          V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM_2);
+          V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
           BEGIN 
          SELECT NVL(max(DIMENSIONS_num), 0) into V_NUM
@@ -2074,7 +2260,7 @@ V_SEQ
          V_NUM := 0;
         END;
                
-           V_SEQ := MKTREF.MKTQA_CAP_UK_TEST_BIS.int_to_seq2 (V_NUM);
+           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
            V_NUM := V_NUM +1;            
            
         END IF;
@@ -3232,7 +3418,7 @@ and transmissionTypeCode is not null
 and gearBoxTypeCode is not null 
 and year_trimester is not null
 and DIMENSIONS != '  '   
-then (BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester) 
+then (BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester || '0' ) ---- AJOUT DERNIER CARACT
 else null end) AS identifier_BLVD,
 '' AS identifier_CONSTR ,
 capcode AS identifier_CAPCODE
@@ -5756,6 +5942,78 @@ REC_transco.countryScope
 
 
 
+	FUNCTION MAIN_PRINCIPAL (   NOMLOG                          VARCHAR2,
+                                P_DATE_TRAI                     DATE DEFAULT SYSDATE,
+                                P_PATH                          VARCHAR2,
+                                P_FILENAME_VEHICLE_JSON         VARCHAR2,
+                                P_FILENAME_NOMENCLATURE_JSON    VARCHAR2,
+                                P_FILENAME_VEHICLE_TXT          VARCHAR2,
+                                P_FILENAME_NOMENCLATURE_TXT     VARCHAR2,
+                                V_INSERTS                       OUT NUMBER,
+                                V_UPDATES                       OUT NUMBER,
+                                V_Error                         Out Varchar2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     
+
+	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+     -------------- ALIM VEHICLE ET NOMENCLATURE
+      V_ERR     := MAIN_ALIM_vehicle( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+      ---------------EXPORT    VEHICLE_JSON
+      V_ERR     := FONC_EXPORT_VEHICLE_JSON(NOMLOG ,P_DATE_TRAI , P_PATH , P_FILENAME_VEHICLE_JSON  );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+   
+   
+      ---------------EXPORT    NOMENCLATURE_JSON
+      V_ERR     := FONC_EXPORT_NOMENCLATURE_JSON(NOMLOG ,P_DATE_TRAI , P_PATH , P_FILENAME_NOMENCLATURE_JSON  );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+   
+   
+      ---------------EXPORT   VEHICLE_TXT
+      V_ERR     := EXPORT_VEHICLE_TXT(NOMLOG ,P_DATE_TRAI , P_PATH , P_FILENAME_VEHICLE_TXT  );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+      ---------------EXPORT   NOMENCLATURE_TXT
+      V_ERR     := EXPORT_NOMENCLATURE_TXT(NOMLOG ,P_DATE_TRAI , P_PATH , P_FILENAME_NOMENCLATURE_TXT  );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;            
+            
+   
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_PRINCIPAL;
+
+
+
+
+
+
+
+
 
 
 
@@ -5764,7 +6022,7 @@ REC_transco.countryScope
                                 V_UPDATES   OUT NUMBER,
                                 V_Error     Out Varchar2 ) RETURN NUMBER IS
 		
-		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+		V_RET NUMBER := 0;                     
 
 	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
 	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
@@ -5848,8 +6106,13 @@ REC_transco.countryScope
 				RETURN V_RET;
 			END IF;          
  
-                        
-
+          ------------------- MAIN NOMENCLATURE             
+			V_ERR     := MAIN_ALIM_NOMENCLATURE (NOMLOG , P_DATE_TRAI, V_INSERTS,V_UPDATES,V_Error) ;   
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;          
+ 
 			
 			RETURN V_RET;
 
@@ -5860,7 +6123,7 @@ REC_transco.countryScope
 
 
 
-	FUNCTION MAIN_ALIM_transco (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
+	FUNCTION MAIN_ALIM_NOMENCLATURE (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
                                 V_UPDATES   OUT NUMBER,
                                 V_Error     Out Varchar2 ) RETURN NUMBER IS
 		
@@ -5914,11 +6177,11 @@ REC_transco.countryScope
 
 		/* AJOUTER APRES end; */
 		
-	END MAIN_ALIM_transco;
+	END MAIN_ALIM_NOMENCLATURE;
 
 
   
 
 
 
-END MKTQA_CAP_UK_TEST_BIS;
+END MKTQA_CALCUL_CAP_UK;
