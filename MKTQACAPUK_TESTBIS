@@ -32,6 +32,7 @@ Cursor C_REC Is
           null as option_label
           from MKTREF.MKTQT_vehicle veh, MKTREF.MKTQT_vehicle_crossRefs crossrefs
           where veh.itemDirectoryVehicleRef = crossrefs.itemDirectoryVehicleRef
+          and nvl(veh.VALIDITYENDDATE, SYSDATE) >= add_months(SYSDATE, -12)
           and crossrefs.identifierType = 'BLVD'
           and crossrefs.identifier is not null;
         --  and  rownum <= 50   ---------
@@ -240,7 +241,7 @@ countryCode as countryCode ,
 itemDirectoryVehicleRef as itemDirectoryVehicleRef ,
 versionState as versionState ,
 TO_CHAR(validityStartDate,'YYYY-MM-DD') as validityStartDate,
-TO_CHAR(validityEndDate,'YYYY-MM-DD') as validityEndDate,
+(CASE WHEN TO_CHAR(validityEndDate,'YYYY-MM-DD') is null then '9999-12-31' else TO_CHAR(validityEndDate,'YYYY-MM-DD')  end) as validityEndDate,
 corporateGroupCode as corporateGroupCode ,
 corporateGroupLabel as corporateGroupLabel ,
 brandCode as brandCode ,
@@ -307,7 +308,9 @@ designCustomerShip as designCustomerShip ,
 versionLabelGlobalShort as versionLabelGlobalShort ,
 versionLabeGlobalLong as versionLabeGlobalLong ,
 versionLabelLocalShort as versionLabelLocalShort ,
-versionLabelLocalLong as versionLabelLocalLong 
+versionLabelLocalLong as versionLabelLocalLong ,
+VEHICULE_TYPE as VEHICULE_TYPE
+
 
 from MKTREF.MKTQT_vehicle
 where  brandcode is not null 
@@ -321,7 +324,8 @@ and maximumPowerDin is not null
 and transmissionTypeCode is not null 
 and gearBoxTypeCode is not null 
 and year_trimester is not null
-and DIMENSIONS != '  ' ;
+and DIMENSIONS != '  ' 
+and nvl(VALIDITYENDDATE, SYSDATE) >= add_months(SYSDATE, -12);
 --and  rownum <= 50;   ---------
 --where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' )  ;
 -----------------------------------CROSSREFS-----------------------------
@@ -445,80 +449,225 @@ BEGIN
       BEGIN   
               V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE+1;
               V_LIGNE := '{
-"tech_id":"' || UPPER(REPLACE(S_mktqt_vehicle.tech_id, '"','')) || '", 
-"tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
-"tech_dateInsertion":"' || S_mktqt_vehicle.tech_dateInsertion || '", 
-"countryCode":"' || UPPER(REPLACE(S_mktqt_vehicle.countryCode, '"','')) || '", 
-"itemDirectoryVehicleRef":"' || UPPER(REPLACE(S_mktqt_vehicle.itemDirectoryVehicleRef, '"','')) || '", 
-"versionState":"' || UPPER(REPLACE(S_mktqt_vehicle.versionState, '"','')) || '", 
-"validityStartDate":"' || S_mktqt_vehicle.validityStartDate || '", 
-"validityEndDate":"' || S_mktqt_vehicle.validityEndDate || '", 
-"corporateGroupCode":"' || UPPER(REPLACE(S_mktqt_vehicle.corporateGroupCode, '"','')) || '", 
-"corporateGroupLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.corporateGroupLabel, '"','')) || '", 
-"brandCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandCode, '"','')) || '", 
+"tech_id":"' || UPPER(REPLACE(S_mktqt_vehicle.tech_id, '"','')) || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+--"tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
+--"tech_dateInsertion":"' || S_mktqt_vehicle.tech_dateInsertion || '", 
+
+V_LIGNE := '"countryCode":"' || UPPER(REPLACE(S_mktqt_vehicle.countryCode, '"','')) || '", 
+"itemDirectoryVehicleRef":"' || UPPER(REPLACE(S_mktqt_vehicle.itemDirectoryVehicleRef, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+-----"versionState":"' || UPPER(REPLACE(S_mktqt_vehicle.versionState, '"','')) || '", 
+
+V_LIGNE := '"validityStartDate":"' || S_mktqt_vehicle.validityStartDate || '", 
+"validityEndDate":"' || S_mktqt_vehicle.validityEndDate || '", ';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+----"corporateGroupCode":"' || UPPER(REPLACE(S_mktqt_vehicle.corporateGroupCode, '"','')) || '", 
+IF S_mktqt_vehicle.corporateGroupLabel != ' ' THEN
+V_LIGNE := '"corporateGroupLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.corporateGroupLabel, '"','')) || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+V_LIGNE := '"brandCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandCode, '"','')) || '", 
 "brandLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandLabel, '"','')) || '", 
-"familyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyCode, '"','')) || '", 
-"familyLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyLabel, '"','')) || '", 
-"generation":"' || S_mktqt_vehicle.generation || '", 
-"versionYear":"' || S_mktqt_vehicle.versionYear || '", 
-"versionTrimester":"' || S_mktqt_vehicle.versionTrimester || '", 
-"segmentMarketingCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.segmentMarketingCode, '"','')) || '", 
-"faceLiftGeneration":"' || S_mktqt_vehicle.faceLiftGeneration || '", 
-"kindCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.kindCode, '"','')) || '", 
-"bodyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.bodyCode, '"','')) || '", 
-"height":"' || S_mktqt_vehicle.height || '", 
-"length":"' || S_mktqt_vehicle.length || '", 
-"sportinessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.sportinessFlag, '"','')) || '", 
-"co2EmissionNEDC":"' || S_mktqt_vehicle.co2EmissionNEDC || '", 
-"co2EmissionWLTP":"' || S_mktqt_vehicle.co2EmissionWLTP || '", 
-"co2ClassCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.co2ClassCode, '"','')) || '", 
-"fiscalHorsePower":"' || S_mktqt_vehicle.fiscalHorsePower || '", 
-"maximumPowerDin":"' || S_mktqt_vehicle.maximumPowerDin || '", 
-"maximumPowerKW":"' || S_mktqt_vehicle.maximumPowerKW || '", 
-"energy1Code":"' || UPPER(REPLACE(S_mktqt_vehicle.energy1Code, '"','')) || '", 
-"energy1DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy1DetailCode, '"','')) || '", 
-"energy2Code":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2Code, '"','')) || '", 
-"energy2DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2DetailCode, '"','')) || '", 
-"energyCombCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energyCombCode, '"','')) || '", 
-"motorisation":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisation, '"','')) || '", 
-"motorisationComb":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisationComb, '"','')) || '", 
-"cubicCapacity":"' || S_mktqt_vehicle.cubicCapacity || '", 
-"transmissionTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.transmissionTypeCode, '"','')) || '", 
-"gearBoxTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.gearBoxTypeCode, '"','')) || '", 
-"nbRapports":"' || S_mktqt_vehicle.nbRapports || '", 
-"typeVariantVersion":"' ||  UPPER(REPLACE(S_mktqt_vehicle.typeVariantVersion, '"','')) || '", 
-"trimLevel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.trimLevel, '"','')) || '", 
-"seatNumber":"' || S_mktqt_vehicle.seatNumber || '", 
-"doorNumber":"' || S_mktqt_vehicle.doorNumber || '", 
-"nedcCombineFuelConsumption":"' || S_mktqt_vehicle.nedcCombineFuelConsumption || '", 
-"nedcExtraUrbanFuelConsumption":"' || S_mktqt_vehicle.nedcExtraUrbanFuelConsumption || '", 
-"nedcUrbanFuelConsumption":"' || S_mktqt_vehicle.nedcUrbanFuelConsumption || '", 
-"wltpLowFuelConsumption":"' || S_mktqt_vehicle.wltpLowFuelConsumption || '", 
-"wltpMediumFuelConsumption":"' || S_mktqt_vehicle.wltpMediumFuelConsumption || '", 
-"wltpHighFuelConsumption":"' || S_mktqt_vehicle.wltpHighFuelConsumption || '", 
-"wltpExtraHighConsumption":"' || S_mktqt_vehicle.wltpExtraHighConsumption || '", 
-"wltpCombinedFuelConsumption":"' || S_mktqt_vehicle.wltpCombinedFuelConsumption || '", 
-"wltpElectricConsumption":"' || S_mktqt_vehicle.wltpElectricConsumption || '", 
-"wltpElectricRange":"' || S_mktqt_vehicle.wltpElectricRange || '", 
-"batteryCapacity":"' || S_mktqt_vehicle.batteryCapacity || '", 
-"maxLadenWeight":"' || S_mktqt_vehicle.maxLadenWeight || '", 
-"kerbWeight":"' || S_mktqt_vehicle.kerbWeight || '", 
-"payLoad":"' || S_mktqt_vehicle.payLoad || '", 
-"hasTelematicBox":"' ||  UPPER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || '", 
-"catalogueDetail":"' ||  UPPER(REPLACE(S_mktqt_vehicle.catalogueDetail, '"','')) || '", 
-"tsnNumber":"' ||  UPPER(REPLACE(S_mktqt_vehicle.tsnNumber, '"','')) || '", 
-"wltpFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.wltpFlag, '"','')) || '", 
-"completenessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.completenessFlag, '"','')) || '", 
-"validationUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.validationUser, '"','')) || '", 
-"validationDate":"' || S_mktqt_vehicle.validationDate || '", 
-"updateUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.updateUser, '"','')) || '", 
-"updateDate":"' || S_mktqt_vehicle.updateDate || '", 
-"purchaseCondition":"' ||  UPPER(REPLACE(S_mktqt_vehicle.purchaseCondition, '"','')) || '", 
-"designBases":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designBases, '"','')) || '", 
-"designCustomerShip":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designCustomerShip, '"','')) || '", 
-"versionLabelGlobalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelGlobalShort, '"','')) || '", 
-"versionLabeGlobalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabeGlobalLong, '"','')) || '", 
-"versionLabelLocalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalShort, '"','')) || '", 
+"familyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyCode, '"','')) || '",
+"familyLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyLabel, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+IF S_mktqt_vehicle.generation is not null THEN
+V_LIGNE := '"generation":"' || S_mktqt_vehicle.generation || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+V_LIGNE := '"versionYear":"' || S_mktqt_vehicle.versionYear || '", 
+"versionTrimester":"' || S_mktqt_vehicle.versionTrimester || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+IF S_mktqt_vehicle.segmentMarketingCode is not null THEN
+V_LIGNE := '"segmentMarketingCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.segmentMarketingCode, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.faceLiftGeneration is not null THEN
+V_LIGNE := '"faceLiftGeneration":"' || S_mktqt_vehicle.faceLiftGeneration || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+V_LIGNE := '"kindCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.kindCode, '"','')) || '", 
+"bodyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.bodyCode, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+
+IF S_mktqt_vehicle.height is not null THEN
+V_LIGNE := '"height":"' || S_mktqt_vehicle.height || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.length is not null THEN
+V_LIGNE := '"length":"' || S_mktqt_vehicle.length || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+----"sportinessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.sportinessFlag, '"','')) || '", 
+-----"co2EmissionNEDC":"' || S_mktqt_vehicle.co2EmissionNEDC || '",
+
+IF S_mktqt_vehicle.co2EmissionWLTP is not null THEN
+V_LIGNE := '"co2EmissionWLTP":"' || S_mktqt_vehicle.co2EmissionWLTP || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+--"co2ClassCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.co2ClassCode, '"','')) || '", 
+---"fiscalHorsePower":"' || S_mktqt_vehicle.fiscalHorsePower || '", 
+
+IF S_mktqt_vehicle.maximumPowerDin is not null THEN
+V_LIGNE := '"maximumPowerDin":"' || S_mktqt_vehicle.maximumPowerDin || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.maximumPowerKW is not null THEN
+V_LIGNE := '"maximumPowerKW":"' || S_mktqt_vehicle.maximumPowerKW || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.energy1Code is not null THEN
+V_LIGNE := '"energy1Code":"' || UPPER(REPLACE(S_mktqt_vehicle.energy1Code, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+
+----"energy1DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy1DetailCode, '"','')) || '", 
+----"energy2Code":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2Code, '"','')) || '", 
+----"energy2DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2DetailCode, '"','')) || '",
+
+V_LIGNE := '"energyCombCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energyCombCode, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+----"motorisation":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisation, '"','')) || '", 
+----"motorisationComb":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisationComb, '"','')) || '", 
+IF S_mktqt_vehicle.cubicCapacity is not null THEN
+V_LIGNE := '"cubicCapacity":"' || S_mktqt_vehicle.cubicCapacity || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.transmissionTypeCode is not null THEN
+V_LIGNE := '"transmissionTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.transmissionTypeCode, '"','')) || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+V_LIGNE := '"gearBoxTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.gearBoxTypeCode, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+IF S_mktqt_vehicle.nbRapports is not null THEN
+V_LIGNE := '"nbRapports":"' || S_mktqt_vehicle.nbRapports || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+-----------"typeVariantVersion":"' ||  UPPER(REPLACE(S_mktqt_vehicle.typeVariantVersion, '"','')) || '",
+
+
+IF S_mktqt_vehicle.trimLevel is not null THEN
+V_LIGNE := '"trimLevel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.trimLevel, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.seatNumber is not null THEN
+V_LIGNE := '"seatNumber":"' || S_mktqt_vehicle.seatNumber || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.doorNumber is not null THEN
+V_LIGNE := '"doorNumber":"' || S_mktqt_vehicle.doorNumber || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+----"nedcCombineFuelConsumption":"' || S_mktqt_vehicle.nedcCombineFuelConsumption || '", 
+---"nedcExtraUrbanFuelConsumption":"' || S_mktqt_vehicle.nedcExtraUrbanFuelConsumption || '", 
+---"nedcUrbanFuelConsumption":"' || S_mktqt_vehicle.nedcUrbanFuelConsumption || '", 
+
+IF S_mktqt_vehicle.wltpLowFuelConsumption is not null THEN
+V_LIGNE := '"wltpLowFuelConsumption":"' || S_mktqt_vehicle.wltpLowFuelConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpMediumFuelConsumption is not null THEN
+V_LIGNE := '"wltpMediumFuelConsumption":"' || S_mktqt_vehicle.wltpMediumFuelConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpHighFuelConsumption is not null THEN
+V_LIGNE := '"wltpHighFuelConsumption":"' || S_mktqt_vehicle.wltpHighFuelConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpExtraHighConsumption is not null THEN
+V_LIGNE := '"wltpExtraHighConsumption":"' || S_mktqt_vehicle.wltpExtraHighConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpCombinedFuelConsumption is not null THEN
+V_LIGNE := '"wltpCombinedFuelConsumption":"' || S_mktqt_vehicle.wltpCombinedFuelConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpElectricConsumption is not null THEN
+V_LIGNE := '"wltpElectricConsumption":"' || S_mktqt_vehicle.wltpElectricConsumption || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.wltpElectricRange is not null THEN
+V_LIGNE := '"wltpElectricRange":"' || S_mktqt_vehicle.wltpElectricRange || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.batteryCapacity is not null THEN
+V_LIGNE := '"batteryCapacity":"' || S_mktqt_vehicle.batteryCapacity || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.maxLadenWeight is not null THEN
+V_LIGNE := '"maxLadenWeight":"' || S_mktqt_vehicle.maxLadenWeight || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+IF S_mktqt_vehicle.kerbWeight is not null THEN
+V_LIGNE := '"kerbWeight":"' || S_mktqt_vehicle.kerbWeight || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+
+IF S_mktqt_vehicle.payLoad is not null THEN
+V_LIGNE := '"payLoad":"' || S_mktqt_vehicle.payLoad || '",'; 
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+END IF;
+
+
+V_LIGNE := '"hasTelematicBox":"' ||  UPPER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+
+---"catalogueDetail":"' ||  UPPER(REPLACE(S_mktqt_vehicle.catalogueDetail, '"','')) || '", 
+---"tsnNumber":"' ||  UPPER(REPLACE(S_mktqt_vehicle.tsnNumber, '"','')) || '", 
+---"wltpFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.wltpFlag, '"','')) || '", 
+---"completenessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.completenessFlag, '"','')) || '", 
+---"validationUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.validationUser, '"','')) || '", 
+---"validationDate":"' || S_mktqt_vehicle.validationDate || '", 
+---"updateUser":"' ||  UPPER(REPLACE(S_mktqt_vehicle.updateUser, '"','')) || '", 
+---"updateDate":"' || S_mktqt_vehicle.updateDate || '", 
+---"purchaseCondition":"' ||  UPPER(REPLACE(S_mktqt_vehicle.purchaseCondition, '"','')) || '", 
+---"designBases":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designBases, '"','')) || '", 
+---"designCustomerShip":"' ||  UPPER(REPLACE(S_mktqt_vehicle.designCustomerShip, '"','')) || '", 
+---"versionLabelGlobalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelGlobalShort, '"','')) || '", 
+---"versionLabeGlobalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabeGlobalLong, '"','')) || '",
+
+V_LIGNE := '"versionLabelLocalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalShort, '"','')) || '", 
 "versionLabelLocalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalLong, '"',''))  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
@@ -557,6 +706,8 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
        
        FOR S_MKTQT_VEHICLE_CROSSREFS IN C_MKTQT_VEHICLE_CROSSREFS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
+            
+            IF S_MKTQT_VEHICLE_CROSSREFS.identifier is not NULL THEN   ------  if constr vide alors on affiche rien
             V_LIGNE := '        {
                 "identifierType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifierType, '"',''))  || '",
                 "identifier":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifier, '"',''))  || '"';
@@ -566,6 +717,8 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                 end if;
 
             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            END IF;
        END LOOP;
        V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
@@ -591,24 +744,27 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
         FOR S_MKTQT_VEHICLE_PRICINGS IN C_MKTQT_VEHICLE_PRICINGS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_PRICINGS_TRAITE := V_NB_PRICINGS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
-                "tariffAreaCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.tariffAreaCode, '"','')) || '",
-                "priceCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceCode, '"','')) || '",
-                "priceType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceType, '"','')) || '",
-                "priceTypeCustomer":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceTypeCustomer, '"','')) || '",
-                "priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",
-                "priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",
-                "vatAmount":"' || S_MKTQT_VEHICLE_PRICINGS.vatAmount || '",
-                "priceET":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",
-                "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIT || '",
-                "priceIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIncludeVAT || '",
-                "currency":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.currency, '"','')) || '",
-                "immAmount":"' || S_MKTQT_VEHICLE_PRICINGS.immAmount || '",
-                "immRate":"' || S_MKTQT_VEHICLE_PRICINGS.immRate || '",
-                "novaAmount":"' || S_MKTQT_VEHICLE_PRICINGS.novaAmount || '",
-                "novaRate":"' || S_MKTQT_VEHICLE_PRICINGS.novaRate || '",
-                "priceWithoutOtrCostIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT || '",
-                "priceWithoutOtrCostET":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostET || '",
-                "priceWithoutOtrCostIncludeVAT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIncludeVAT || '"';
+                "priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",';
+                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                
+                IF S_MKTQT_VEHICLE_PRICINGS.priceEndDate is not null THEN
+                V_LIGNE := '                "priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",';
+                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                END IF;
+                
+                V_LIGNE := '                "priceET":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",';
+                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                /*
+                IF S_MKTQT_VEHICLE_PRICINGS.priceIT is null THEN    ----- uniquement pour priceIT
+                V_LIGNE := '                "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",'; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                ELSE
+                V_LIGNE := '                "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceIT || '",'; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                END IF;
+                */
+                
+                V_LIGNE := '                "currency":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.currency, '"','')) || '", 
+                "priceWithoutOtrCostIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT || '"';
+
                 
                 if V_NB_PRICINGS_TRAITE = V_NB_PRICINGS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
@@ -647,12 +803,9 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
             
             V_LIGNE := '        {        
                 "code":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.code, '"','')) || '",
-                "constructorCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.constructorCode, '"','')) || '",
                 "typeCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.typeCode, '"','')) || '",
-                "isPack":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || '",
-                "isAgregated":"' || S_MKTQT_VEHICLE_OPTIONS.isAgregated || '",
-                "startDate":"' || S_MKTQT_VEHICLE_OPTIONS.startDate || '",
-                "endDate":"' || S_MKTQT_VEHICLE_OPTIONS.endDate || '",';
+                "isPack":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || '",';
+
 
                 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
                       
@@ -717,20 +870,34 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                         FOR S_MKTQT_OPTIONSPRICINGS IN C_MKTQT_OPTIONSPRICINGS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
                             V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
                             V_LIGNE := '        {
-                                "territorialityCode":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.territorialityCode, '"','')) || '",
-                                "pricebookCode":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookCode, '"','')) || '",
-                                "pricebookType":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookType, '"','')) || '",
-                                "pricebookTypeCustomer":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.pricebookTypeCustomer, '"','')) || '",
-                                "pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",
-                                "pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",
-                                "vatAmount":"' || S_MKTQT_OPTIONSPRICINGS.vatAmount || '",
-                                "currency":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.currency, '"','')) || '",
-                                "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '",
-                                "priceIT":"' || S_MKTQT_OPTIONSPRICINGS.priceIT || '",
-                                "priceIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.priceIncludeVAT || '",
-                                "basePriceWithChargesET":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesET || '",
-                                "basePriceWithChargesIT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIT || '",
-                                "basePriceWithChargesIncludeVAT":"' || S_MKTQT_OPTIONSPRICINGS.basePriceWithChargesIncludeVAT || '"';
+                                "pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",';
+                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                
+                                IF S_MKTQT_OPTIONSPRICINGS.pricebookEndDate is not NULL THEN
+                                V_LIGNE := '                                "pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",';
+                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                END IF;
+                                
+                                V_LIGNE := '                                "currency":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.currency, '"','')) || '",';
+                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                
+                                
+                                V_LIGNE := '                                "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '"';
+                                
+                                
+                                
+                                /*
+                                IF S_MKTQT_OPTIONSPRICINGS.priceIT is null THEN     -------uniquement pour priceIT
+                                V_LIGNE := '                                "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '",
+                                "priceIT":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '"';
+                                ELSE
+                                V_LIGNE := '                                "priceET":"' || S_MKTQT_OPTIONSPRICINGS.priceET || '",
+                                "priceIT":"' || S_MKTQT_OPTIONSPRICINGS.priceIT || '"';
+                                END IF;
+                                */
+                                
+                                ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                
 
                             if V_NB_OPTIONSPRICINGS_TRAITE = V_NB_OPTIONSPRICINGS THEN V_LIGNE := V_LIGNE || '}';
                             else V_LIGNE := V_LIGNE || '},';
@@ -778,7 +945,6 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
             V_NB_BASEEQUIPMENTS_TRAITE := V_NB_BASEEQUIPMENTS_TRAITE+1;   ---- A REVOIR 
             V_LIGNE := '        {
                 "externalRef":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef, '"','')) || '",
-                "typeCategoryCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.typeCategoryCode, '"','')) || '",
                 "language":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.language, '"','')) || '",
                 "label":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.label, '"','')) || '"';
                 
@@ -864,13 +1030,13 @@ parent as parent,
 parent_details_entity as parent_details_entity,
 parent_details_code as parent_details_code,
 description_language as description_language,		
-description_label as description_label,
+(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(description_label) ELSE description_label END) as description_label,
 crossref_typecode as crossref_typecode,
 crossref_country	 as crossref_country,
-crossref_code		 as crossref_code,
+(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(crossref_code) ELSE crossref_code END)	as crossref_code,
 translation_language as translation_language,
-translation_label as translation_label,
-bomAttribut as bomAttribut,
+(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(translation_label) ELSE translation_label END) as translation_label,
+(CASE WHEN bomAttribut != ' ' THEN bomAttribut ELSE NULL END) as bomAttribut,
 countryScope as countryScope
 from MKTREF.MKTQT_nomenclature
 ;
@@ -900,17 +1066,25 @@ BEGIN
       BEGIN
          V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
               V_LIGNE := '{
-"entity":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.entity, '"','')) || '",
-"code":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.code, '"','')) || '",
+"entity":"' ||  S_MKTQT_nomenclature.entity || '",
+"code":"' ||  S_MKTQT_nomenclature.code || '",
 "startValidityDate":"' || S_MKTQT_nomenclature.startValidityDate || '",
 "endValidityDate":"' || S_MKTQT_nomenclature.endValidityDate || '",
+"bomAttributs": ["' || S_MKTQT_nomenclature.bomAttribut  || '"],
 "countryCode":"' || S_MKTQT_nomenclature.countryCode || '",
-"countryScope":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.countryScope, '"','')) || '",';
+"countryScope":"' ||  S_MKTQT_nomenclature.countryScope || '",';
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
 
 IF S_MKTQT_nomenclature.parent != ' ' THEN
-V_LIGNE :='"parent":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.parent, '"','')) || '",';
+V_LIGNE :='"parent":"' ||  S_MKTQT_nomenclature.parent || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+END IF;
+
+
+
+IF S_MKTQT_nomenclature.entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN
+V_LIGNE := '"parentDetails": [{"entity":"brand","code":"' ||  SUBSTR(S_MKTQT_nomenclature.parent,1,2) || '"}],';
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 END IF;
 
@@ -918,34 +1092,51 @@ END IF;
 V_LIGNE:='"descriptions":
 [{';
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
-----"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_language, '"','')) || '",
-----"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '
+
 
 IF S_MKTQT_nomenclature.description_language = ' ' THEN
-    V_LIGNE :='"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '"' ;
-ELSE V_LIGNE := '"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_language, '"','')) || '",
-"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.description_label, '"','')) || '"';
+    V_LIGNE :='"label":"' ||  S_MKTQT_nomenclature.description_label || '"' ;
+ELSE V_LIGNE := '"language":"' ||  S_MKTQT_nomenclature.description_language || '",
+"label":"' ||  S_MKTQT_nomenclature.description_label || '"';
 END IF;
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 
 
+IF S_MKTQT_nomenclature.Entity in ('transmission','kind') THEN
 V_LIGNE :='}],
 "crossrefs":
 [{
-"typeCode":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.crossref_typecode, '"','')) || '",
-"code":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.crossref_code, '"','')) || '"
+"typeCode":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_typecode,' ','') || '",
+"code":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_code,' ','') || '"
 }],
 "translations":
 [{';
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
---"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_language, '"','')) || '",
---"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"
+
+
+ELSE
+
+V_LIGNE :='}],
+"crossrefs":
+[{
+"typeCode":"' ||  S_MKTQT_nomenclature.crossref_typecode || '",
+"code":"' ||  S_MKTQT_nomenclature.crossref_code || '"
+}],
+"translations":
+[{';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
+
+END IF;
+
+
+
 IF S_MKTQT_nomenclature.translation_language = ' ' THEN
-    V_LIGNE :='"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"' ;
-ELSE V_LIGNE := '"language":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_language, '"','')) || '",
-"label":"' ||  UPPER(REPLACE(S_MKTQT_nomenclature.translation_label, '"','')) || '"';
+    V_LIGNE :='"label":"' || S_MKTQT_nomenclature.translation_label || '"' ;
+ELSE V_LIGNE := '"language":"' ||  S_MKTQT_nomenclature.translation_language || '",
+"label":"' ||  S_MKTQT_nomenclature.translation_label || '"';
 END IF;
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
 V_LIGNE:='}]';
 
 ---------}';
@@ -4849,8 +5040,8 @@ REC_transco.description_label   , --description_label
 REC_transco.crossref_code	,  --crossref_code
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-'model_gen', --bomAttribut		,
-'UK'    --countryScope	
+'', --bomAttribut		,
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -4874,7 +5065,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
       and bomAttribut = 'model_gen'
-      and countryScope = 'UK' 
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU  
        and crossref_code = REC_transco.crossref_code
@@ -5022,7 +5213,7 @@ REC_transco.crossref_code	,  --crossref_code
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
 'trimLevel', --bomAttribut		,
-'UK'    --countryScope	
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5044,7 +5235,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
       and bomAttribut = 'trimlevel'
-      and countryScope = 'UK' 
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.crossref_code 
@@ -5126,7 +5317,7 @@ REC_transco.crossref_code	,  --crossref_code
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
 'trimLevel', --bomAttribut		,
-'UK'    --countryScope	
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5149,7 +5340,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
       and bomAttribut = 'trimlevel'
-      and countryScope = 'UK' 
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.crossref_code 
@@ -5302,8 +5493,8 @@ REC_transco.description_label   , --description_label
 REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-' ', --bomAttribut		,
-'UK'    --countryScope	
+'', --bomAttribut		,
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5325,8 +5516,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_typecode = 'CAP'
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
-      and bomAttribut = ' '
-      and countryScope = 'UK' 
+      and bomAttribut = ''
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
       and crossref_code = REC_transco.description_label 
@@ -5406,8 +5597,8 @@ REC_transco.description_label   , --description_label
 REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-' ', --bomAttribut		,
-'UK'    --countryScope	
+'', --bomAttribut		,
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5429,8 +5620,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_typecode = 'CAP'
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
-      and bomAttribut = ' '
-      and countryScope = 'UK' 
+      and bomAttribut = ''
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.description_label 
@@ -5583,8 +5774,8 @@ REC_transco.description_label   , --description_label
 REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-' ', --bomAttribut		,
-'UK'    --countryScope	
+'', --bomAttribut		,
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5606,8 +5797,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_typecode = 'CAP'
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
-      and bomAttribut = ' '
-      and countryScope = 'UK' 
+      and bomAttribut = ''
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.description_label 
@@ -5691,8 +5882,8 @@ REC_transco.description_label   , --description_label
 REC_transco.description_label	,  --crossref_code  --- MAPPING : crossref_code = description_label
 'en_GB',  --translation_language	,
 REC_transco.description_label	, --- MAPPING : translation_label = description_label
-' ', --bomAttribut		,
-'UK'    --countryScope	
+'', --bomAttribut		,
+'GB'    --countryScope	
               );
 
         V_INS := V_INS + 1;
@@ -5714,8 +5905,8 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       and crossref_typecode = 'CAP'
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
-      and bomAttribut = ' '
-      and countryScope = 'UK' 
+      and bomAttribut = ''
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.description_label 
@@ -5798,7 +5989,7 @@ crossref_typecode		as crossref_typecode		,
 crossref_country		as crossref_country		,
 crossref_code			as crossref_code			,
 translation_language	as translation_language	,
-translation_label	as translation_label	,
+substr(description_label,instr(description_label,':')+1 )  	as translation_label	,   -------- translation_labels   ----- modif
 bomAttribut		as bomAttribut		,
 countryScope	as countryScope	
   from mktref.MKTQT_nomenclature where entity = 'model'
@@ -5903,7 +6094,7 @@ REC_transco.countryScope
       and crossref_country = 'GB'
       and translation_language = 'en_GB'
       and bomAttribut = 'familyCode'
-      and countryScope = 'UK' 
+      and countryScope = 'GB' 
        and code = REC_transco.code
        --and description_label = REC_transco.description_label  --NOUVEAU 
        and crossref_code = REC_transco.crossref_code ;
