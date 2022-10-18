@@ -24,17 +24,23 @@ Cursor C_REC Is
           veh.versionLabelLocalLong as label_blvd,
           'GB' as country,
           veh.brandCode as brand,
-          null as vehicle_manufacturer_code,
+          codeconstr.identifier as vehicle_manufacturer_code,   ----ajout du code constructeur de la table crossrefs
           veh.capcode as cap_code ,
           veh.tech_id as cap_id ,
           null as option_code_manu,
           null as option_code_jato,
           null as option_label
-          from MKTREF.MKTQT_vehicle veh, MKTREF.MKTQT_vehicle_crossRefs crossrefs
+          from  MKTREF.MKTQT_vehicle veh,
+                MKTREF.MKTQT_vehicle_crossRefs crossrefs,
+                MKTREF.MKTQT_vehicle_crossRefs codeconstr
           where veh.itemDirectoryVehicleRef = crossrefs.itemDirectoryVehicleRef
           and nvl(veh.VALIDITYENDDATE, SYSDATE) >= add_months(SYSDATE, -12)
+          
           and crossrefs.identifierType = 'BLVD'
-          and crossrefs.identifier is not null;
+          and crossrefs.identifier is not null
+          
+          and crossrefs.itemdirectoryvehicleref = codeconstr.itemdirectoryvehicleref (+)
+          and codeconstr.identifierType = 'CONSTR' ;
         --  and  rownum <= 50   ---------
         --  ; 
 
@@ -1366,16 +1372,16 @@ BEGIN
         IF V_NUM_2 is not null then 
           V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM_2);
         else 
-           BEGIN 
-         SELECT NVL(max(model_gen_num), 0) into V_NUM
-         from   MKTREF.MKTQT_MODEL_GEN
-         where  BRAND_CODE = REC_vehicle_VP.brandCode;
-        EXCEPTION WHEN OTHERS THEN
-         V_NUM := 0;
-        END;
-                        
+            BEGIN 
+                SELECT NVL(max(model_gen_num), 0) into V_NUM
+                from   MKTREF.MKTQT_MODEL_GEN
+                where  BRAND_CODE = REC_vehicle_VP.brandCode;
+            EXCEPTION WHEN OTHERS THEN
+                V_NUM := 0;
+            END;
+           V_NUM := V_NUM +1;     ---- changement  
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+           
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_MODEL_GEN
@@ -1471,9 +1477,9 @@ REC_vehicle_VP.CROSSREF_CODE     -- AJOUT VENDREDI
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-               
+            V_NUM := V_NUM +1;     ---- changement     
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+           --V_NUM := V_NUM +1;
         END IF;
         
         INSERT INTO MKTREF.MKTQT_MODEL_GEN
@@ -1661,7 +1667,7 @@ BEGIN
         END IF;
         
         BEGIN 
-         SELECT trim_num into V_NUM_2
+         SELECT distinct trim_num into V_NUM_2
          from   MKTREF.MKTQT_TRIM
          where  BRAND_CODE = REC_vehicle_VP.brandCode
          AND    VEHICULE_NAME = REC_vehicle_VP.VEHICULE_NAME
@@ -1685,9 +1691,9 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-                      
+            V_NUM := V_NUM +1;     ---- changement            
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+           --V_NUM := V_NUM +1;
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_TRIM
@@ -1764,7 +1770,7 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         END IF;
         
         BEGIN 
-         SELECT trim_num into V_NUM_2
+         SELECT distinct trim_num into V_NUM_2
          from   MKTREF.MKTQT_TRIM
          where  BRAND_CODE = REC_vehicle_VU.brandCode
          AND    VEHICULE_NAME = REC_vehicle_VU.VEHICULE_NAME
@@ -1788,9 +1794,9 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;       
-
+            V_NUM := V_NUM +1;     ---- changement  
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;           
+           --V_NUM := V_NUM +1;           
         END IF;
         
         INSERT INTO MKTREF.MKTQT_TRIM
@@ -2014,9 +2020,9 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;         
-        
+            V_NUM := V_NUM +1;     ---- changement  
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+           --V_NUM := V_NUM +1;
         END IF ;
         
         INSERT INTO MKTREF.MKTQT_MOTORISATIONBLVD
@@ -2114,9 +2120,9 @@ V_SEQ
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;       
-        
+            V_NUM := V_NUM +1;     ---- changement  
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+          --- V_NUM := V_NUM +1;
         END IF;
         
         INSERT INTO MKTREF.MKTQT_MOTORISATIONBLVD
@@ -2349,9 +2355,9 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;    
-        
+            V_NUM := V_NUM +1;     ---- changement  
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;
+           --V_NUM := V_NUM +1;
            
         END IF ;
         
@@ -2450,9 +2456,9 @@ V_SEQ
         EXCEPTION WHEN OTHERS THEN
          V_NUM := 0;
         END;
-               
+             V_NUM := V_NUM +1;     ---- changement    
            V_SEQ := MKTREF.MKTQA_CALCUL_CAP_UK.int_to_seq2 (V_NUM);
-           V_NUM := V_NUM +1;            
+          -- V_NUM := V_NUM +1;            
            
         END IF;
         
@@ -2551,7 +2557,7 @@ BEGIN
 A.Id as tech_id,
 NULL as tech_dateExtraction ,
 NULL as tech_dateInsertion  ,
-'UK' as countryCode,
+'GB' as countryCode,
 concat(concat('P', A.Id), TO_CHAR(B.effectivefrom, 'YYYYMMDD')) as itemDirectoryVehicleRef , 
 NULL as versionState   ,
 B.effectivefrom as validityStartDate   ,
@@ -2722,6 +2728,7 @@ and door_seat.crossref_code(+) = concat(concat(A.doors,'-'),B.seatNumber)
 and year_trimester.entity(+) ='year_trimester'  
 and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
 
+and nvl(B.effectiveto, SYSDATE) >= add_months(SYSDATE, -12) 
 ;
 
   
@@ -2736,7 +2743,7 @@ and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace
 A.Id as tech_id,
 NULL as tech_dateExtraction ,
 NULL as tech_dateInsertion  ,
-'UK' as countryCode,
+'GB' as countryCode,
 concat(concat('L', A.Id), TO_CHAR(B.effectivefrom, 'YYYYMMDD')) as itemDirectoryVehicleRef , 
 NULL as versionState   ,
 B.effectivefrom  as validityStartDate   ,
@@ -2906,6 +2913,7 @@ and door_seat.crossref_code(+) = concat('-',B.seatNumber)
 and year_trimester.entity(+) ='year_trimester'  
 and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
 
+and nvl(B.effectiveto, SYSDATE) >= add_months(SYSDATE, -12) 
 ;
 
 
@@ -3210,21 +3218,10 @@ capcode = REC_vehicle_VP.capcode
 
 
         where  itemDirectoryVehicleRef  = REC_vehicle_VP.itemDirectoryVehicleRef  ;
-      --  and versionYear  = REC_vehicle_VP.versionYear 
-      --  and  versionTrimester     = REC_vehicle_VP.versionTrimester   
-      --  and generation   = REC_vehicle_VP.generation  
-      -- and DIMENSIONS       = REC_vehicle_VP.DIMENSIONS_ID
-      --  and model_gen                = REC_vehicle_vp.MODEL_GEN_ID ;
-        
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-       -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-        --and V_DATE_SITU  =  Date_situ 
-       -- and Code_pays = 'UK';
+
 
 
         V_UPD := V_UPD + 1;
-        --RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle',to_char(REC_vehicle_VP.itemDirectoryVehicleRef)|| '-' || to_char(REC_vehicle_VP.versionYear) || '-' || to_char(REC_vehicle_VP.versionTrimester) || '-' ||to_char(REC_vehicle_VP.generation) || '-' ||  to_char(REC_vehicle_VP.MODEL_GEN_ID) );
 
         WHEN OTHERS THEN
 				COMMIT;
@@ -3527,16 +3524,6 @@ capcode = REC_vehicle_VU.capcode
 
 
         where itemDirectoryVehicleRef  = REC_vehicle_VU.itemDirectoryVehicleRef ;
-      -- and versionYear  = REC_vehicle_VU.versionYear 
-       -- and  versionTrimester     = REC_vehicle_VU.versionTrimester    
-       -- and generation   = REC_vehicle_VU.generation  
-       -- and DIMENSIONS       = REC_vehicle_VU.DIMENSIONS_ID
-       -- and model_gen                = REC_vehicle_vu.MODEL_GEN_ID ;
-       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
-       -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
-    	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
-        --and V_DATE_SITU  =  Date_situ 
-       -- and Code_pays = 'UK';
 
 
         V_UPD := V_UPD + 1;
@@ -3611,9 +3598,16 @@ and year_trimester is not null
 and DIMENSIONS != '  '   
 then (BRANDCODE || MODEL_GEN || KINDCODE || DIMENSIONS || door_seat || TRIM || energyCombCode ||MOTORISATIONBLVD || year_trimester || '0' ) ---- AJOUT DERNIER CARACT
 else null end) AS identifier_BLVD,
-'' AS identifier_CONSTR ,
+(case when veh.validitystartdate = (select max(veh2.validitystartdate) from MKTQT_vehicle veh2 where veh2.tech_id= veh.tech_id and veh2.vehicule_type = veh.vehicule_type)
+then codeconstr.manufacturer_code else null end  )  AS identifier_CONSTR,  -- AJOUT CODE CONSTR
 capcode AS identifier_CAPCODE
-from MKTQT_vehicle
+--validitystartdate,
+--veh.tech_id
+
+from MKTQT_vehicle veh,  MKTREF.mktqt_PredictCapCode codeconstr
+where veh.tech_id  =  codeconstr.cap_id (+)
+and veh.vehicule_type = codeconstr.Cap_Vehicle_Type (+)
+------and codeconstr.manufacturer_code is not null
 ;
 
 
@@ -3652,14 +3646,6 @@ from MKTQT_vehicle
 itemDirectoryVehicleRef,
 identifierType,
 identifier
---versionYear,
---versionTrimester,
---generation,-- add
---DIMENSIONS,  -- add
---MODEL_GEN,-- add
---VEHICULE_TYPE,
---BLVD,
---capcode
               )
         VALUES
               (  
@@ -3667,13 +3653,6 @@ identifier
 REC_vehicle_crossRefs.itemDirectoryVehicleRef,
 REC_vehicle_crossRefs.identifierType_BLVD,
 REC_vehicle_crossRefs.identifier_BLVD
---REC_vehicle_crossRefs.versionYear,
---REC_vehicle_crossRefs.versionTrimester,
---REC_vehicle_crossRefs.generation,-- add
---REC_vehicle_crossRefs.DIMENSIONS,-- add
---REC_vehicle_crossRefs.MODEL_GEN,-- add
---REC_vehicle_crossRefs.VEHICULE_TYPE,
---REC_vehicle_crossRefs.capcode
               );
 
         V_INS := V_INS + 1;
@@ -3687,12 +3666,7 @@ REC_vehicle_crossRefs.identifier_BLVD
 
         where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
         and identifierType = REC_vehicle_crossRefs.identifierType_BLVD;
-      ---  and     versionYear = REC_vehicle_crossRefs.versionYear
-      ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
-      ---  and     generation = REC_vehicle_crossRefs.generation
-      ---  and     DIMENSIONS = REC_vehicle_crossRefs.DIMENSIONS
-      --  and     MODEL_GEN = REC_vehicle_crossRefs.MODEL_GEN
-      ---  and     BLVD = REC_vehicle_crossRefs.BLVD ;
+
         
 
         V_UPD := V_UPD + 1;
@@ -3739,14 +3713,7 @@ REC_vehicle_crossRefs.identifier_BLVD
 itemDirectoryVehicleRef,
 identifierType,
 identifier
---versionYear,
---versionTrimester,
---generation,-- add
---DIMENSIONS,  -- add
---MODEL_GEN,-- add
---VEHICULE_TYPE,
---BLVD,
---capcode
+
               )
         VALUES
               (  
@@ -3754,13 +3721,6 @@ identifier
 REC_vehicle_crossRefs.itemDirectoryVehicleRef,
 REC_vehicle_crossRefs.identifierType_CONSTR,
 REC_vehicle_crossRefs.identifier_CONSTR
---REC_vehicle_crossRefs.versionYear,
---REC_vehicle_crossRefs.versionTrimester,
---REC_vehicle_crossRefs.generation,-- add
---REC_vehicle_crossRefs.DIMENSIONS,-- add
---REC_vehicle_crossRefs.MODEL_GEN,-- add
---REC_vehicle_crossRefs.VEHICULE_TYPE,
---REC_vehicle_crossRefs.capcode
               );
 
         V_INS := V_INS + 1;
@@ -3774,12 +3734,7 @@ REC_vehicle_crossRefs.identifier_CONSTR
 
         where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
         and identifierType = REC_vehicle_crossRefs.identifierType_CONSTR;
-      ---  and     versionYear = REC_vehicle_crossRefs.versionYear
-      ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
-      ---  and     generation = REC_vehicle_crossRefs.generation
-      ---  and     DIMENSIONS = REC_vehicle_crossRefs.DIMENSIONS
-      --  and     MODEL_GEN = REC_vehicle_crossRefs.MODEL_GEN
-      ---  and     BLVD = REC_vehicle_crossRefs.BLVD ;
+
         
 
         V_UPD := V_UPD + 1;
@@ -3827,14 +3782,6 @@ REC_vehicle_crossRefs.identifier_CONSTR
 itemDirectoryVehicleRef,
 identifierType,
 identifier
---versionYear,
---versionTrimester,
---generation,-- add
---DIMENSIONS,  -- add
---MODEL_GEN,-- add
---VEHICULE_TYPE,
---BLVD,
---capcode
               )
         VALUES
               (  
@@ -3842,13 +3789,6 @@ identifier
 REC_vehicle_crossRefs.itemDirectoryVehicleRef,
 REC_vehicle_crossRefs.identifierType_CAPCODE,
 REC_vehicle_crossRefs.identifier_CAPCODE
---REC_vehicle_crossRefs.versionYear,
---REC_vehicle_crossRefs.versionTrimester,
---REC_vehicle_crossRefs.generation,-- add
---REC_vehicle_crossRefs.DIMENSIONS,-- add
---REC_vehicle_crossRefs.MODEL_GEN,-- add
---REC_vehicle_crossRefs.VEHICULE_TYPE,
---REC_vehicle_crossRefs.capcode
               );
 
         V_INS := V_INS + 1;
@@ -3862,12 +3802,7 @@ REC_vehicle_crossRefs.identifier_CAPCODE
 
         where   itemDirectoryVehicleRef = REC_vehicle_crossRefs.itemDirectoryVehicleRef
         and identifierType = REC_vehicle_crossRefs.identifierType_CAPCODE;
-      ---  and     versionYear = REC_vehicle_crossRefs.versionYear
-      ---  and     versionTrimester = REC_vehicle_crossRefs.versionTrimester 
-      ---  and     generation = REC_vehicle_crossRefs.generation
-      ---  and     DIMENSIONS = REC_vehicle_crossRefs.DIMENSIONS
-      --  and     MODEL_GEN = REC_vehicle_crossRefs.MODEL_GEN
-      ---  and     BLVD = REC_vehicle_crossRefs.BLVD ;
+
         
 
         V_UPD := V_UPD + 1;
@@ -6246,7 +6181,7 @@ REC_transco.countryScope
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
-			END IF;
+			END IF; 
 		---------------05	
 			V_ERR     := ALIM_vehicle( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
@@ -6305,7 +6240,7 @@ REC_transco.countryScope
 			END IF;          
  
 			
-			RETURN V_RET;
+			RETURN V_RET; 
 
 		/* AJOUTER APRES end; */
 		
