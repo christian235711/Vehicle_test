@@ -1286,7 +1286,8 @@ BEGIN
                     CAPMAN.NAME as CAPMAN_NAME,
                     'VP' AS VEHICULE_TYPE,
                     CAPDER.RANCODE || 'GEN' || B.generation AS crossref_code,
-                   (CAPRAN.NAME || ' (' || 'GEN' || B.generation || ')') AS TRANSLATION_LABEL  --- ajout 20-10-2022
+                   (CAPRAN.NAME || ' (' || 'GEN' || B.generation || ')') AS TRANSLATION_LABEL,  --- ajout 20-10-2022
+                   CAPDER.MANCODE as MANCODE  ----ajout 28-10-22
      
      from    MKTREF.MKTQT_NVDModelYear_VP B,
              MKTREF.MKTQT_CapDer_VP CAPDER, 
@@ -1314,7 +1315,8 @@ BEGIN
                       CAPMAN.NAME as CAPMAN_NAME,
                      'VU' AS VEHICULE_TYPE,
                      CAPDER.RANCODE || 'GEN' || B.generation AS crossref_code,    ---- AJOUT VENDREDI 
-                     (CAPRAN.NAME || ' (' || 'GEN' || B.generation || ')') AS TRANSLATION_LABEL  --- ajout 20-10-2022
+                     (CAPRAN.NAME || ' (' || 'GEN' || B.generation || ')') AS TRANSLATION_LABEL,  --- ajout 20-10-2022
+                     CAPDER.MANCODE as MANCODE  ----ajout 28-10-22
                      
      from    MKTREF.MKTQT_NVDModelYear_VU B,
              MKTREF.MKTQT_CapDer_VU CAPDER,
@@ -1336,9 +1338,9 @@ BEGIN
   BEGIN
 
     File_Id := mkt.mktqaut.F_Open(Nomlog);
-  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle','------------------------- BEGIN  -----------------------------');
-  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle','## Alimentation de la table MKTREF.MKTQT_MODEL_GEN ##');
-  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle','## Flux BILAN   ##');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN','------------------------- BEGIN  -----------------------------');
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN','## Alimentation de la table MKTREF.MKTQT_MODEL_GEN ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_MODEL_GEN','## Flux BILAN   ##');
   
           
         SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
@@ -1354,6 +1356,13 @@ BEGIN
   LOOP
         
        /*************************************************************************/
+        BEGIN
+        
+        IF REC_vehicle_VP.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VP.MANCODE));
+        ELSE
+        
         BEGIN
         
         IF V_ERR=1 THEN EXIT;
@@ -1432,9 +1441,12 @@ REC_vehicle_VP.TRANSLATION_LABEL  -- AJOUT
 				V_ERR := 1;
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle','Message Erreur pl/sql :'||Sqlerrm,'E');
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN','Message Erreur pl/sql :'||Sqlerrm,'E');
         
         RETURN V_ERR;
+      
+      END;  ----
+      END IF;  ----
       
         END;     
    END LOOP;
@@ -1442,7 +1454,7 @@ REC_vehicle_VP.TRANSLATION_LABEL  -- AJOUT
    COMMIT;
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_MODEL_GEN','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
    
    -------------------------------VU  
@@ -1456,6 +1468,17 @@ REC_vehicle_VP.TRANSLATION_LABEL  -- AJOUT
         
        /*************************************************************************/
         BEGIN
+        
+        
+        IF REC_vehicle_VU.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VU.MANCODE));
+        ELSE
+        
+        BEGIN
+        
+        
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -1533,9 +1556,12 @@ REC_vehicle_VU.TRANSLATION_LABEL  --AJOUT
 				V_ERR := 1;
 
 				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
-				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle','Message Erreur pl/sql :'||Sqlerrm,'E');
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN','Message Erreur pl/sql :'||Sqlerrm,'E');
         
         RETURN V_ERR;
+      
+      END;  --
+      END IF; --
       
         END;     
    END LOOP;
@@ -1543,7 +1569,7 @@ REC_vehicle_VU.TRANSLATION_LABEL  --AJOUT
    COMMIT;
    V_INSERTS := V_INS;
    V_Updates := V_Upd;
-   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_vehicle','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_MODEL_GEN','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
    
    
    
@@ -1595,7 +1621,8 @@ BEGIN
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
-            concat('C', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
+            concat('C', CAPDER.TrimCode) as crossref_code,  -- AJOUT VENDREDI
+            CAPDER.MANCODE as MANCODE --
      
      from    MKTREF.MKTQT_NVDModelYear_VP B,
              MKTREF.MKTQT_CapDer_VP CAPDER,
@@ -1624,7 +1651,8 @@ BEGIN
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
             (case when CAPTRIM.NAME is null then ' ' else  CAPTRIM.NAME end) as VEHICULE_TRIM ,  -- car VEHICULE_TRIM est clé primaire et CAPTRIM.NAME peut être null
-            concat('L', CAPDER.TrimCode) as crossref_code  -- AJOUT VENDREDI
+            concat('L', CAPDER.TrimCode) as crossref_code,  -- AJOUT VENDREDI
+            CAPDER.MANCODE as MANCODE --
      
      from    MKTREF.MKTQT_NVDModelYear_VU B,
              MKTREF.MKTQT_CapDer_VU CAPDER,
@@ -1668,6 +1696,17 @@ BEGIN
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VP.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VP.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_TRIM : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_TRIM));
+        ELSE
+        
+        BEGIN
+        
+        
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -1752,6 +1791,9 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         
         RETURN V_ERR;
       
+      END;
+      END IF;
+      
         END;     
    END LOOP;
 
@@ -1772,6 +1814,15 @@ REC_vehicle_VP.CROSSREF_CODE   -- AJOUT VENDREDI
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VU.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VU.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_TRIM : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_TRIM));
+        ELSE
+        
+        BEGIN
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -1856,6 +1907,9 @@ REC_vehicle_VU.CROSSREF_CODE   -- AJOUT VENDREDI
         
         RETURN V_ERR;
       
+      END;
+      END IF;
+      
         END;     
    END LOOP;
 
@@ -1913,8 +1967,8 @@ BEGIN
      select distinct  brand.code as brandCode,
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  B.nbRapports  || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD 
-            --(maximumPowerDin.valuefloat  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )|| '/' || batteryCapacity.valuefloat) as VEHICULE_MOTORISATIONBLVD
+            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' ||  B.nbRapports  || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD,
+            CAPDER.MANCODE as MANCODE  --- ajout 28-10-2022
  
      from    MKTREF.MKTQT_NVDModelYear_VP B,
              MKTREF.MKTQT_CapDer_VP CAPDER,
@@ -1950,7 +2004,8 @@ BEGIN
      select distinct brand.code as brandCode   ,
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' || B.nbRapports || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD
+            (B.maximumPowerDin  || '/' || CAPDER.Transmission || '/' || CAPDER.DriveTrain || '/' || B.nbRapports || '/' || B.batteryCapacity) as VEHICULE_MOTORISATIONBLVD,
+             CAPDER.MANCODE as MANCODE  --- ajout 28-10-2022
      
      from    MKTREF.MKTQT_NVDModelYear_VU B,
              MKTREF.MKTQT_CapDer_VU CAPDER,
@@ -1999,6 +2054,16 @@ BEGIN
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VP.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VP.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_MOTORISATIONBLVD : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_MOTORISATIONBLVD));
+        ELSE
+        
+        BEGIN       
+        
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -2079,6 +2144,9 @@ V_SEQ
         
         RETURN V_ERR;
       
+      END;
+      END IF;
+      
         END;     
    END LOOP;
 
@@ -2099,6 +2167,16 @@ V_SEQ
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VU.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VU.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_MOTORISATIONBLVD : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_MOTORISATIONBLVD));
+        ELSE
+        
+        BEGIN       
+        
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -2178,6 +2256,9 @@ V_SEQ
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MOTORISATIONBLVD','Message Erreur pl/sql :'||Sqlerrm,'E');
         RETURN V_ERR;
       
+      END;
+      END IF;
+      
         END;     
    END LOOP;
 
@@ -2235,8 +2316,8 @@ BEGIN
      select distinct  brand.code as brandCode,
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VP' AS VEHICULE_TYPE,
-            (body.code || ':' || B.height || ':' || B.length || ':' || ':' || B.maxLadenWeight)   as  VEHICULE_DIMENSIONS --mercredi
-            --(substr(CAPDER.capcode,11,1) || height.valuefloat || length.valuefloat || maxLadenWeight.valuefloat  ) as  VEHICULE_DIMENSIONS -- avant
+            (body.code || ':' || B.height || ':' || B.length || ':' || ':' || B.maxLadenWeight)   as  VEHICULE_DIMENSIONS,
+            CAPDER.MANCODE as MANCODE
  
      from    MKTREF.MKTQT_NVDModelYear_VP B,
              MKTREF.MKTQT_CapDer_VP CAPDER,
@@ -2275,8 +2356,8 @@ BEGIN
      select distinct brand.code as brandCode   ,
             CAPMAN.NAME || ':' || CAPRAN.NAME || ':' || 'GEN' || B.generation AS VEHICULE_NAME,
             'VU' AS VEHICULE_TYPE,
-            (body.code || ':' || B.height || ':' || B.length  || ':' || B.payLoad || ':' || B.maxLadenWeight) as  VEHICULE_DIMENSIONS  --mercredi
-            --(substr(CAPDER.capcode,11,1) || height.valuefloat || length.valuefloat  ||  payLoad.valuefloat || maxLadenWeight.valuefloat) as  VEHICULE_DIMENSIONS --avant     
+            (body.code || ':' || B.height || ':' || B.length  || ':' || B.payLoad || ':' || B.maxLadenWeight) as  VEHICULE_DIMENSIONS,
+            CAPDER.MANCODE as MANCODE
             
      from    MKTREF.MKTQT_NVDModelYear_VU B,
              MKTREF.MKTQT_CapDer_VU CAPDER,
@@ -2334,6 +2415,17 @@ BEGIN
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VP.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VP.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_DIMENSIONS : ' || TO_CHAR(REC_vehicle_VP.VEHICULE_DIMENSIONS));
+        ELSE
+        
+        BEGIN  
+        
+        
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -2414,6 +2506,9 @@ V_SEQ
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_DIMENSIONS','Message Erreur pl/sql :'||Sqlerrm,'E');
         
         RETURN V_ERR;
+     
+     END;
+     END IF;
       
         END;     
    END LOOP;
@@ -2435,6 +2530,16 @@ V_SEQ
         
        /*************************************************************************/
         BEGIN
+        
+        IF REC_vehicle_VU.brandCode IS NULL THEN
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_NAME : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_NAME));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'MANCODE : ' || TO_CHAR(REC_vehicle_VU.MANCODE));
+              Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_MODEL_GEN : BRANDCODE ABSENT DANS LA TABLE NOMENCLATURE ', 'VEHICULE_DIMENSIONS : ' || TO_CHAR(REC_vehicle_VU.VEHICULE_DIMENSIONS));
+        ELSE
+        
+        BEGIN  
+           
+        
         
         IF V_ERR=1 THEN EXIT;
         END IF;
@@ -2515,6 +2620,9 @@ V_SEQ
 				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_DIMENSIONS','Message Erreur pl/sql :'||Sqlerrm,'E');
         RETURN V_ERR;
       
+      END;
+      END IF;
+      
         END;     
    END LOOP;
 
@@ -2590,7 +2698,8 @@ B.height as height  ,  ----------------------- 34
 B.length as length  , ----------------------- 4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-B.co2EmissionWLTP as co2EmissionWLTP , ----------------------- 173
+(case when substr(A.capcode, 12, 1) in ('Z','A','R','X') then co2EmissionWLTP_285.valuefloat when substr(A.capcode, 12, 1) in ('D','Y','P','F','G','H','B') then  co2EmissionWLTP_173.valuefloat when substr(A.capcode, 12, 1) in ('E','C') then '0' end) as co2EmissionWLTP,
+------------------------------B.co2EmissionWLTP as co2EmissionWLTP , ----------------------- 173
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
 B.maximumPowerDin as maximumPowerDin , ----------------------- 21
@@ -2649,7 +2758,7 @@ DIMENSIONS.DIMENSIONS_ID as DIMENSIONS_ID,
 (case when door_seat.crossref_code in ('0-1','0-2','2-1','2-2','2-4','3-2','3-4','3-5','4-4','4-5','5-2','5-4','5-5','5-7','5-8','5-9','4-3','2-3') then door_seat.code else 'Z' end) as door_seat,
 year_trimester.code as year_trimester,
 A.Capcode as capcode
---B.effectivefrom as effectivefrom,
+-----B.effectivefrom as effectivefrom
 
 
 from MKTREF.MKTQT_CapDer_VP A,
@@ -2665,7 +2774,8 @@ from MKTREF.MKTQT_CapDer_VP A,
      MKTREF.MKTQT_nomenclature door_seat, --add
      MKTREF.MKTQT_nomenclature year_trimester, --add
 
-
+MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP_173,
+MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP_285,
      
      MKTREF.MKTQT_MODEL_GEN MG,
      MKTQT_CAPMAN_VP   CAPMAN,
@@ -2699,6 +2809,13 @@ and transmission.crossref_code(+) = A.drivetrain
 and gearbox.entity (+) = 'gearbox'
 and gearbox.crossref_code(+) = A.transmission
 
+
+
+and co2EmissionWLTP_173.id(+) = B.id and co2EmissionWLTP_173.effectivefrom(+) = B.effectivefrom
+and co2EmissionWLTP_173.techcode(+) = 173
+
+and co2EmissionWLTP_285.id(+) = B.id and co2EmissionWLTP_285.effectivefrom(+) = B.effectivefrom
+and co2EmissionWLTP_285.techcode(+) = 285
 
 -- MODEL GEN
 AND MG.BRAND_CODE  = brand.code
@@ -2740,6 +2857,7 @@ and year_trimester.entity(+) ='year_trimester'
 and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace(B.refe, '.', ',')-floor(replace(B.refe, '.', ',')) ), ',', '.' )
 
 and nvl(B.effectiveto, SYSDATE) >= add_months(SYSDATE, -12) 
+
 ;
 
   
@@ -2776,7 +2894,8 @@ B.height as height, --34 as height  , ---34
 B.length as length, --4  as length  , ---4
 NULL as sportinessFlag  ,
 NULL as co2EmissionNEDC ,
-B.co2EmissionWLTP as co2EmissionWLTP, -- 239 as co2EmissionWLTP , --239
+(case when substr(A.capcode, 12, 1) in ('Z','A','R','X') then co2EmissionWLTP_272.valuefloat when substr(A.capcode, 12, 1) in ('D','Y','P','F','G','H','B') then  co2EmissionWLTP_239.valuefloat when substr(A.capcode, 12, 1) in ('E','C') then '0' end) as co2EmissionWLTP,
+-------B.co2EmissionWLTP as co2EmissionWLTP, -- 239 as co2EmissionWLTP , --239
 NULL as co2ClassCode    ,
 NULL as fiscalHorsePower    ,
 B.maximumPowerDin as maximumPowerDin, -- 21 as maximumPowerDin ,  --21
@@ -2837,7 +2956,9 @@ A.Capcode as capcode
 --B.effectivefrom as effectivefrom,
 
 
-from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_NVDGenericStatus_VU C,
+from MKTREF.MKTQT_CapDer_VU A ,
+    MKTREF.MKTQT_NVDModelYear_VU B ,
+    MKTREF.MKTQT_NVDGenericStatus_VU C,
      MKTREF.MKTQT_nomenclature brand,
      MKTREF.MKTQT_nomenclature model,
      MKTREF.MKTQT_nomenclature segment,
@@ -2848,7 +2969,8 @@ from MKTREF.MKTQT_CapDer_VU A , MKTREF.MKTQT_NVDModelYear_VU B  , MKTREF.MKTQT_N
      MKTREF.MKTQT_nomenclature door_seat, --add
      MKTREF.MKTQT_nomenclature year_trimester, --add
      
-
+MKTREF.MKTQT_NVDTechnical_VU co2EmissionWLTP_272,
+MKTREF.MKTQT_NVDTechnical_VU co2EmissionWLTP_239,
      
      MKTREF.MKTQT_MODEL_GEN MG,
      MKTQT_CAPMAN_VU   CAPMAN,
@@ -2882,6 +3004,13 @@ and transmission.entity (+)= 'transmission'
 and transmission.crossref_code(+) = A.drivetrain
 and gearbox.entity (+) = 'gearbox'
 and gearbox.crossref_code(+) = A.transmission
+
+
+and co2EmissionWLTP_272.id(+) = B.id and co2EmissionWLTP_272.effectivefrom(+) = B.effectivefrom
+and co2EmissionWLTP_272.techcode(+) = 272
+
+and co2EmissionWLTP_239.id(+) = B.id and co2EmissionWLTP_239.effectivefrom(+) = B.effectivefrom
+and co2EmissionWLTP_239.techcode(+) = 239
 
 
 -- MODEL GEN
@@ -2926,7 +3055,6 @@ and year_trimester.description_label(+) = replace(substr(B.refe, 0,4)+ ( replace
 
 and nvl(B.effectiveto, SYSDATE) >= add_months(SYSDATE, -12) 
 ;
-
 
 
 
@@ -3560,6 +3688,13 @@ capcode = REC_vehicle_VU.capcode
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
     
   END ALIM_vehicle;
@@ -3910,6 +4045,13 @@ REC_vehicle_crossRefs.identifier_SUPPLIERID
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle_crossRefs','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
 
   END ALIM_vehicle_crossRefs;
@@ -4196,15 +4338,10 @@ BEGIN
     Select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 veh.itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.generation,-- add
-------veh.DIMENSIONS,  -- add
-------veh.MODEL_GEN,-- add
 'VP' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
-(case when B.catcode in (44, 45, 73, 74, 75, 76, 81, 82, 86, 90, 97) then 'C' else 'O' end) as typeCode,
+(case when B.catcode in (44, 45, 73, 74, 75, 76) then 'C' when B.catcode in (81, 82, 86, 90, 97) then 'T' else 'O' end) as typeCode,
 --(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
 (case when D.periodcode is not null then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
@@ -4217,7 +4354,7 @@ A.effectiveto as effectiveto,
 A.basic as basic
 
 from mktqt_vehicle veh, mktref.mktqt_NVDOption_VP A, mktref.mktqt_NVDDictionaryOption_VP B, mktref.mktqt_NVDPackContents_VP C, MKTQT_NVDPackPeriods_VP D
-where veh.tech_id = A.id and veh.validityStartDate  = A.effectivefrom and veh.VEHICULE_TYPE = 'VP'
+where veh.tech_id = A.id and (veh.validityStartDate < A.effectiveto or A.effectiveto is null) and (veh.validityEndDate > A.effectivefrom or veh.validityEndDate is null) and veh.VEHICULE_TYPE = 'VP'
 and A.optioncode = B.optioncode (+) 
 and A.optioncode = C.optioncode (+) 
 and C.periodcode = D.periodcode (+)
@@ -4227,15 +4364,10 @@ union
 select distinct
 veh.tech_id AS tech_id, ------ AJOUT POUR JOINTURE AVEC MKTQT_NVDPrices_VP
 veh.itemDirectoryVehicleRef as itemDirectoryVehicleRef,  ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.versionYear	as versionYear,   ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.versionTrimester as versionTrimester,   ------ AJOUT POUR JOINTURE AVEC VEH
-------veh.generation,-- add
-------veh.DIMENSIONS,  -- add
-------veh.MODEL_GEN,-- add
 'VU' as VEHICULE_TYPE, ------ AJOUT POUR JOINTURE
 A.optioncode as code,
 NULL as constructorCode,
-(case when B.catcode in (103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113) then 'C' else 'O' end) as typeCode,
+(case when B.catcode in (103, 104, 105, 106, 107, 108) then 'C' when B.catcode in (109, 110, 111, 112, 113) then 'T' else 'O' end) as typeCode,
 --(case when exists( select 1 from  mktref.MKTQT_NVDPackPeriods_VP D where D.periodcode = C.periodcode  )then 'True' else 'False' end) as isPack,
 (case when D.periodcode is not null then 'True' else 'False' end) as isPack,
 NULL as isAgregated,
@@ -4248,7 +4380,7 @@ A.effectiveto as effectiveto,
 A.basic as basic
 
 from mktqt_vehicle veh, mktref.mktqt_NVDOption_VU A, mktref.mktqt_NVDDictionaryOption_VU B, mktref.mktqt_NVDPackContents_VU C, MKTQT_NVDPackPeriods_VU D
-where veh.tech_id = A.id and veh.validityStartDate    = A.effectivefrom and veh.VEHICULE_TYPE = 'VU'
+where veh.tech_id = A.id and (veh.validityStartDate < A.effectiveto or A.effectiveto is null) and (veh.validityEndDate > A.effectivefrom or veh.validityEndDate is null) and veh.VEHICULE_TYPE = 'VU'
 and A.optioncode = B.optioncode (+)
 and A.optioncode = C.optioncode (+) 
 and C.periodcode = D.periodcode (+)
@@ -4288,11 +4420,6 @@ and C.periodcode = D.periodcode (+)
               (  
 tech_id,    ------ AJOUT POUR JOINTURE
 itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
-------versionYear,------ AJOUT POUR JOINTURE  
-------versionTrimester,------ AJOUT POUR JOINTURE  
-------generation,-- add
-------DIMENSIONS,  -- add
-------MODEL_GEN,-- add
 VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 code,
 constructorCode,
@@ -4312,11 +4439,6 @@ basic  --add
               (  
 REC_veh_options.tech_id,    ------ AJOUT POUR JOINTURE
 REC_veh_options.itemDirectoryVehicleRef,------ AJOUT POUR JOINTURE  
-------REC_veh_options.versionYear,------ AJOUT POUR JOINTURE  
-------REC_veh_options.versionTrimester,------ AJOUT POUR JOINTURE  
-------REC_veh_options.generation,-- add
-------REC_veh_options.DIMENSIONS,  -- add
-------REC_veh_options.MODEL_GEN,-- add
 REC_veh_options.VEHICULE_TYPE,------ AJOUT POUR JOINTURE  
 REC_veh_options.code,
 REC_veh_options.constructorCode,
@@ -4356,11 +4478,6 @@ basic = REC_veh_options.basic  --add
 
         where code = REC_veh_options.code
         and   itemDirectoryVehicleRef = REC_veh_options.itemDirectoryVehicleRef;
-        ------and   versionYear = REC_veh_options.versionYear
-       ------ and   versionTrimester = REC_veh_options.versionTrimester 
-       ------ and generation = REC_veh_options.generation  -- add
-        ------and DIMENSIONS = REC_veh_options.DIMENSIONS  -- add
-       ------ and MODEL_GEN = REC_veh_options.MODEL_GEN  ;-- add;
          
        -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
       --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
@@ -4390,6 +4507,13 @@ basic = REC_veh_options.basic  --add
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle_options','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
    
     
@@ -4754,6 +4878,13 @@ basePriceWithChargesIncludeVAT = REC_veh_optionspricings.basePriceWithChargesInc
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_vehicle_optionspricings','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
 
     
@@ -5113,6 +5244,13 @@ REC_transco.TRANSLATION_LABEL	, --- MAPPING : translation_label = description_la
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_model_gen','Message Erreur pl/sql :'||Sqlerrm,'E');
+   
    End;
     
   END ALIM_transco_model_gen;
@@ -5672,6 +5810,12 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_transco_motorisationBLVD','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
     
   END ALIM_transco_motorisationBLVD;
@@ -6141,6 +6285,12 @@ REC_transco.countryScope
    
    UTL_FILE.FCLOSE(FILE_ID);
    RETURN V_ERR;
+   EXCEPTION WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'UPDATE_transco_model','Message Erreur pl/sql :'||Sqlerrm,'E');
    End;
     
   END UPDATE_transco_model;
