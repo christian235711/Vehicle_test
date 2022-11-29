@@ -1,5 +1,8 @@
 create or replace PACKAGE BODY MKTQADSCUS AS
 
+---------------------------------------------------------------------------------------------------
+--                              Customer 
+--------------------------------------------------------------------------------------------------- 
 
 Function ALIM_MKTQAFSL_CUSTOMER ( Nomlog      Varchar2,
                             P_DATE_TRAI DATE ,
@@ -258,9 +261,8 @@ BEGIN
                             SCS_CUSTOMER_ID  AS SRCPARTYID,
                             SCS_COUNTRY_CD  AS SRCJVCODE,
                             'FSL'  AS SRCAPPCODE,
-                             SCS_PINCODETYPE AS CODE,  -- A REVOIR
-                             'ISIC' AS TYPECODE
-                            
+                            SCS_PINCODETYPE AS CODE,  -- A REVOIR
+                            'ISIC' AS TYPECODE                          
                                 
                     FROM  MKTOV.MKTQT_S_CSTMR cst;
                                                                    
@@ -1472,6 +1474,539 @@ p_date_trai
    RETURN V_ERR;
    end;
 end ALIM_MKTQAFSL_CUS_CTMEAN_EXREF;
+
+
+
+
+---------------------------------------------------------------------------------------------------
+--                              CustomerProfile 
+---------------------------------------------------------------------------------------------------  
+
+
+Function ALIM_MKTQAFSL_CUSTOMER_PROFILE ( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE ,
+                            p_code_pays varchar2) Return Number IS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_UPD_2 NUMBER := 0;
+  V_FUNC VARCHAR2(30) := 'ALIM_MKTQAFSL_CUSTOMER_PROFILE';    
+  V_TAB1 VARCHAR2(40) := 'MKTOV.MKTQT_CUSTOMER_PROFILE'; 
+  V_TAB2 VARCHAR2(30) := 'SRS'; 
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor c_mkt Is
+                    SELECT
+                                SCS_CUSTOMER_ID||SCS_COUNTRY_CD||'FSL' AS TECH_ID,
+                                SCS_COUNTRY_CD AS COUNTRYBRANCHCODE,
+                                SCS_CUSTOMER_ID AS SRCPARTYID,
+                                SCS_COUNTRY_CD AS SRCJVCODE,
+                                'FSL' AS SRCAPPCODE,
+                                (CASE WHEN SCS_STATUSCODE = '100555' THEN 'true' ELSE 'false' END) AS UNPAIDFLAG,  --- A REVOIR
+                                'true' AS ISLEASCO,
+                                'false' AS ISFINCO
+                     FROM  MKTOV.MKTQT_S_CSTMR cst; 
+
+ /*******************************************************************************/
+  BEGIN
+
+	File_Id := Mkt.Mktqaut.F_Open(Nomlog);
+  Res := Mkt.Mktqaut.F_Write(File_Id, V_FUNC,'## Alimentation de la table '||V_TAB1||' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC,'## Flux '||V_TAB2||' ##');
+
+  FOR REC IN c_mkt
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+
+        INSERT INTO MKTOV.MKTQT_CUSTOMER_PROFILE 
+              (
+TECH_ID,
+COUNTRYBRANCHCODE,
+SRCPARTYID,
+SRCJVCODE,
+SRCAPPCODE,
+UNPAIDFLAG,
+ISLEASCO,
+ISFINCO,
+CODE_PAYS,
+DATE_SITU					
+              )
+        VALUES
+              (
+REC.TECH_ID,
+REC.COUNTRYBRANCHCODE,
+REC.SRCPARTYID,
+REC.SRCJVCODE,
+REC.SRCAPPCODE,
+REC.UNPAIDFLAG,
+REC.ISLEASCO,
+REC.ISFINCO,
+P_CODE_PAYS,
+p_date_trai
+);
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+          When Dup_Val_On_Index Then
+          Update  MKTOV.MKTQT_CUSTOMER_PROFILE 
+          Set     	
+                    ---TECH_ID = REC.TECH_ID,
+                    COUNTRYBRANCHCODE = REC.COUNTRYBRANCHCODE,
+                    SRCPARTYID = REC.SRCPARTYID,
+                    SRCJVCODE = REC.SRCJVCODE,
+                    SRCAPPCODE = REC.SRCAPPCODE,
+                    UNPAIDFLAG = REC.UNPAIDFLAG,
+                    ISLEASCO = REC.ISLEASCO,
+                    ISFINCO = REC.ISFINCO,
+                    DATE_SITU	=	p_date_trai				
+          Where   TECH_ID	=	REC.TECH_ID	
+          AND     CODE_PAYS	=	P_CODE_PAYS;
+
+
+          			V_UPD := V_UPD + 1;
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+				Res := Mkt.Mktqaut.F_Write(File_Id,V_FUNC,'Message Erreur pl/sql :'||Sqlerrm);
+      
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+   
+   RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC ,'Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+End ALIM_MKTQAFSL_CUSTOMER_PROFILE;
+
+
+
+
+Function ALIM_MKTQAFSL_CUSTOMER_PRF_CTT ( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE ,
+                            p_code_pays varchar2) Return Number IS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_UPD_2 NUMBER := 0;
+  V_FUNC VARCHAR2(30) := 'ALIM_MKTQAFSL_CUSTOMER_PRF_CTT';    
+  V_TAB1 VARCHAR2(40) := 'MKTOV.MKTQT_CUSTOMER_PROFILE_CTT'; 
+  V_TAB2 VARCHAR2(30) := 'SRS'; 
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor c_mkt Is
+                    SELECT
+                              SFP_CUSTOMER_ID||SFP_COUNTRY_CD||'FSL' as     tech_id,
+                              'CLIE' as stakeholderRole,
+                              SFP_CONTRACT_ID as contractRef,
+                              SFP_CONTRACT_STATUS_ENUMID as accountStatus,
+                              SFP_DEALER_ID as dealershipRef,
+                              SFP_CHASSIS_NUMBER as vehSerialNumber,
+                              'true' as isLeasco,
+                              'false' as isFinco,
+                              'FSL' as backOfficeOrigin	
+                    FROM MKTOV.MKTQT_S_FPA_STCK_FLW;
+
+
+ /*******************************************************************************/
+  BEGIN
+
+	File_Id := Mkt.Mktqaut.F_Open(Nomlog);
+  Res := Mkt.Mktqaut.F_Write(File_Id, V_FUNC,'## Alimentation de la table '||V_TAB1||' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC,'## Flux '||V_TAB2||' ##');
+
+  FOR REC IN c_mkt
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+
+        INSERT INTO MKTOV.MKTQT_CUSTOMER_PROFILE_CTT 
+              (
+TECH_ID,
+STAKEHOLDERROLE,
+CONTRACTREF,
+ACCOUNTSTATUS,
+DEALERSHIPREF,
+VEHSERIALNUMBER,
+ISLEASCO,
+ISFINCO,
+BACKOFFICEORIGIN,
+CODE_PAYS,
+DATE_SITU					
+              )
+        VALUES
+              (
+REC.TECH_ID,
+REC.STAKEHOLDERROLE,
+REC.CONTRACTREF,
+REC.ACCOUNTSTATUS,
+REC.DEALERSHIPREF,
+REC.VEHSERIALNUMBER,
+REC.ISLEASCO,
+REC.ISFINCO,
+REC.BACKOFFICEORIGIN,
+P_CODE_PAYS,
+p_date_trai
+);
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+          When Dup_Val_On_Index Then
+          Update  MKTOV.MKTQT_CUSTOMER_PROFILE_CTT 
+          Set     	
+                    --TECH_ID = REC.TECH_ID,
+                    STAKEHOLDERROLE = REC.STAKEHOLDERROLE,
+                    CONTRACTREF = REC.CONTRACTREF,
+                    ACCOUNTSTATUS = REC.ACCOUNTSTATUS,
+                    DEALERSHIPREF = REC.DEALERSHIPREF,
+                    VEHSERIALNUMBER = REC.VEHSERIALNUMBER,
+                    ISLEASCO = REC.ISLEASCO,
+                    ISFINCO = REC.ISFINCO,
+                    BACKOFFICEORIGIN = REC.BACKOFFICEORIGIN,
+                    DATE_SITU	=	p_date_trai				
+          Where   TECH_ID	=	REC.TECH_ID	
+          AND     CODE_PAYS	=	P_CODE_PAYS;
+
+
+          			V_UPD := V_UPD + 1;
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+				Res := Mkt.Mktqaut.F_Write(File_Id,V_FUNC,'Message Erreur pl/sql :'||Sqlerrm);
+      
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+   
+   RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC ,'Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+End ALIM_MKTQAFSL_CUSTOMER_PRF_CTT;
+
+---------------------------------------------------------------------------------------------------
+--                              Agreement 
+---------------------------------------------------------------------------------------------------   
+
+
+Function ALIM_MKTQAFSL_AGREEMENT ( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE ,
+                            p_code_pays varchar2) Return Number IS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_UPD_2 NUMBER := 0;
+  V_FUNC VARCHAR2(30) := 'ALIM_MKTQAFSL_AGREEMENT';    
+  V_TAB1 VARCHAR2(40) := 'MKTOV.MKTQT_AGREEMENT'; 
+  V_TAB2 VARCHAR2(30) := 'SRS'; 
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor c_mkt Is
+                    SELECT                              
+                             QTE.SQT_REQUEST_ID || OPRTNS.SCN_COUNTRY_CD ||'FSL' AS TECH_ID,
+                             sysdate AS TECH_DATEEXTRACTION,
+                             QTE.SQT_COUNTRY_CD AS COUNTRYBRANCHCODE,
+                             (CASE WHEN OPRTNS.SCN_BUYBACK_TYPE_EN = 'No buyback' THEN 'false' ELSE 'true' END) AS ISBUYBACKMAKE                                                          
+                              
+                    FROM MKTOV.MKTQT_S_QTE QTE,
+                        MKTOV.MKTQT_S_CNTRCT CNTRCT,
+                        MKTOV.MKTQT_S_CNTRCT_OPRTNS OPRTNS,
+                        MKTOV.MKTQT_S_CSTMR CSTMR, 
+                        MKTOV.MKTQT_S_FPA_STCK_FLW FLW,
+                        MKTOV.MKTQT_S_VHCLE VHCLE
+                        
+                    WHERE OPRTNS.SCN_CONTRACT_ID =  CNTRCT.SCN_CONTRACT_ID 
+                    AND   OPRTNS.SCN_BUSINESSPARTNER_ID =  CSTMR.SCS_BUSINESSPARTNER_ID
+                    AND   CNTRCT.SCN_CONTRACT_ID = FLW.SFP_CONTRACT_ID
+                    AND   QTE.SQT_QUOTE_ID = FLW.SFP_QUOTE_ID
+                    AND   OPRTNS.SCN_CONFIGVEHICLE_ID = VHCLE.SVH_CONFIGVEHICLE_ID
+                    
+                    AND CNTRCT.SCN_IS_BILLABLE <> 'Full Billing';
+                    
+
+ /*******************************************************************************/
+  BEGIN
+
+	File_Id := Mkt.Mktqaut.F_Open(Nomlog);
+  Res := Mkt.Mktqaut.F_Write(File_Id, V_FUNC,'## Alimentation de la table '||V_TAB1||' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC,'## Flux '||V_TAB2||' ##');
+
+  FOR REC IN c_mkt
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+
+        INSERT INTO MKTOV.MKTQT_AGREEMENT 
+              (
+TECH_ID,
+TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE,
+DATE_SITU,
+CODE_PAYS					
+              )
+        VALUES
+              (
+REC.TECH_ID,
+REC.TECH_DATEEXTRACTION,
+REC.COUNTRYBRANCHCODE,
+p_date_trai,
+P_CODE_PAYS
+);
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+          When Dup_Val_On_Index Then
+          Update  MKTOV.MKTQT_AGREEMENT 
+          Set     	
+                    TECH_DATEEXTRACTION  = REC.TECH_DATEEXTRACTION,
+                    COUNTRYBRANCHCODE = REC.COUNTRYBRANCHCODE,
+                    DATE_SITU	=	p_date_trai				
+          Where   tech_id	=	REC.tech_id	
+          AND     CODE_PAYS	=	P_CODE_PAYS;
+
+
+          			V_UPD := V_UPD + 1;
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+				Res := Mkt.Mktqaut.F_Write(File_Id,V_FUNC,'Message Erreur pl/sql :'||Sqlerrm);
+      
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+   
+   RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC ,'Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+End ALIM_MKTQAFSL_AGREEMENT;
+
+
+
+
+Function ALIM_MKTQAFSL_AGREEMENT_REQEST ( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE ,
+                            p_code_pays varchar2) Return Number IS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+  V_UPD_2 NUMBER := 0;
+  V_FUNC VARCHAR2(30) := 'ALIM_MKTQAFSL_AGREEMENT_REQEST';    
+  V_TAB1 VARCHAR2(40) := 'MKTOV.MKTQT_AGREEMENT_REQUEST'; 
+  V_TAB2 VARCHAR2(30) := 'SRS'; 
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor c_mkt Is
+                    SELECT
+                              QTE.SQT_REQUEST_ID || OPRTNS.SCN_COUNTRY_CD ||'FSL' AS TECH_ID,
+                              sysdate AS TECH_DATEEXTRACTION,
+                              QTE.SQT_QUOTE_ID AS REQUESTREF,
+                              QTE.SQT_QUOTE_STATUS_ENUMID AS STATUSCODE,
+                              OPRTNS.SCN_CONTRACT_REFERENCE AS RESERVEDCONTRACTREF,
+                              OPRTNS.SCN_CONTRACTACTIVATIONDATE AS ACTIVATIONDATE,
+                              sysdate AS DATESTARTREQUEST,  ---- updateDate  --- A REVOIR
+                              (CASE WHEN CNTRCT.SCN_CONTRACT_STATUS_EN = 'Running' THEN CNTRCT.SCN_EFFECTIVE_FROM_DT ELSE NULL END) AS LIQUIDATIONDATE,
+                              QTE.SQT_QUOTE_STATUS_EN AS REQUESTSTATUS,
+                              OPRTNS.SCN_MAKE_NM AS BRANDLABEL,
+                              OPRTNS.SCN_RVC_RV_AMOUNT AS TOTALFINANCEDAMOUNTET , --- A REVOIR
+                              (CASE WHEN FLW.SFP_PRODUCT_CATEGORY_GROUP = 'Operating Lease' THEN 'LLD' ELSE NULL END) AS PRODUCTCATEGORYCODE,
+                              FLW.SFP_PROMOTION_CODE AS COMMERCIALPRODUCTLABEL,
+                              FLW.SFP_DEALER_REFERENCE AS SELLERAGENCY,
+                              OPRTNS.SCN_BROKER_ID AS SALESMANCODE, --- A REVOIR
+                              QTE.SQT_BROKER_COMPANY AS SALESMANNAME,--- A REVOIR  ---salesmanCompanyName
+                              QTE.SQT_BROKER_ID AS EMPLOYEESALESMANID,--- A REVOIR  ---salesmanRef
+                              QTE.SQT_QUOTE_STATUS_EN AS OFFERSTATUS,--- A REVOIR
+                              sysdate AS CREATIONDATE,--- A REVOIR
+                              QTE.SQT_EFFECTIVE_FROM_DT AS UPDATEDATE
+                               
+                    FROM MKTOV.MKTQT_S_QTE QTE,
+                        MKTOV.MKTQT_S_CNTRCT CNTRCT,
+                        MKTOV.MKTQT_S_CNTRCT_OPRTNS OPRTNS,
+                        MKTOV.MKTQT_S_CSTMR CSTMR, 
+                        MKTOV.MKTQT_S_FPA_STCK_FLW FLW,
+                        MKTOV.MKTQT_S_VHCLE VHCLE
+                        
+                    WHERE OPRTNS.SCN_CONTRACT_ID =  CNTRCT.SCN_CONTRACT_ID 
+                    AND   OPRTNS.SCN_BUSINESSPARTNER_ID =  CSTMR.SCS_BUSINESSPARTNER_ID
+                    AND   CNTRCT.SCN_CONTRACT_ID = FLW.SFP_CONTRACT_ID
+                    AND   QTE.SQT_QUOTE_ID = FLW.SFP_QUOTE_ID
+                    AND   OPRTNS.SCN_CONFIGVEHICLE_ID = VHCLE.SVH_CONFIGVEHICLE_ID
+                    
+                    AND CNTRCT.SCN_IS_BILLABLE <> 'Full Billing';
+
+
+ /*******************************************************************************/
+  BEGIN
+
+	File_Id := Mkt.Mktqaut.F_Open(Nomlog);
+  Res := Mkt.Mktqaut.F_Write(File_Id, V_FUNC,'## Alimentation de la table '||V_TAB1||' ##');
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC,'## Flux '||V_TAB2||' ##');
+
+  FOR REC IN c_mkt
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+
+        INSERT INTO MKTOV.MKTQT_AGREEMENT_REQUEST 
+              (
+TECH_ID,
+TECH_DATEEXTRACTION,
+REQUESTREF,
+STATUSCODE,
+RESERVEDCONTRACTREF,
+ACTIVATIONDATE,
+DATESTARTREQUEST,
+LIQUIDATIONDATE,
+REQUESTSTATUS,
+BRANDLABEL,
+TOTALFINANCEDAMOUNTET ,
+PRODUCTCATEGORYCODE,
+COMMERCIALPRODUCTLABEL,
+SELLERAGENCY,
+SALESMANCODE,
+SALESMANNAME,
+EMPLOYEESALESMANID,
+OFFERSTATUS,
+CREATIONDATE,
+UPDATEDATE,
+CODE_PAYS,
+DATE_SITU					
+              )
+        VALUES
+              (
+REC.TECH_ID,
+REC.TECH_DATEEXTRACTION,
+REC.REQUESTREF,
+REC.STATUSCODE,
+REC.RESERVEDCONTRACTREF,
+REC.ACTIVATIONDATE,
+REC.DATESTARTREQUEST,
+REC.LIQUIDATIONDATE,
+REC.REQUESTSTATUS,
+REC.BRANDLABEL,
+REC.TOTALFINANCEDAMOUNTET ,
+REC.PRODUCTCATEGORYCODE,
+REC.COMMERCIALPRODUCTLABEL,
+REC.SELLERAGENCY,
+REC.SALESMANCODE,
+REC.SALESMANNAME,
+REC.EMPLOYEESALESMANID,
+REC.OFFERSTATUS,
+REC.CREATIONDATE,
+REC.UPDATEDATE,
+P_CODE_PAYS,
+p_date_trai
+);
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+          When Dup_Val_On_Index Then
+          Update  MKTOV.MKTQT_AGREEMENT_REQUEST 
+          Set     	
+                    ---TECH_ID = REC.TECH_ID,
+                    TECH_DATEEXTRACTION = REC.TECH_DATEEXTRACTION,
+                    REQUESTREF = REC.REQUESTREF,
+                    STATUSCODE = REC.STATUSCODE,
+                    RESERVEDCONTRACTREF = REC.RESERVEDCONTRACTREF,
+                    ACTIVATIONDATE = REC.ACTIVATIONDATE,
+                    DATESTARTREQUEST = REC.DATESTARTREQUEST,
+                    LIQUIDATIONDATE = REC.LIQUIDATIONDATE,
+                    REQUESTSTATUS = REC.REQUESTSTATUS,
+                    BRANDLABEL = REC.BRANDLABEL,
+                    TOTALFINANCEDAMOUNTET  = REC.TOTALFINANCEDAMOUNTET ,
+                    PRODUCTCATEGORYCODE = REC.PRODUCTCATEGORYCODE,
+                    COMMERCIALPRODUCTLABEL = REC.COMMERCIALPRODUCTLABEL,
+                    SELLERAGENCY = REC.SELLERAGENCY,
+                    SALESMANCODE = REC.SALESMANCODE,
+                    SALESMANNAME = REC.SALESMANNAME,
+                    EMPLOYEESALESMANID = REC.EMPLOYEESALESMANID,
+                    OFFERSTATUS = REC.OFFERSTATUS,
+                    CREATIONDATE = REC.CREATIONDATE,
+                    UPDATEDATE = REC.UPDATEDATE,
+                    DATE_SITU	=	p_date_trai				
+          Where   TECH_ID	=	REC.TECH_ID	
+          AND     CODE_PAYS	=	P_CODE_PAYS;
+
+
+          			V_UPD := V_UPD + 1;
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+				Res := Mkt.Mktqaut.F_Write(File_Id,V_FUNC,'Message Erreur pl/sql :'||Sqlerrm);
+      
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+   
+   RES := MKT.MKTQAUT.F_WRITE(FILE_ID, V_FUNC ,'Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+End ALIM_MKTQAFSL_AGREEMENT_REQEST;
+
+
+
 
 
 END MKTQADSCUS;
