@@ -1,0 +1,4399 @@
+create or replace PACKAGE BODY MKTQA_CAP_UK AS
+
+
+
+  FUNCTION ALIM_PredictCapCode (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_PREDICTCAPCODE Is
+  Select 
+Cap_Id				as Cap_Id				,
+(case when Cap_Vehicle_Type = 'Car' then 'VP' else 'VU' end) as Cap_Vehicle_Type		,  ---- pour faire la jointure apres
+Cap_Code			as Cap_Code			,
+Cap_Description			as Cap_Description			,
+Cap_Doors			as Cap_Doors			,
+Cap_Drive			as Cap_Drive			,
+Cap_Transmission		as Cap_Transmission		,
+Cap_Fuel			as Cap_Fuel			,
+Cap_BodyStyle			as Cap_BodyStyle			,
+Cap_Engine			as Cap_Engine			,
+Cap_Introduced			as Cap_Introduced			,
+Cap_Discontinued		as Cap_Discontinued		,
+Manufacturer_Code		as Manufacturer_Code		,
+Manufacturer_Vehicle_Type	as Manufacturer_Vehicle_Type	,
+Manufacturer_Description	as Manufacturer_Description	,
+Manufacturer_Doors		as Manufacturer_Doors		,
+Manufacturer_Drive		as Manufacturer_Drive		,
+Manufacturer_Transmission	as Manufacturer_Transmission	,
+Manufacturer_Fuel		as Manufacturer_Fuel		,
+Manufacturer_BodyStyle		as Manufacturer_BodyStyle		,
+Manufacturer_Engine		as Manufacturer_Engine		,
+Manufacturer_Introduced		as Manufacturer_Introduced		,
+Manufacturer_Discontinued	as Manufacturer_Discontinued
+  FROM MKTLDR.MKTQTT_PREDICTCAPCODE ; 
+          
+
+ 
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_PredictCapCode','## Alimentation de la table MKTREF.MKTQT_PredictCapCodeP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_PredictCapCode','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_PREDICTCAPCODE IN C_PREDICTCAPCODE
+  LOOP
+
+      
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_PREDICTCAPCODE
+              ( 
+DATE_MAJ,
+Cap_Id				,
+Cap_Vehicle_Type		,
+Cap_Code			,
+Cap_Description			,
+Cap_Doors			,
+Cap_Drive			,
+Cap_Transmission		,
+Cap_Fuel			,
+Cap_BodyStyle			,
+Cap_Engine			,
+Cap_Introduced			,
+Cap_Discontinued		,
+Manufacturer_Code		,
+Manufacturer_Vehicle_Type,	
+Manufacturer_Description,	
+Manufacturer_Doors		,
+Manufacturer_Drive		,
+Manufacturer_Transmission,	
+Manufacturer_Fuel		,
+Manufacturer_BodyStyle	,	
+Manufacturer_Engine		,
+Manufacturer_Introduced	,	
+Manufacturer_Discontinued	          
+              )
+              
+        VALUES
+              (  
+V_DATE_SITU, 
+REC_PREDICTCAPCODE.Cap_Id				,
+REC_PREDICTCAPCODE.Cap_Vehicle_Type		,
+REC_PREDICTCAPCODE.Cap_Code			,
+REC_PREDICTCAPCODE.Cap_Description			,
+REC_PREDICTCAPCODE.Cap_Doors			,
+REC_PREDICTCAPCODE.Cap_Drive			,
+REC_PREDICTCAPCODE.Cap_Transmission		,
+REC_PREDICTCAPCODE.Cap_Fuel			,
+REC_PREDICTCAPCODE.Cap_BodyStyle			,
+REC_PREDICTCAPCODE.Cap_Engine			,
+REC_PREDICTCAPCODE.Cap_Introduced			,
+REC_PREDICTCAPCODE.Cap_Discontinued		,
+REC_PREDICTCAPCODE.Manufacturer_Code		,
+REC_PREDICTCAPCODE.Manufacturer_Vehicle_Type,	
+REC_PREDICTCAPCODE.Manufacturer_Description,	
+REC_PREDICTCAPCODE.Manufacturer_Doors		,
+REC_PREDICTCAPCODE.Manufacturer_Drive		,
+REC_PREDICTCAPCODE.Manufacturer_Transmission,	
+REC_PREDICTCAPCODE.Manufacturer_Fuel		,
+REC_PREDICTCAPCODE.Manufacturer_BodyStyle	,	
+REC_PREDICTCAPCODE.Manufacturer_Engine		,
+REC_PREDICTCAPCODE.Manufacturer_Introduced	,	
+REC_PREDICTCAPCODE.Manufacturer_Discontinued	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_PREDICTCAPCODE
+        Set        
+---Cap_Id				 = REC_PREDICTCAPCODE.Cap_Id				,
+---Cap_Vehicle_Type		 = REC_PREDICTCAPCODE.Cap_Vehicle_Type		,
+DATE_MAJ               =           V_DATE_SITU,
+Cap_Code			 = REC_PREDICTCAPCODE.Cap_Code			,
+Cap_Description			 = REC_PREDICTCAPCODE.Cap_Description			,
+Cap_Doors			 = REC_PREDICTCAPCODE.Cap_Doors			,
+Cap_Drive			 = REC_PREDICTCAPCODE.Cap_Drive			,
+Cap_Transmission		 = REC_PREDICTCAPCODE.Cap_Transmission		,
+Cap_Fuel			 = REC_PREDICTCAPCODE.Cap_Fuel			,
+Cap_BodyStyle			 = REC_PREDICTCAPCODE.Cap_BodyStyle			,
+Cap_Engine			 = REC_PREDICTCAPCODE.Cap_Engine			,
+Cap_Introduced			 = REC_PREDICTCAPCODE.Cap_Introduced			,
+Cap_Discontinued		 = REC_PREDICTCAPCODE.Cap_Discontinued		,
+Manufacturer_Code		 = REC_PREDICTCAPCODE.Manufacturer_Code		,
+Manufacturer_Vehicle_Type	 = REC_PREDICTCAPCODE.Manufacturer_Vehicle_Type,	
+Manufacturer_Description	 = REC_PREDICTCAPCODE.Manufacturer_Description,	
+Manufacturer_Doors		 = REC_PREDICTCAPCODE.Manufacturer_Doors		,
+Manufacturer_Drive		 = REC_PREDICTCAPCODE.Manufacturer_Drive		,
+Manufacturer_Transmission	 = REC_PREDICTCAPCODE.Manufacturer_Transmission,	
+Manufacturer_Fuel		 = REC_PREDICTCAPCODE.Manufacturer_Fuel		,
+Manufacturer_BodyStyle		 = REC_PREDICTCAPCODE.Manufacturer_BodyStyle	,	
+Manufacturer_Engine		 = REC_PREDICTCAPCODE.Manufacturer_Engine		,
+Manufacturer_Introduced		 = REC_PREDICTCAPCODE.Manufacturer_Introduced	,	
+Manufacturer_Discontinued	 = REC_PREDICTCAPCODE.Manufacturer_Discontinued	
+
+        where  Cap_Id          =      REC_PREDICTCAPCODE.Cap_Id 
+        and Cap_Vehicle_Type		 = REC_PREDICTCAPCODE.Cap_Vehicle_Type;
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_PredictCapCode','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_PredictCapCode','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_PredictCapCode;
+  
+
+
+
+
+
+
+  FUNCTION UPDATE_NVDModelYear_VP (  NOMLOG varchar2,P_DATE_TRAI date ) Return Number AS
+--BEGIN
+-- DECLARE
+
+    V_ERR       number:=0;
+    N_UPD      NUMBER := 0;
+    FILE_ID     UTL_FILE.FILE_TYPE;
+    RES         NUMBER := 0;
+  
+V_generation			VARCHAR2(8);
+V_height 				VARCHAR2(8);
+V_length 				VARCHAR2(8);
+---V_co2EmissionWLTP 		VARCHAR2(8);
+V_maximumPowerDin 		VARCHAR2(8);
+V_maximumPowerKW  		VARCHAR2(8);
+V_cubicCapacity 			VARCHAR2(8);
+V_nbRapports  			VARCHAR2(8);
+V_seatNumber 			VARCHAR2(8);
+V_wltpLowFuelConsumption  	VARCHAR2(8);
+V_wltpMediumFuelConsumption  	VARCHAR2(8);
+V_wltpHighFuelConsumption  	VARCHAR2(8);
+V_wltpExtraHighConsumption  	VARCHAR2(8);
+V_wltpCombinedFuelConsumption  	VARCHAR2(8);
+V_wltpElectricConsumption  	VARCHAR2(8);
+V_wltpElectricRange  		VARCHAR2(8);
+V_batteryCapacity  		VARCHAR2(8);
+V_maxLadenWeight  		VARCHAR2(8);
+V_kerbWeight 			VARCHAR2(8);
+V_payLoad 		VARCHAR2(8);
+
+
+
+  Cursor C_NVDModelYear_VP Is
+    Select distinct
+  B.ID as ID,
+  B.effectivefrom as effectivefrom,
+generation.valuestring as generation  , ----------------------- 471
+height.valuefloat as height  ,  ----------------------- 34
+length.valuefloat as length  , ----------------------- 4
+---co2EmissionWLTP.valuefloat as co2EmissionWLTP , ----------------------- 173
+maximumPowerDin.valuefloat as maximumPowerDin , ----------------------- 21
+maximumPowerKW.valuefloat  as maximumPowerKW  , ----------------------- 48
+cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
+(case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end) as nbRapports  , ----------------------- 66 
+seatNumber.valuefloat as seatNumber  , ----------------------- 47
+wltpLowFuelConsumption.valuefloat  as wltpLowFuelConsumption  ,  ----------------------- 184
+wltpMediumFuelConsumption.valuefloat  as wltpMediumFuelConsumption   , ----------------------- 185
+wltpHighFuelConsumption.valuefloat  as wltpHighFuelConsumption , ----------------------- 186
+wltpExtraHighConsumption.valuefloat  as wltpExtraHighConsumption    , -----------------------187
+wltpCombinedFuelConsumption.valuefloat  as wltpCombinedFuelConsumption ,-----------------------188
+wltpElectricConsumption.valuefloat  as wltpElectricConsumption ,-----------------------164
+wltpElectricRange.valuefloat  as wltpElectricRange   ,-----------------------165
+batteryCapacity.valuefloat  as batteryCapacity ,-----------------------163
+maxLadenWeight.valuefloat  as maxLadenWeight  ,-----------------------14
+kerbWeight.valuefloat  as kerbWeight  ,-----------------------3 
+NULL as payLoad 
+  
+  FROM MKTREF.MKTQT_NVDModelYear_VP B,
+        
+     MKTREF.MKTQT_NVDTechnical_VP generation,
+     MKTREF.MKTQT_NVDTechnical_VP height,
+     MKTREF.MKTQT_NVDTechnical_VP length,
+     ---MKTREF.MKTQT_NVDTechnical_VP co2EmissionWLTP,
+     MKTREF.MKTQT_NVDTechnical_VP maximumPowerDin,
+     MKTREF.MKTQT_NVDTechnical_VP maximumPowerKW,
+     
+     MKTREF.MKTQT_NVDTechnical_VP  cubicCapacity,
+     MKTREF.MKTQT_NVDTechnical_VP seatNumber, 
+    MKTREF.MKTQT_NVDTechnical_VP wltpLowFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VP wltpMediumFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VP wltpHighFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VP wltpExtraHighConsumption,
+    MKTREF.MKTQT_NVDTechnical_VP wltpCombinedFuelConsumption ,
+    MKTREF.MKTQT_NVDTechnical_VP wltpElectricConsumption,
+    MKTREF.MKTQT_NVDTechnical_VP wltpElectricRange, 
+    MKTREF.MKTQT_NVDTechnical_VP kerbWeight,
+    MKTREF.MKTQT_NVDTECHNICAL_VP nbRapports,
+    MKTREF.MKTQT_NVDTECHNICAL_VP batteryCapacity,  
+    MKTREF.MKTQT_NVDTECHNICAL_VP  maxLadenWeight  
+
+where  generation.id(+) = B.id and generation.effectivefrom(+) = B.effectivefrom
+and generation.techcode(+) = 471
+and height.id(+) = B.id and height.effectivefrom(+) = B.effectivefrom
+and height.techcode (+) = 34
+and length.id(+) = B.id and length.effectivefrom(+) = B.effectivefrom
+and length.techcode(+) = 4
+---and co2EmissionWLTP.id(+) = B.id and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
+---and co2EmissionWLTP.techcode(+) = 173
+and maximumPowerDin.id (+) = B.id and maximumPowerDin.effectivefrom(+) = B.effectivefrom
+and maximumPowerDin.techcode(+) = 21 
+and maximumPowerKW.id(+) = B.id and maximumPowerKW.effectivefrom(+) = B.effectivefrom
+and maximumPowerKW.techcode(+) = 48
+
+and  cubicCapacity.ID(+) = B.ID and cubicCapacity.effectivefrom(+) = B.effectivefrom and cubicCapacity.techcode(+) = 20
+and  nbRapports.ID(+) = B.ID and nbRapports.effectivefrom(+) = B.effectivefrom and nbRapports.techcode(+) = 66
+and  seatNumber.ID(+) = B.ID and seatNumber.effectivefrom(+) = B.effectivefrom and seatNumber.techcode(+) = 47
+and  wltpLowFuelConsumption.ID(+) = B.ID and wltpLowFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpLowFuelConsumption.techcode(+) = 184
+and  wltpMediumFuelConsumption.ID(+) = B.ID and wltpMediumFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpMediumFuelConsumption.techcode(+) = 185
+and  wltpHighFuelConsumption.ID(+) = B.ID and wltpHighFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpHighFuelConsumption.techcode(+) = 186
+and  wltpExtraHighConsumption.ID(+) = B.ID and wltpExtraHighConsumption.effectivefrom(+) = B.effectivefrom and wltpExtraHighConsumption.techcode(+) = 187
+and  wltpCombinedFuelConsumption.ID(+) = B.ID and wltpCombinedFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpCombinedFuelConsumption.techcode(+) = 188
+and  wltpElectricConsumption.ID(+) = B.ID and wltpElectricConsumption.effectivefrom(+) = B.effectivefrom and wltpElectricConsumption.techcode(+) = 164
+and  wltpElectricRange.ID(+) = B.ID and wltpElectricRange.effectivefrom(+) = B.effectivefrom and wltpElectricRange.techcode(+) = 165
+and  batteryCapacity.ID(+) = B.ID and batteryCapacity.effectivefrom(+) = B.effectivefrom and batteryCapacity.techcode(+) = 163
+and  maxLadenWeight.ID(+) = B.ID and maxLadenWeight.effectivefrom(+) = B.effectivefrom and maxLadenWeight.techcode(+) = 14
+and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom and kerbWeight.techcode(+) = 3  
+
+;
+          
+          
+          
+          
+
+ 
+BEGIN
+
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'UPDATE_NVDModelYear_VP', ' ## MISE A JOUR ' ||  ' ##');
+
+      FOR S_NVDModelYear_VP IN C_NVDModelYear_VP LOOP
+      BEGIN
+           IF MOD(N_UPD, 1000) = 0 THEN COMMIT; END IF; 
+           
+V_generation			 := S_NVDModelYear_VP.generation			;
+V_height 				 := S_NVDModelYear_VP.height 				;
+V_length 				 := S_NVDModelYear_VP.length 				;
+---V_co2EmissionWLTP 		 := S_NVDModelYear_VP.co2EmissionWLTP 		;
+V_maximumPowerDin 		 := S_NVDModelYear_VP.maximumPowerDin 		;
+V_maximumPowerKW  		 := S_NVDModelYear_VP.maximumPowerKW  		;
+V_cubicCapacity 			 := S_NVDModelYear_VP.cubicCapacity 			;
+V_nbRapports  			 := S_NVDModelYear_VP.nbRapports  			;
+V_seatNumber 			 := S_NVDModelYear_VP.seatNumber 			;
+V_wltpLowFuelConsumption  	 := S_NVDModelYear_VP.wltpLowFuelConsumption  	;
+V_wltpMediumFuelConsumption  	 := S_NVDModelYear_VP.wltpMediumFuelConsumption  	;
+V_wltpHighFuelConsumption  	 := S_NVDModelYear_VP.wltpHighFuelConsumption  	;
+V_wltpExtraHighConsumption  	 := S_NVDModelYear_VP.wltpExtraHighConsumption  	;
+V_wltpCombinedFuelConsumption  	 := S_NVDModelYear_VP.wltpCombinedFuelConsumption  	;
+V_wltpElectricConsumption  	 := S_NVDModelYear_VP.wltpElectricConsumption  	;
+V_wltpElectricRange  		 := S_NVDModelYear_VP.wltpElectricRange  		;
+V_batteryCapacity  		 := S_NVDModelYear_VP.batteryCapacity  		;
+V_maxLadenWeight  		 := S_NVDModelYear_VP.maxLadenWeight  		;
+V_kerbWeight 			 := S_NVDModelYear_VP.kerbWeight 			;
+V_payLoad 	 := S_NVDModelYear_VP.payLoad 		;
+              
+                 UPDATE MKTREF.MKTQT_NVDModelYear_VP
+                 
+                 SET   
+generation			 = V_generation			,
+height 				 = V_height 				,
+length 				 = V_length 				,
+----co2EmissionWLTP 		 = V_co2EmissionWLTP 		,
+maximumPowerDin 		 = V_maximumPowerDin 		,
+maximumPowerKW  		 = V_maximumPowerKW  		,
+cubicCapacity 			 = V_cubicCapacity 			,
+nbRapports  			 = V_nbRapports  			,
+seatNumber 			 = V_seatNumber 			,
+wltpLowFuelConsumption  	 = V_wltpLowFuelConsumption  	,
+wltpMediumFuelConsumption  	 = V_wltpMediumFuelConsumption  	,
+wltpHighFuelConsumption  	 = V_wltpHighFuelConsumption  	,
+wltpExtraHighConsumption  	 = V_wltpExtraHighConsumption  	,
+wltpCombinedFuelConsumption  	 = V_wltpCombinedFuelConsumption  	,
+wltpElectricConsumption  	 = V_wltpElectricConsumption  	,
+wltpElectricRange  		 = V_wltpElectricRange  		,
+batteryCapacity  		 = V_batteryCapacity  		,
+maxLadenWeight  		 = V_maxLadenWeight  		,
+kerbWeight 			 = V_kerbWeight 			,
+payLoad 	 = V_payLoad 		
+
+                 WHERE  ID                     = S_NVDModelYear_VP.ID
+                 AND    EFFECTIVEFROM           = S_NVDModelYear_VP.EFFECTIVEFROM;
+                 
+                 
+                 
+                 N_UPD  := N_UPD +1;
+                 EXCEPTION WHEN OTHERS THEN COMMIT;
+                           V_ERR  := 1;
+                            RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'UPDATE_NVDModelYear_VP ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_NVDModelYear_VP.ID);
+                            RETURN V_ERR;
+                  END;
+      END LOOP;
+      COMMIT;
+      res := MKT.MKTQAUT.F_WRITE(file_id,
+                               'UPDATE_NVDModelYear_VP',
+                               'Nombre de mises a jour :' || N_UPD);
+  
+  res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
+    UTL_FILE.FCLOSE(file_id);
+
+  RETURN V_ERR;
+  
+  /*
+EXCEPTION WHEN OTHERS THEN COMMIT;
+          V_ERR  := 1;
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'UPDATE_NVDModelYear_VP ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          RETURN V_ERR;                               
+    */                           
+                      
+
+  END UPDATE_NVDModelYear_VP;
+
+
+
+
+  FUNCTION UPDATE_NVDModelYear_VU (  NOMLOG varchar2,P_DATE_TRAI date ) Return Number AS
+--BEGIN
+-- DECLARE
+
+    V_ERR       number:=0;
+    N_UPD      NUMBER := 0;
+    FILE_ID     UTL_FILE.FILE_TYPE;
+    RES         NUMBER := 0;
+  
+V_generation			VARCHAR2(8);
+V_height 				VARCHAR2(8);
+V_length 				VARCHAR2(8);
+---V_co2EmissionWLTP 		VARCHAR2(8);
+V_maximumPowerDin 		VARCHAR2(8);
+V_maximumPowerKW  		VARCHAR2(8);
+V_cubicCapacity 			VARCHAR2(8);
+V_nbRapports  			VARCHAR2(8);
+V_seatNumber 			VARCHAR2(8);
+V_wltpLowFuelConsumption  	VARCHAR2(8);
+V_wltpMediumFuelConsumption  	VARCHAR2(8);
+V_wltpHighFuelConsumption  	VARCHAR2(8);
+V_wltpExtraHighConsumption  	VARCHAR2(8);
+V_wltpCombinedFuelConsumption  	VARCHAR2(8);
+V_wltpElectricConsumption  	VARCHAR2(8);
+V_wltpElectricRange  		VARCHAR2(8);
+V_batteryCapacity  		VARCHAR2(8);
+V_maxLadenWeight  		VARCHAR2(8);
+V_kerbWeight 			VARCHAR2(8);
+V_payLoad 		VARCHAR2(8);
+
+
+
+  Cursor C_NVDModelYear_VU Is
+    Select distinct
+  B.ID as ID,
+  B.effectivefrom as effectivefrom,
+generation.valuestring as generation  , ----------------------- 477
+height.valuefloat as height  ,  ----------------------- 34
+length.valuefloat as length  , ----------------------- 4
+----co2EmissionWLTP.valuefloat as co2EmissionWLTP , ----------------------- 239
+maximumPowerDin.valuefloat as maximumPowerDin , ----------------------- 21
+maximumPowerKW.valuefloat  as maximumPowerKW  , ----------------------- 48
+cubicCapacity.valuefloat as cubicCapacity   , ----------------------- 20
+(case when nbRapports.valuestring not in ('AUTOMATIC','N') then ( case  when substr(nbRapports.valuestring, 2,1) ='S' then  substr(nbRapports.valuestring, 1,1) else replace(substr(nbRapports.valuestring, 1,2),' ','') end )  else null end) as nbRapports  , ----------------------- 66 
+seatNumber.valuefloat as seatNumber  , ----------------------- 47
+wltpLowFuelConsumption.valuefloat  as wltpLowFuelConsumption  ,  ----------------------- 299
+wltpMediumFuelConsumption.valuefloat  as wltpMediumFuelConsumption   , ----------------------- 302
+wltpHighFuelConsumption.valuefloat  as wltpHighFuelConsumption , ----------------------- 296
+wltpExtraHighConsumption.valuefloat  as wltpExtraHighConsumption    , -----------------------293
+wltpCombinedFuelConsumption.valuefloat  as wltpCombinedFuelConsumption ,-----------------------290
+wltpElectricConsumption.valuefloat  as wltpElectricConsumption ,-----------------------166
+wltpElectricRange.valuefloat  as wltpElectricRange   ,-----------------------167
+batteryCapacity.valuefloat  as batteryCapacity ,-----------------------152
+maxLadenWeight.valuefloat  as maxLadenWeight  ,-----------------------14
+kerbWeight.valuefloat  as kerbWeight  ,-----------------------3 
+payLoad.valuefloat as payLoad
+  
+  FROM MKTREF.MKTQT_NVDModelYear_VU B,
+        
+     MKTREF.MKTQT_NVDTechnical_VU generation,
+     MKTREF.MKTQT_NVDTechnical_VU height,
+     MKTREF.MKTQT_NVDTechnical_VU length,
+     ---MKTREF.MKTQT_NVDTechnical_VU co2EmissionWLTP,
+     MKTREF.MKTQT_NVDTechnical_VU maximumPowerDin,
+     MKTREF.MKTQT_NVDTechnical_VU maximumPowerKW,
+     
+     MKTREF.MKTQT_NVDTechnical_VU  cubicCapacity,
+     MKTREF.MKTQT_NVDTechnical_VU seatNumber, 
+    MKTREF.MKTQT_NVDTechnical_VU wltpLowFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpMediumFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpHighFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpExtraHighConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpCombinedFuelConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpElectricConsumption,
+    MKTREF.MKTQT_NVDTechnical_VU wltpElectricRange,
+    MKTREF.MKTQT_NVDTechnical_VU kerbWeight,
+    MKTREF.MKTQT_NVDTechnical_VU payLoad,
+
+
+     MKTREF.MKTQT_NVDTECHNICAL_VU nbRapports,
+     MKTREF.MKTQT_NVDTECHNICAL_VU batteryCapacity,
+     MKTREF.MKTQT_NVDTECHNICAL_VU  maxLadenWeight  
+
+where  generation.id(+) = B.id and generation.effectivefrom(+) = B.effectivefrom
+and generation.id(+) = B.id and generation.effectivefrom(+) = B.effectivefrom
+and generation.techcode(+) = 477
+and height.id(+) = B.id and height.effectivefrom(+) = B.effectivefrom
+and height.techcode (+) = 34
+and length.id(+) = B.id and length.effectivefrom(+) = B.effectivefrom
+and length.techcode(+) = 4
+---and co2EmissionWLTP.id(+) = B.id and co2EmissionWLTP.effectivefrom(+) = B.effectivefrom
+---and co2EmissionWLTP.techcode(+) = 239
+and maximumPowerDin.id (+) = B.id and maximumPowerDin.effectivefrom(+) = B.effectivefrom
+and maximumPowerDin.techcode(+) = 21 
+and maximumPowerKW.id(+) = B.id and maximumPowerKW.effectivefrom(+) = B.effectivefrom
+and maximumPowerKW.techcode(+) = 48
+
+and  cubicCapacity.ID(+) = B.ID and cubicCapacity.effectivefrom(+) = B.effectivefrom and cubicCapacity.techcode(+) = 20
+and  nbRapports.ID(+) = B.ID and nbRapports.effectivefrom(+) = B.effectivefrom and nbRapports.techcode(+) = 66
+and  seatNumber.ID(+) = B.ID and seatNumber.effectivefrom(+) = B.effectivefrom and seatNumber.techcode(+) = 47
+and  wltpLowFuelConsumption.ID(+) = B.ID and wltpLowFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpLowFuelConsumption.techcode(+) = 299
+and  wltpMediumFuelConsumption.ID(+) = B.ID and wltpMediumFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpMediumFuelConsumption.techcode(+) = 302
+and  wltpHighFuelConsumption.ID(+) = B.ID and wltpHighFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpHighFuelConsumption.techcode(+) = 296
+and  wltpExtraHighConsumption.ID(+) = B.ID and wltpExtraHighConsumption.effectivefrom(+) = B.effectivefrom and wltpExtraHighConsumption.techcode(+) = 293
+and  wltpCombinedFuelConsumption.ID(+) = B.ID and wltpCombinedFuelConsumption.effectivefrom(+) = B.effectivefrom and wltpCombinedFuelConsumption.techcode(+) = 290
+and  wltpElectricConsumption.ID(+) = B.ID and wltpElectricConsumption.effectivefrom(+) = B.effectivefrom and wltpElectricConsumption.techcode(+) = 166
+and  wltpElectricRange.ID(+) = B.ID and wltpElectricRange.effectivefrom(+) = B.effectivefrom and wltpElectricRange.techcode(+) = 167
+and  batteryCapacity.ID(+) = B.ID and batteryCapacity.effectivefrom(+) = B.effectivefrom and batteryCapacity.techcode(+) = 152
+and  maxLadenWeight.ID(+) = B.ID and maxLadenWeight.effectivefrom(+) = B.effectivefrom and maxLadenWeight.techcode(+) = 14
+and  kerbWeight.ID(+) = B.ID and kerbWeight.effectivefrom(+) = B.effectivefrom and kerbWeight.techcode(+) = 3
+and  payLoad.ID(+) = B.ID and payLoad.effectivefrom(+) = B.effectivefrom and payLoad.techcode(+) = 32  -- DIFFERENCE
+
+;
+          
+          
+
+ 
+BEGIN
+
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'UPDATE_NVDModelYear_VU', ' ## MISE A JOUR ' ||  ' ##');
+
+      FOR S_NVDModelYear_VU IN C_NVDModelYear_VU LOOP
+      BEGIN
+           IF MOD(N_UPD, 1000) = 0 THEN COMMIT; END IF; 
+           
+V_generation			 := S_NVDModelYear_VU.generation			;
+V_height 				 := S_NVDModelYear_VU.height 				;
+V_length 				 := S_NVDModelYear_VU.length 				;
+---V_co2EmissionWLTP 		 := S_NVDModelYear_VU.co2EmissionWLTP 		;
+V_maximumPowerDin 		 := S_NVDModelYear_VU.maximumPowerDin 		;
+V_maximumPowerKW  		 := S_NVDModelYear_VU.maximumPowerKW  		;
+V_cubicCapacity 			 := S_NVDModelYear_VU.cubicCapacity 			;
+V_nbRapports  			 := S_NVDModelYear_VU.nbRapports  			;
+V_seatNumber 			 := S_NVDModelYear_VU.seatNumber 			;
+V_wltpLowFuelConsumption  	 := S_NVDModelYear_VU.wltpLowFuelConsumption  	;
+V_wltpMediumFuelConsumption  	 := S_NVDModelYear_VU.wltpMediumFuelConsumption  	;
+V_wltpHighFuelConsumption  	 := S_NVDModelYear_VU.wltpHighFuelConsumption  	;
+V_wltpExtraHighConsumption  	 := S_NVDModelYear_VU.wltpExtraHighConsumption  	;
+V_wltpCombinedFuelConsumption  	 := S_NVDModelYear_VU.wltpCombinedFuelConsumption  	;
+V_wltpElectricConsumption  	 := S_NVDModelYear_VU.wltpElectricConsumption  	;
+V_wltpElectricRange  		 := S_NVDModelYear_VU.wltpElectricRange  		;
+V_batteryCapacity  		 := S_NVDModelYear_VU.batteryCapacity  		;
+V_maxLadenWeight  		 := S_NVDModelYear_VU.maxLadenWeight  		;
+V_kerbWeight 			 := S_NVDModelYear_VU.kerbWeight 			;
+V_payLoad 	 := S_NVDModelYear_VU.payLoad 		;
+              
+                 UPDATE MKTREF.MKTQT_NVDModelYear_VU
+                 
+                 SET   
+generation			 = V_generation			,
+height 				 = V_height 				,
+length 				 = V_length 				,
+---co2EmissionWLTP 		 = V_co2EmissionWLTP 		,
+maximumPowerDin 		 = V_maximumPowerDin 		,
+maximumPowerKW  		 = V_maximumPowerKW  		,
+cubicCapacity 			 = V_cubicCapacity 			,
+nbRapports  			 = V_nbRapports  			,
+seatNumber 			 = V_seatNumber 			,
+wltpLowFuelConsumption  	 = V_wltpLowFuelConsumption  	,
+wltpMediumFuelConsumption  	 = V_wltpMediumFuelConsumption  	,
+wltpHighFuelConsumption  	 = V_wltpHighFuelConsumption  	,
+wltpExtraHighConsumption  	 = V_wltpExtraHighConsumption  	,
+wltpCombinedFuelConsumption  	 = V_wltpCombinedFuelConsumption  	,
+wltpElectricConsumption  	 = V_wltpElectricConsumption  	,
+wltpElectricRange  		 = V_wltpElectricRange  		,
+batteryCapacity  		 = V_batteryCapacity  		,
+maxLadenWeight  		 = V_maxLadenWeight  		,
+kerbWeight 			 = V_kerbWeight 			,
+payLoad 	 = V_payLoad 		
+
+                 WHERE  ID                     = S_NVDModelYear_VU.ID
+                 AND    EFFECTIVEFROM           = S_NVDModelYear_VU.EFFECTIVEFROM;
+                 
+                 
+                 
+                 N_UPD  := N_UPD +1;
+                 EXCEPTION WHEN OTHERS THEN COMMIT;
+                           V_ERR  := 1;
+                            RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'UPDATE_NVDModelYear_VU ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_NVDModelYear_VU.ID);
+                            RETURN V_ERR;
+                  END;
+      END LOOP;
+      COMMIT;
+      res := MKT.MKTQAUT.F_WRITE(file_id,
+                               'UPDATE_NVDModelYear_VU',
+                               'Nombre de mises a jour :' || N_UPD);
+  
+  res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
+    UTL_FILE.FCLOSE(file_id);
+
+  RETURN V_ERR;
+  
+  /*
+EXCEPTION WHEN OTHERS THEN COMMIT;
+          V_ERR  := 1;
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'UPDATE_NVDModelYear_VP ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          RETURN V_ERR;                               
+    */                           
+                      
+
+  END UPDATE_NVDModelYear_VU;
+
+
+
+
+
+
+
+
+
+
+
+  FUNCTION ALIM_CAPDER_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_CAPDER_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CAPDER_VP ; 
+          
+
+ 
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CAPDER_VP','## Alimentation de la table MKTREF.MKTQT_CAPDER_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CAPDER_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CAPDER_VP IN C_CAPDER_VP
+  LOOP
+
+      
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CAPDER_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,      
+    --ID_MOIS ,
+   -- ID_ANNEE ,
+   -- Date_situ ,
+    --Code_pays ,
+    ID,
+    CAPCODE,
+    MANCODE,
+    RANCODE,
+    MODCODE,
+    TRIMCODE,
+    NAME,
+    INTRODUCED ,
+    DISCONTINUED ,
+    ORDERNO ,
+    VEHICLESECTOR ,
+    DOORS,
+    DRIVETRAIN ,
+    FUELDELIVERY,
+    TRANSMISSION ,
+    FUELTYPE                
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+   -- V_JOUR,            
+    --V_Mois ,
+    --V_ANNEE ,
+   -- V_DATE_SITU ,
+   -- 'UK' ,
+    REC_CAPDER_VP.ID,
+    REC_CAPDER_VP.CAPCODE,
+    REC_CAPDER_VP.MANCODE,
+    REC_CAPDER_VP.RANCODE,
+    REC_CAPDER_VP.MODCODE,
+    REC_CAPDER_VP.TRIMCODE,
+    REC_CAPDER_VP.NAME,
+    REC_CAPDER_VP.INTRODUCED ,
+    REC_CAPDER_VP.DISCONTINUED ,
+    REC_CAPDER_VP.ORDERNO ,
+    REC_CAPDER_VP.VEHICLESECTOR ,
+    REC_CAPDER_VP.DOORS,
+    REC_CAPDER_VP.DRIVETRAIN ,
+    REC_CAPDER_VP.FUELDELIVERY,
+    REC_CAPDER_VP.TRANSMISSION ,
+    REC_CAPDER_VP.FUELTYPE   
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CAPDER_VP
+        Set        
+    --ID          =      REC_CAPDER_VP.ID  
+    DATE_MAJ = P_DATE_TRAI,
+    CAPCODE     =       REC_CAPDER_VP.CAPCODE,
+    MANCODE     =       REC_CAPDER_VP.MANCODE,
+    RANCODE     =       REC_CAPDER_VP.RANCODE,
+    MODCODE     =       REC_CAPDER_VP.MODCODE,
+    TRIMCODE    =       REC_CAPDER_VP.TRIMCODE,
+    NAME        =       REC_CAPDER_VP.NAME,
+    INTRODUCED      =       REC_CAPDER_VP.INTRODUCED ,
+    DISCONTINUED        =       REC_CAPDER_VP.DISCONTINUED ,
+    ORDERNO         =       REC_CAPDER_VP.ORDERNO ,
+    VEHICLESECTOR       =       REC_CAPDER_VP.VEHICLESECTOR ,
+    DOORS       =       REC_CAPDER_VP.DOORS,
+    DRIVETRAIN      =       REC_CAPDER_VP.DRIVETRAIN ,
+    FUELDELIVERY        =       REC_CAPDER_VP.FUELDELIVERY,
+    TRANSMISSION        =       REC_CAPDER_VP.TRANSMISSION ,
+    FUELTYPE        =       REC_CAPDER_VP.FUELTYPE   
+
+        where  ID          =      REC_CAPDER_VP.ID ;
+         
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+      --  and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    --	and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+     --   and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CAPDER_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CAPDER_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_CAPDER_VP;
+  
+
+  FUNCTION ALIM_NVDTechnical_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDTechnical_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDTechnical_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDTechnical_VP','## Alimentation de la table MKTREF.MKTQT_NVDTechnical_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDTechnical_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDTechnical_VP IN C_NVDTechnical_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDTechnical_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,   
+    --ID_MOIS ,
+   -- ID_ANNEE ,
+   -- Date_situ ,
+   -- Code_pays ,
+ID              ,
+TechCode        ,
+EffectiveFrom   ,
+EffectiveTo     ,
+ValueDatetime   ,
+ValueFloat      ,
+ValueString     ,
+ValueBoolean                   
+              )
+              
+        VALUES
+              ( 
+              V_DATE_SITU, --' ',
+  --V_JOUR,
+   --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDTechnical_VP.ID              ,
+REC_NVDTechnical_VP.TechCode        ,
+REC_NVDTechnical_VP.EffectiveFrom   ,
+REC_NVDTechnical_VP.EffectiveTo     ,
+REC_NVDTechnical_VP.ValueDatetime   ,
+REC_NVDTechnical_VP.ValueFloat      ,
+REC_NVDTechnical_VP.ValueString     ,
+REC_NVDTechnical_VP.ValueBoolean  
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDTechnical_VP
+        Set        
+            
+---ID              =REC_NVDTechnical_VP.ID              ,
+---TechCode        =REC_NVDTechnical_VP.TechCode        ,
+---EffectiveFrom   =REC_NVDTechnical_VP.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo     =REC_NVDTechnical_VP.EffectiveTo     ,
+ValueDatetime   =REC_NVDTechnical_VP.ValueDatetime   ,
+ValueFloat      =REC_NVDTechnical_VP.ValueFloat      ,
+ValueString     =REC_NVDTechnical_VP.ValueString     ,
+ValueBoolean  =REC_NVDTechnical_VP.ValueBoolean  
+
+        where  ID          =      REC_NVDTechnical_VP.ID 
+        and    TechCode        =REC_NVDTechnical_VP.TechCode        
+        and    EffectiveFrom   =REC_NVDTechnical_VP.EffectiveFrom   ;
+      --  and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+       -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    	--and     V_JOUR          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+       -- and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDTechnical_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDTechnical_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_NVDTechnical_VP;
+
+
+  FUNCTION ALIM_NVDModelYear_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDModelYear_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDModelYear_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDModelYear_VP','## Alimentation de la table MKTREF.MKTQT_NVDModelYear_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDModelYear_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDModelYear_VP IN C_NVDModelYear_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDModelYear_VP
+              ( 
+              DATE_MAJ,      
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID ,
+EffectiveFrom  ,
+EffectiveTo ,
+Refe ,
+ImageId  ,
+ImageNotExactMatch 
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDModelYear_VP.ID ,
+REC_NVDModelYear_VP.EffectiveFrom  ,
+REC_NVDModelYear_VP.EffectiveTo ,
+REC_NVDModelYear_VP.Refe ,
+REC_NVDModelYear_VP.ImageId  ,
+REC_NVDModelYear_VP.ImageNotExactMatch 
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDModelYear_VP
+        Set        
+            
+---ID =REC_NVDModelYear_VP.ID ,
+---EffectiveFrom  =REC_NVDModelYear_VP.EffectiveFrom  ,
+
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo =REC_NVDModelYear_VP.EffectiveTo ,
+Refe =REC_NVDModelYear_VP.Refe ,
+ImageId  =REC_NVDModelYear_VP.ImageId  ,
+ImageNotExactMatch=REC_NVDModelYear_VP.ImageNotExactMatch 
+
+        where  ID          =      REC_NVDModelYear_VP.ID 
+        and     EffectiveFrom  =REC_NVDModelYear_VP.EffectiveFrom  ;
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+       -- and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+       -- and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+      --  and V_DATE_SITU  =  Date_situ 
+      --  and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDModelYear_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDModelYear_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_NVDModelYear_VP;
+
+
+
+
+  FUNCTION ALIM_NVDGenericStatus_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDGenericStatus_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDGenericStatus_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDGenericStatus_VP','## Alimentation de la table MKTREF.MKTQT_NVDGenericStatus_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDGenericStatus_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDGenericStatus_VP IN C_NVDGenericStatus_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDGenericStatus_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+GenericCode	,
+EffectiveFrom   ,
+EffectiveTo 	,
+Status 		
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+   -- V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDGenericStatus_VP.ID	 	,
+REC_NVDGenericStatus_VP.GenericCode	,
+REC_NVDGenericStatus_VP.EffectiveFrom   ,
+REC_NVDGenericStatus_VP.EffectiveTo 	,
+REC_NVDGenericStatus_VP.Status 		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDGenericStatus_VP
+        Set        
+            
+--ID	 	=REC_NVDGenericStatus_VP.ID	 	,
+--GenericCode	=REC_NVDGenericStatus_VP.GenericCode	,
+--EffectiveFrom   =REC_NVDGenericStatus_VP.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDGenericStatus_VP.EffectiveTo 	,
+Status =REC_NVDGenericStatus_VP.Status 	
+
+        where  ID          =      REC_NVDGenericStatus_VP.ID 
+        and     GenericCode  =REC_NVDGenericStatus_VP.GenericCode  
+        and     EffectiveFrom  =REC_NVDGenericStatus_VP.EffectiveFrom ;
+       -- and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDGenericStatus_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDGenericStatus_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDGenericStatus_VP;
+
+
+
+
+
+  FUNCTION ALIM_NVDPrices_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDPrices_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPrices_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPrices_VP','## Alimentation de la table MKTREF.MKTQT_NVDPrices_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPrices_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPrices_VP IN C_NVDPrices_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPrices_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+EffectiveFrom   ,
+EffectiveTo 	,
+Basic		,
+Vat   		,
+Delivery	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+   --V_ANNEE ,
+   --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDPrices_VP.ID	 	,
+REC_NVDPrices_VP.EffectiveFrom   ,
+REC_NVDPrices_VP.EffectiveTo 	,
+REC_NVDPrices_VP.Basic		,
+REC_NVDPrices_VP.Vat   		,
+REC_NVDPrices_VP.Delivery		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPrices_VP
+        Set        
+            
+--ID	 	=REC_NVDPrices_VP.ID	 	,
+--EffectiveFrom   =REC_NVDPrices_VP.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDPrices_VP.EffectiveTo 	,
+Basic		=REC_NVDPrices_VP.Basic		,
+Vat   		=REC_NVDPrices_VP.Vat   		,
+Delivery =REC_NVDPrices_VP.Delivery		
+
+        where  ID          =      REC_NVDPrices_VP.ID 
+        and     EffectiveFrom  =REC_NVDPrices_VP.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPrices_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPrices_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDPrices_VP;
+
+  FUNCTION ALIM_NVDOption_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDOption_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDOption_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDOption_VP','## Alimentation de la table MKTREF.MKTQT_NVDOption_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDOption_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDOption_VP IN C_NVDOption_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDOption_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+OptionCode	,
+EffectiveFrom   ,
+EffectiveTo 	,
+ModifiedDate	,
+Basic		,
+Vat   		,
+Poa		,
+Defaultt	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDOption_VP.ID	 	,
+REC_NVDOption_VP.OptionCode	,
+REC_NVDOption_VP.EffectiveFrom   ,
+REC_NVDOption_VP.EffectiveTo 	,
+REC_NVDOption_VP.ModifiedDate	,
+REC_NVDOption_VP.Basic		,
+REC_NVDOption_VP.Vat   		,
+REC_NVDOption_VP.Poa		,
+REC_NVDOption_VP.Defaultt		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDOption_VP
+        Set        
+            
+--ID	 	=REC_NVDOption_VP.ID	 	,
+--OptionCode	=REC_NVDOption_VP.OptionCode	,
+--EffectiveFrom   =REC_NVDOption_VP.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDOption_VP.EffectiveTo 	,
+ModifiedDate	=REC_NVDOption_VP.ModifiedDate	,
+Basic		=REC_NVDOption_VP.Basic		,
+Vat   		=REC_NVDOption_VP.Vat   		,
+Poa		=REC_NVDOption_VP.Poa		,
+Defaultt =REC_NVDOption_VP.Defaultt		
+
+        where  ID          =      REC_NVDOption_VP.ID 
+        and    OptionCode	=REC_NVDOption_VP.OptionCode	
+        and     EffectiveFrom  =REC_NVDOption_VP.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDOption_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDOption_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDOption_VP;
+
+
+  FUNCTION ALIM_NVDDictionaryOption_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDDictionaryOption_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDDictionaryOption_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDDictionaryOption_VP','## Alimentation de la table MKTREF.MKTQT_NVDDictionaryOption_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDDictionaryOption_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDDictionaryOption_VP IN C_NVDDictionaryOption_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDDictionaryOption_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+OptionCode	,
+ManLevel	,
+CatCode		,
+Description	,
+LongDescription	,
+NonSpecificCostOption
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDDictionaryOption_VP.OptionCode	,
+REC_NVDDictionaryOption_VP.ManLevel	,
+REC_NVDDictionaryOption_VP.CatCode		,
+REC_NVDDictionaryOption_VP.Description	,
+REC_NVDDictionaryOption_VP.LongDescription	,
+REC_NVDDictionaryOption_VP.NonSpecificCostOption
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDDictionaryOption_VP
+        Set        
+            
+--OptionCode	=REC_NVDDictionaryOption_VP.OptionCode	,
+--ManLevel	=REC_NVDDictionaryOption_VP.ManLevel	,
+DATE_MAJ        =  P_DATE_TRAI,
+CatCode		=REC_NVDDictionaryOption_VP.CatCode		,
+Description	=REC_NVDDictionaryOption_VP.Description	,
+LongDescription	=REC_NVDDictionaryOption_VP.LongDescription	,
+NonSpecificCostOption =REC_NVDDictionaryOption_VP.NonSpecificCostOption	
+
+        where  OptionCode	=REC_NVDDictionaryOption_VP.OptionCode	
+        and    ManLevel	=REC_NVDDictionaryOption_VP.ManLevel	;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDDictionaryOption_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDDictionaryOption_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDDictionaryOption_VP;
+
+
+
+  FUNCTION ALIM_NVDPackContents_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDPackContents_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPackContents_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackContents_VP','## Alimentation de la table MKTREF.MKTQT_NVDPackContents_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackContents_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPackContents_VP IN C_NVDPackContents_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPackContents_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+PeriodCode	,
+OptionCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDPackContents_VP.PeriodCode	,
+REC_NVDPackContents_VP.OptionCode	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPackContents_VP
+        Set        
+            
+
+    DATE_MAJ        =  P_DATE_TRAI,
+    PeriodCode	 =REC_NVDPackContents_VP.PeriodCode	,
+    OptionCode =REC_NVDPackContents_VP.OptionCode
+
+        where  PeriodCode	 =REC_NVDPackContents_VP.PeriodCode	
+        and    OptionCode =REC_NVDPackContents_VP.OptionCode	;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackContents_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackContents_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDPackContents_VP;
+
+
+
+  FUNCTION ALIM_NVDStandardEquipment_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDStandardEquipment_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDStandardEquipment_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDStandardEquipment_VP','## Alimentation de la table MKTREF.MKTQT_NVDStandardEquipment_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDStandardEquipment_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDStandardEquipment_VP IN C_NVDStandardEquipment_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDStandardEquipment_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Id		,
+OptionCode 	,
+EffectiveFrom,
+EffectiveTo	,
+ModifiedDate
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDStandardEquipment_VP.Id		,
+REC_NVDStandardEquipment_VP.OptionCode 	,
+REC_NVDStandardEquipment_VP.EffectiveFrom,
+REC_NVDStandardEquipment_VP.EffectiveTo	,
+REC_NVDStandardEquipment_VP.ModifiedDate
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDStandardEquipment_VP
+        Set        
+            
+--Id		 =REC_NVDStandardEquipment_VP.Id		,
+--OptionCode 	 =REC_NVDStandardEquipment_VP.OptionCode 	,
+--EffectiveFrom =REC_NVDStandardEquipment_VP.EffectiveFrom,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo	 =REC_NVDStandardEquipment_VP.EffectiveTo	,
+ModifiedDate =REC_NVDStandardEquipment_VP.ModifiedDate
+
+        where  Id		 =REC_NVDStandardEquipment_VP.Id			
+        and    OptionCode 	 =REC_NVDStandardEquipment_VP.OptionCode 	
+        and     EffectiveFrom =REC_NVDStandardEquipment_VP.EffectiveFrom;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDStandardEquipment_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDStandardEquipment_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDStandardEquipment_VP;
+
+
+
+  FUNCTION ALIM_CapRange_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapRange_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapRange_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapRange_VP','## Alimentation de la table MKTREF.MKTQT_CapRange_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapRange_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapRange_VP IN C_CapRange_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapRange_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code		,
+Name		,
+ManCode		
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapRange_VP.Code		,
+REC_CapRange_VP.Name		,
+REC_CapRange_VP.ManCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapRange_VP
+        Set        
+            
+--Code		  = REC_CapRange_VP.Code		,
+DATE_MAJ        =  P_DATE_TRAI,
+Name		  = REC_CapRange_VP.Name		,
+ManCode  = REC_CapRange_VP.ManCode	
+
+        where Code		  = REC_CapRange_VP.Code		;			
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+       --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapRange_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapRange_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapRange_VP;
+
+  FUNCTION ALIM_CapMan_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapMan_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapMan_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapMan_VP','## Alimentation de la table MKTREF.MKTQT_CapMan_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapMan_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapMan_VP IN C_CapMan_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapMan_VP
+              (
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code	,
+Name 	,
+Labour	,
+OrderNo ,
+ManLookupCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapMan_VP.Code	,
+REC_CapMan_VP.Name 	,
+REC_CapMan_VP.Labour	,
+REC_CapMan_VP.OrderNo ,
+REC_CapMan_VP.ManLookupCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapMan_VP
+        Set        
+            
+---Code	 =REC_CapMan_VP.Code	,
+DATE_MAJ        =  P_DATE_TRAI,
+Name 	 =REC_CapMan_VP.Name 	,
+Labour	 =REC_CapMan_VP.Labour	,
+OrderNo  =REC_CapMan_VP.OrderNo ,
+ManLookupCode =REC_CapMan_VP.ManLookupCode		
+
+        where Code	 =REC_CapMan_VP.Code    ;					
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapMan_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapMan_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapMan_VP;
+
+
+
+  FUNCTION ALIM_CapTrim_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapTrim_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapTrim_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapTrim_VP','## Alimentation de la table MKTREF.MKTQT_CapTrim_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapTrim_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapTrim_VP IN C_CapTrim_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapTrim_VP
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code	,
+Name	,	
+ManCode	,
+RanCode	,
+ModCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapTrim_VP.Code	,
+REC_CapTrim_VP.Name	,	
+REC_CapTrim_VP.ManCode	,
+REC_CapTrim_VP.RanCode	,
+REC_CapTrim_VP.ModCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapTrim_VP
+        Set        
+            
+--Code	=REC_CapTrim_VP.Code	,
+DATE_MAJ        =  P_DATE_TRAI,
+Name	=REC_CapTrim_VP.Name	,	
+ManCode	=REC_CapTrim_VP.ManCode	,
+RanCode	=REC_CapTrim_VP.RanCode	,
+ModCode =REC_CapTrim_VP.ModCode		
+
+        where Code	 =REC_CapTrim_VP.Code		;			
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapTrim_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapTrim_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapTrim_VP;
+
+
+
+
+  FUNCTION ALIM_NVDPackPeriods_VP (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_NVDPackPeriods_VP Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPackPeriods_VP ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackPeriods_VP','## Alimentation de la table MKTREF.MKTQT_NVDPackPeriods_VP ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackPeriods_VP','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPackPeriods_VP IN C_NVDPackPeriods_VP
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPackPeriods_VP
+              ( 
+    DATE_MAJ, --ID_JOUR,      
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+PeriodCode		,
+PackCode		,
+EffectiveFrom	,
+EffectiveTo		  	
+              )
+        VALUES
+              (  
+    V_DATE_SITU, --' ', --V_JOUR,            
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_Date_situ ,
+    --'UK' ,
+REC_NVDPackPeriods_VP.PeriodCode		,
+REC_NVDPackPeriods_VP.PackCode		,
+REC_NVDPackPeriods_VP.EffectiveFrom	,
+REC_NVDPackPeriods_VP.EffectiveTo			           	   	        
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPackPeriods_VP
+        Set    DATE_MAJ        =  P_DATE_TRAI,        
+--PeriodCode		 = REC_NVDPackPeriods_VP.PeriodCode		,
+PackCode		 = REC_NVDPackPeriods_VP.PackCode		,
+EffectiveFrom	 = REC_NVDPackPeriods_VP.EffectiveFrom	,
+EffectiveTo	 = REC_NVDPackPeriods_VP.EffectiveTo		
+
+        where  	   PeriodCode	 =  REC_NVDPackPeriods_VP.PeriodCode	 	
+        ; --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackPeriods_VP','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackPeriods_VP','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+
+  END ALIM_NVDPackPeriods_VP;
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------   VU     -----------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  FUNCTION ALIM_CapDer_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_CapDer_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapDer_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapDer_VU','## Alimentation de la table MKTREF.MKTQT_CapDer_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapDer_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapDer_VU IN C_CapDer_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapDer_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,      
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+    ID,
+    CAPCODE,
+    MANCODE,
+    RANCODE,
+    MODCODE,
+    TRIMCODE,
+    NAME,
+    INTRODUCED ,
+    DISCONTINUED ,
+    ORDERNO ,
+    VEHICLESECTOR ,
+    DOORS,
+    DRIVETRAIN ,
+    FUELDELIVERY,
+    TRANSMISSION ,
+    FUELTYPE                
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,            
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+    REC_CapDer_VU.ID,
+    REC_CapDer_VU.CAPCODE,
+    REC_CapDer_VU.MANCODE,
+    REC_CapDer_VU.RANCODE,
+    REC_CapDer_VU.MODCODE,
+    REC_CapDer_VU.TRIMCODE,
+    REC_CapDer_VU.NAME,
+    REC_CapDer_VU.INTRODUCED ,
+    REC_CapDer_VU.DISCONTINUED ,
+    REC_CapDer_VU.ORDERNO ,
+    REC_CapDer_VU.VEHICLESECTOR ,
+    REC_CapDer_VU.DOORS,
+    REC_CapDer_VU.DRIVETRAIN ,
+    REC_CapDer_VU.FUELDELIVERY,
+    REC_CapDer_VU.TRANSMISSION ,
+    REC_CapDer_VU.FUELTYPE   
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapDer_VU
+        Set        
+    --ID          =      REC_CapDer_VU.ID  
+    DATE_MAJ        =  P_DATE_TRAI,
+    CAPCODE     =       REC_CapDer_VU.CAPCODE,
+    MANCODE     =       REC_CapDer_VU.MANCODE,
+    RANCODE     =       REC_CapDer_VU.RANCODE,
+    MODCODE     =       REC_CapDer_VU.MODCODE,
+    TRIMCODE    =       REC_CapDer_VU.TRIMCODE,
+    NAME        =       REC_CapDer_VU.NAME,
+    INTRODUCED      =       REC_CapDer_VU.INTRODUCED ,
+    DISCONTINUED        =       REC_CapDer_VU.DISCONTINUED ,
+    ORDERNO         =       REC_CapDer_VU.ORDERNO ,
+    VEHICLESECTOR       =       REC_CapDer_VU.VEHICLESECTOR ,
+    DOORS       =       REC_CapDer_VU.DOORS,
+    DRIVETRAIN      =       REC_CapDer_VU.DRIVETRAIN ,
+    FUELDELIVERY        =       REC_CapDer_VU.FUELDELIVERY,
+    TRANSMISSION        =       REC_CapDer_VU.TRANSMISSION ,
+    FUELTYPE        =       REC_CapDer_VU.FUELTYPE   
+
+        where  ID          =      REC_CapDer_VU.ID ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapDer_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapDer_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+  END ALIM_CapDer_VU;
+
+  FUNCTION ALIM_NVDTechnical_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDTechnical_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDTechnical_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDTechnical_VU','## Alimentation de la table MKTREF.MKTQT_NVDTechnical_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDTechnical_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDTechnical_VU IN C_NVDTechnical_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDTechnical_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,   
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID              ,
+TechCode        ,
+EffectiveFrom   ,
+EffectiveTo     ,
+ValueDatetime   ,
+ValueFloat      ,
+ValueString     ,
+ValueBoolean                   
+              )
+              
+        VALUES
+              (    
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDTechnical_VU.ID              ,
+REC_NVDTechnical_VU.TechCode        ,
+REC_NVDTechnical_VU.EffectiveFrom   ,
+REC_NVDTechnical_VU.EffectiveTo     ,
+REC_NVDTechnical_VU.ValueDatetime   ,
+REC_NVDTechnical_VU.ValueFloat      ,
+REC_NVDTechnical_VU.ValueString     ,
+REC_NVDTechnical_VU.ValueBoolean  
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDTechnical_VU
+        Set        
+            
+---ID              =REC_NVDTechnical_VU.ID              ,
+---TechCode        =REC_NVDTechnical_VU.TechCode        ,
+---EffectiveFrom   =REC_NVDTechnical_VU.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo     =REC_NVDTechnical_VU.EffectiveTo     ,
+ValueDatetime   =REC_NVDTechnical_VU.ValueDatetime   ,
+ValueFloat      =REC_NVDTechnical_VU.ValueFloat      ,
+ValueString     =REC_NVDTechnical_VU.ValueString     ,
+ValueBoolean  =REC_NVDTechnical_VU.ValueBoolean  
+
+        where  ID          =      REC_NVDTechnical_VU.ID 
+        and    TechCode        =REC_NVDTechnical_VU.TechCode        
+        and    EffectiveFrom   =REC_NVDTechnical_VU.EffectiveFrom   ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    	--and     V_JOUR          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDTechnical_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDTechnical_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_NVDTechnical_VU;
+
+
+  FUNCTION ALIM_NVDModelYear_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDModelYear_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDModelYear_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDModelYear_VU','## Alimentation de la table MKTREF.MKTQT_NVDModelYear_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDModelYear_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDModelYear_VU IN C_NVDModelYear_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDModelYear_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID ,
+EffectiveFrom  ,
+EffectiveTo ,
+Refe ,
+ImageId  ,
+ImageNotExactMatch 
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDModelYear_VU.ID ,
+REC_NVDModelYear_VU.EffectiveFrom  ,
+REC_NVDModelYear_VU.EffectiveTo ,
+REC_NVDModelYear_VU.Refe ,
+REC_NVDModelYear_VU.ImageId  ,
+REC_NVDModelYear_VU.ImageNotExactMatch 
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDModelYear_VU
+        Set        
+            
+---ID =REC_NVDModelYear_VU.ID ,
+---EffectiveFrom  =REC_NVDModelYear_VU.EffectiveFrom  ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo =REC_NVDModelYear_VU.EffectiveTo ,
+Refe =REC_NVDModelYear_VU.Refe ,
+ImageId  =REC_NVDModelYear_VU.ImageId  ,
+ImageNotExactMatch=REC_NVDModelYear_VU.ImageNotExactMatch 
+
+        where  ID          =      REC_NVDModelYear_VU.ID 
+        and     EffectiveFrom  =REC_NVDModelYear_VU.EffectiveFrom  ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDModelYear_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDModelYear_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+
+  END ALIM_NVDModelYear_VU;
+
+
+
+
+  FUNCTION ALIM_NVDGenericStatus_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDGenericStatus_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDGenericStatus_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDGenericStatus_VU','## Alimentation de la table MKTREF.MKTQT_NVDGenericStatus_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDGenericStatus_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDGenericStatus_VU IN C_NVDGenericStatus_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDGenericStatus_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+GenericCode	,
+EffectiveFrom   ,
+EffectiveTo 	,
+Status 		
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDGenericStatus_VU.ID	 	,
+REC_NVDGenericStatus_VU.GenericCode	,
+REC_NVDGenericStatus_VU.EffectiveFrom   ,
+REC_NVDGenericStatus_VU.EffectiveTo 	,
+REC_NVDGenericStatus_VU.Status 		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDGenericStatus_VU
+        Set        
+            
+--ID	 	=REC_NVDGenericStatus_VU.ID	 	,
+--GenericCode	=REC_NVDGenericStatus_VU.GenericCode	,
+--EffectiveFrom   =REC_NVDGenericStatus_VU.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDGenericStatus_VU.EffectiveTo 	,
+Status =REC_NVDGenericStatus_VU.Status 	
+
+        where  ID          =      REC_NVDGenericStatus_VU.ID 
+        and     GenericCode  =REC_NVDGenericStatus_VU.GenericCode  
+        and     EffectiveFrom  =REC_NVDGenericStatus_VU.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDGenericStatus_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDGenericStatus_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDGenericStatus_VU;
+
+
+
+
+
+  FUNCTION ALIM_NVDPrices_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDPrices_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPrices_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPrices_VU','## Alimentation de la table MKTREF.MKTQT_NVDPrices_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPrices_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPrices_VU IN C_NVDPrices_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPrices_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+EffectiveFrom   ,
+EffectiveTo 	,
+Basic		,
+Vat   		,
+Delivery	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDPrices_VU.ID	 	,
+REC_NVDPrices_VU.EffectiveFrom   ,
+REC_NVDPrices_VU.EffectiveTo 	,
+REC_NVDPrices_VU.Basic		,
+REC_NVDPrices_VU.Vat   		,
+REC_NVDPrices_VU.Delivery		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPrices_VU
+        Set        
+            
+--ID	 	=REC_NVDPrices_VU.ID	 	,
+--EffectiveFrom   =REC_NVDPrices_VU.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDPrices_VU.EffectiveTo 	,
+Basic		=REC_NVDPrices_VU.Basic		,
+Vat   		=REC_NVDPrices_VU.Vat   		,
+Delivery =REC_NVDPrices_VU.Delivery		
+
+        where  ID          =      REC_NVDPrices_VU.ID 
+        and     EffectiveFrom  =REC_NVDPrices_VU.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPrices_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPrices_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDPrices_VU;
+
+  FUNCTION ALIM_NVDOption_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDOption_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDOption_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDOption_VU','## Alimentation de la table MKTREF.MKTQT_NVDOption_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDOption_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDOption_VU IN C_NVDOption_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDOption_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+ID	 	,
+OptionCode	,
+EffectiveFrom   ,
+EffectiveTo 	,
+ModifiedDate	,
+Basic		,
+Vat   		,
+Poa		,
+Defaultt	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDOption_VU.ID	 	,
+REC_NVDOption_VU.OptionCode	,
+REC_NVDOption_VU.EffectiveFrom   ,
+REC_NVDOption_VU.EffectiveTo 	,
+REC_NVDOption_VU.ModifiedDate	,
+REC_NVDOption_VU.Basic		,
+REC_NVDOption_VU.Vat   		,
+REC_NVDOption_VU.Poa		,
+REC_NVDOption_VU.Defaultt		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDOption_VU
+        Set        
+            
+--ID	 	=REC_NVDOption_VU.ID	 	,
+--OptionCode	=REC_NVDOption_VU.OptionCode	,
+--EffectiveFrom   =REC_NVDOption_VU.EffectiveFrom   ,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo 	=REC_NVDOption_VU.EffectiveTo 	,
+ModifiedDate	=REC_NVDOption_VU.ModifiedDate	,
+Basic		=REC_NVDOption_VU.Basic		,
+Vat   		=REC_NVDOption_VU.Vat   		,
+Poa		=REC_NVDOption_VU.Poa		,
+Defaultt =REC_NVDOption_VU.Defaultt		
+
+        where  ID          =      REC_NVDOption_VU.ID 
+        and    OptionCode	=REC_NVDOption_VU.OptionCode	
+        and     EffectiveFrom  =REC_NVDOption_VU.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDOption_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDOption_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDOption_VU;
+
+
+  FUNCTION ALIM_NVDDictionaryOption_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDDictionaryOption_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDDictionaryOption_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDDictionaryOption_VU','## Alimentation de la table MKTREF.MKTQT_NVDDictionaryOption_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDDictionaryOption_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDDictionaryOption_VU IN C_NVDDictionaryOption_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDDictionaryOption_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+OptionCode	,
+ManLevel	,
+CatCode		,
+Description	,
+LongDescription	,
+NonSpecificCostOption
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDDictionaryOption_VU.OptionCode	,
+REC_NVDDictionaryOption_VU.ManLevel	,
+REC_NVDDictionaryOption_VU.CatCode		,
+REC_NVDDictionaryOption_VU.Description	,
+REC_NVDDictionaryOption_VU.LongDescription	,
+REC_NVDDictionaryOption_VU.NonSpecificCostOption
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDDictionaryOption_VU
+        Set        
+            
+--OptionCode	=REC_NVDDictionaryOption_VU.OptionCode	,
+--ManLevel	=REC_NVDDictionaryOption_VU.ManLevel	,
+DATE_MAJ        =  P_DATE_TRAI,
+CatCode		=REC_NVDDictionaryOption_VU.CatCode		,
+Description	=REC_NVDDictionaryOption_VU.Description	,
+LongDescription	=REC_NVDDictionaryOption_VU.LongDescription	,
+NonSpecificCostOption =REC_NVDDictionaryOption_VU.NonSpecificCostOption	
+
+        where  OptionCode	=REC_NVDDictionaryOption_VU.OptionCode	
+        and    ManLevel	=REC_NVDDictionaryOption_VU.ManLevel	;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDDictionaryOption_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDDictionaryOption_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDDictionaryOption_VU;
+
+
+
+  FUNCTION ALIM_NVDPackContents_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDPackContents_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPackContents_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackContents_VU','## Alimentation de la table MKTREF.MKTQT_NVDPackContents_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackContents_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPackContents_VU IN C_NVDPackContents_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPackContents_VU
+              (
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+PeriodCode	,
+OptionCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDPackContents_VU.PeriodCode	,
+REC_NVDPackContents_VU.OptionCode	
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPackContents_VU
+        Set        
+            DATE_MAJ        =  P_DATE_TRAI,
+    PeriodCode	 =REC_NVDPackContents_VU.PeriodCode	,
+    OptionCode =REC_NVDPackContents_VU.OptionCode
+
+        where  PeriodCode	 =REC_NVDPackContents_VU.PeriodCode	
+        and    OptionCode =REC_NVDPackContents_VU.OptionCode	;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackContents_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackContents_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDPackContents_VU;
+
+
+
+  FUNCTION ALIM_NVDStandardEquipment_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_NVDStandardEquipment_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDStandardEquipment_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDStandardEquipment_VU','## Alimentation de la table MKTREF.MKTQT_NVDStandardEquipment_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDStandardEquipment_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDStandardEquipment_VU IN C_NVDStandardEquipment_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDStandardEquipment_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Id		,
+OptionCode 	,
+EffectiveFrom,
+EffectiveTo	,
+ModifiedDate
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_NVDStandardEquipment_VU.Id		,
+REC_NVDStandardEquipment_VU.OptionCode 	,
+REC_NVDStandardEquipment_VU.EffectiveFrom,
+REC_NVDStandardEquipment_VU.EffectiveTo	,
+REC_NVDStandardEquipment_VU.ModifiedDate
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDStandardEquipment_VU
+        Set        
+            
+--Id		 =REC_NVDStandardEquipment_VU.Id		,
+--OptionCode 	 =REC_NVDStandardEquipment_VU.OptionCode 	,
+--EffectiveFrom =REC_NVDStandardEquipment_VU.EffectiveFrom,
+DATE_MAJ        =  P_DATE_TRAI,
+EffectiveTo	 =REC_NVDStandardEquipment_VU.EffectiveTo	,
+ModifiedDate =REC_NVDStandardEquipment_VU.ModifiedDate
+
+        where  Id		 =REC_NVDStandardEquipment_VU.Id			
+        and    OptionCode 	 =REC_NVDStandardEquipment_VU.OptionCode 	
+        and     EffectiveFrom =REC_NVDStandardEquipment_VU.EffectiveFrom ;
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDStandardEquipment_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDStandardEquipment_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_NVDStandardEquipment_VU;
+
+
+
+  FUNCTION ALIM_CapRange_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapRange_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapRange_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapRange_VU','## Alimentation de la table MKTREF.MKTQT_CapRange_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapRange_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapRange_VU IN C_CapRange_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapRange_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code		,
+Name		,
+ManCode		
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapRange_VU.Code		,
+REC_CapRange_VU.Name		,
+REC_CapRange_VU.ManCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapRange_VU
+        Set        
+            
+--Code		  = REC_CapRange_VU.Code		,
+DATE_MAJ        =  P_DATE_TRAI,
+Name		  = REC_CapRange_VU.Name		,
+ManCode  = REC_CapRange_VU.ManCode	
+
+        where Code		  = REC_CapRange_VU.Code	;				
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapRange_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapRange_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapRange_VU;
+
+  FUNCTION ALIM_CapMan_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapMan_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapMan_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapMan_VU','## Alimentation de la table MKTREF.MKTQT_CapMan_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapMan_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapMan_VU IN C_CapMan_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapMan_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code	,
+Name 	,
+Labour	,
+OrderNo ,
+ManLookupCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapMan_VU.Code	,
+REC_CapMan_VU.Name 	,
+REC_CapMan_VU.Labour	,
+REC_CapMan_VU.OrderNo ,
+REC_CapMan_VU.ManLookupCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapMan_VU
+        Set        
+            
+---Code	 =REC_CapMan_VU.Code	,
+DATE_MAJ        =  P_DATE_TRAI,
+Name 	 =REC_CapMan_VU.Name 	,
+Labour	 =REC_CapMan_VU.Labour	,
+OrderNo  =REC_CapMan_VU.OrderNo ,
+ManLookupCode =REC_CapMan_VU.ManLookupCode		
+
+        where Code	 =REC_CapMan_VU.Code	;				
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapMan_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapMan_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapMan_VU;
+
+
+
+  FUNCTION ALIM_CapTrim_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+
+  Cursor C_CapTrim_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_CapTrim_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapTrim_VU','## Alimentation de la table MKTREF.MKTQT_CapTrim_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_CapTrim_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_CapTrim_VU IN C_CapTrim_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_CapTrim_VU
+              ( 
+              DATE_MAJ,
+    --ID_JOUR,
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+Code	,
+Name	,	
+ManCode	,
+RanCode	,
+ModCode	
+              )
+              
+        VALUES
+              (  
+              V_DATE_SITU, --' ',
+    --V_JOUR,
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_DATE_SITU ,
+    --'UK' ,
+REC_CapTrim_VU.Code	,
+REC_CapTrim_VU.Name	,	
+REC_CapTrim_VU.ManCode	,
+REC_CapTrim_VU.RanCode	,
+REC_CapTrim_VU.ModCode		
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_CapTrim_VU
+        Set        
+            
+--Code	=REC_CapTrim_VU.Code	,
+DATE_MAJ        =  P_DATE_TRAI,
+Name	=REC_CapTrim_VU.Name	,	
+ManCode	=REC_CapTrim_VU.ManCode	,
+RanCode	=REC_CapTrim_VU.RanCode	,
+ModCode =REC_CapTrim_VU.ModCode		
+
+        where Code	 =REC_CapTrim_VU.Code		;			
+        --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+        --and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_CapTrim_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_CapTrim_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+
+  END ALIM_CapTrim_VU;
+
+
+
+
+ FUNCTION ALIM_NVDPackPeriods_VU (  NOMLOG      VARCHAR2,
+                                P_DATE_TRAI DATE DEFAULT SYSDATE,
+                                V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2) Return Number AS
+
+BEGIN
+  DECLARE
+
+  V_ERR   NUMBER := 0;
+  V_INS   NUMBER := 0;
+  V_UPD   NUMBER := 0;
+        V_ANNEE NUMBER ;
+        V_MOIS  NUMBER ;
+        V_JOUR NUMBER;
+        V_Date_Situ Date;
+        
+
+  FILE_ID UTL_FILE.FILE_TYPE;
+  RES     NUMBER := 0;
+
+  Cursor C_NVDPackPeriods_VU Is
+  Select * 
+  FROM MKTLDR.MKTQTT_NVDPackPeriods_VU ; 
+          
+
+ /*******************************************************************************/
+  BEGIN
+
+    File_Id := mkt.mktqaut.F_Open(Nomlog);
+  Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackPeriods_VU','## Alimentation de la table MKTREF.MKTQT_NVDPackPeriods_VU ##');
+  RES := mkt.mktQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackPeriods_VU','## Flux BILAN   ##');
+  
+          
+        SELECT trunc(P_DATE_TRAI) INTO V_DATE_SITU FROM dual;
+        Select To_Number(To_Char(V_DATE_SITU,'MM')) Into V_Mois From Dual ;
+        SELECT to_number(to_char(V_DATE_SITU,'YYYY'))   INTO V_ANNEE  from dual;
+        SELECT to_number(to_char(V_DATE_SITU,'DD'))   INTO V_JOUR  from dual;
+
+
+  FOR REC_NVDPackPeriods_VU IN C_NVDPackPeriods_VU
+  LOOP
+
+       /*************************************************************************/
+        BEGIN
+
+        IF V_ERR=1 THEN EXIT;
+        END IF;
+
+        IF MOD(V_UPD + V_INS, 100)=0 THEN COMMIT;
+        END IF;
+        
+
+        INSERT INTO MKTREF.MKTQT_NVDPackPeriods_VU
+              ( 
+    DATE_MAJ, --ID_JOUR,      
+    --ID_MOIS ,
+    --ID_ANNEE ,
+    --Date_situ ,
+    --Code_pays ,
+PeriodCode		,
+PackCode		,
+EffectiveFrom	,
+EffectiveTo		  	
+              )
+        VALUES
+              (  
+    V_DATE_SITU, --' ', --V_JOUR,            
+    --V_Mois ,
+    --V_ANNEE ,
+    --V_Date_situ ,
+    --'UK' ,
+REC_NVDPackPeriods_VU.PeriodCode		,
+REC_NVDPackPeriods_VU.PackCode		,
+REC_NVDPackPeriods_VU.EffectiveFrom	,
+REC_NVDPackPeriods_VU.EffectiveTo			           	   	        
+              );
+
+        V_INS := V_INS + 1;
+
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+				Update  MKTREF.MKTQT_NVDPackPeriods_VU
+        Set    DATE_MAJ        =  P_DATE_TRAI,        
+--PeriodCode		 = REC_NVDPackPeriods_VU.PeriodCode		,
+PackCode		 = REC_NVDPackPeriods_VU.PackCode		,
+EffectiveFrom	 = REC_NVDPackPeriods_VU.EffectiveFrom	,
+EffectiveTo	 = REC_NVDPackPeriods_VU.EffectiveTo		
+
+        where  	   PeriodCode	 =  REC_NVDPackPeriods_VU.PeriodCode	 	
+        ; --and     V_ANNEE          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'YYYY'))
+        --and     V_Mois          = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'MM'))
+    	--and     V_JOUR         = TO_NUMBER(TO_CHAR(P_DATE_TRAI, 'DD'))
+        --and V_DATE_SITU  =  Date_situ 
+        --and Code_pays = 'UK';
+
+
+        V_UPD := V_UPD + 1;
+        
+        WHEN OTHERS THEN
+				COMMIT;
+				V_ERR := 1;
+
+				V_Error := Substr('SQLCODE: '||To_Char(Sqlcode)||' -ERROR: '||Sqlerrm,1,4000);
+				Res := mkt.mktqaut.F_Write(File_Id, 'ALIM_NVDPackPeriods_VU','Message Erreur pl/sql :'||Sqlerrm,'E');
+        RETURN V_ERR;
+        END;
+   END LOOP;
+
+   COMMIT;
+
+   V_INSERTS := V_INS;
+   V_Updates := V_Upd;
+   RES := mkt.MKTQAUT.F_WRITE(FILE_ID, 'ALIM_NVDPackPeriods_VU','Nombre de mises a jour : '||TO_CHAR(V_UPD)||', d''insertions : '||TO_CHAR(V_INS));
+   UTL_FILE.FCLOSE(FILE_ID);
+   RETURN V_ERR;
+   End;
+    
+
+  END ALIM_NVDPackPeriods_VU;
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------   MAIN     -----------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+	FUNCTION MAIN_ALIM_VP (NOMLOG VARCHAR2, P_DATE_TRAI DATE, V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+		--V_INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+
+		---------------01			
+		V_ERR     := ALIM_CAPDER_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+		---------------02			
+			V_ERR     := ALIM_NVDTechnical_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------03			
+			V_ERR     := ALIM_NVDModelYear_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------04			
+			V_ERR     := ALIM_NVDGenericStatus_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------05			
+			V_ERR     := ALIM_NVDPrices_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------06			
+			V_ERR     := ALIM_NVDOption_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------07			
+			V_ERR     := ALIM_NVDDictionaryOption_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------08			
+			V_ERR     := ALIM_NVDPackContents_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------09			
+			V_ERR     := ALIM_NVDStandardEquipment_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------10			
+			V_ERR     := ALIM_CapRange_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------11			
+			V_ERR     := ALIM_CapMan_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------12			
+			V_ERR     := ALIM_CapTrim_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+              ---------------37			
+			V_ERR     := ALIM_NVDPackPeriods_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF; 
+ 
+ 
+ 
+ /*
+               ---------------14  CALCUL CAPCODE (DERNIER FICHIER) 			
+			V_ERR     := ALIM_PredictCapCode( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF; 
+ 
+ 
+ 
+ */
+ 
+ 
+        ---------------UPDATE			
+			V_ERR     := UPDATE_NVDModelYear_VP( NOMLOG , P_DATE_TRAI);  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;                             
+
+            
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_ALIM_VP;
+
+
+	FUNCTION MAIN_ALIM_VU (NOMLOG VARCHAR2, P_DATE_TRAI DATE,  V_INSERTS   OUT NUMBER,
+                                V_UPDATES   OUT NUMBER,
+                                V_Error     Out Varchar2 ) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+	--INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+	--	V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+
+
+		---------------01			
+			V_ERR     := ALIM_CapDer_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+		---------------02			
+			V_ERR     := ALIM_NVDTechnical_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------03			
+			V_ERR     := ALIM_NVDModelYear_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------04			
+			V_ERR     := ALIM_NVDGenericStatus_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------05			
+			V_ERR     := ALIM_NVDPrices_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------06			
+			V_ERR     := ALIM_NVDOption_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------07			
+			V_ERR     := ALIM_NVDDictionaryOption_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------08			
+			V_ERR     := ALIM_NVDPackContents_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------09			
+			V_ERR     := ALIM_NVDStandardEquipment_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------10			
+			V_ERR     := ALIM_CapRange_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------11			
+			V_ERR     := ALIM_CapMan_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+            
+        ---------------12			
+			V_ERR     := ALIM_CapTrim_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+
+              ---------------37			
+			V_ERR     := ALIM_NVDPackPeriods_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF; 
+         
+            
+		---------------UPDATE			
+			V_ERR     := UPDATE_NVDModelYear_VU( NOMLOG , P_DATE_TRAI);  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_ALIM_VU;
+  
+  FUNCTION MAIN_PRINCIPAL (NOMLOG VARCHAR2, P_DATE_TRAI DATE, P_PATH VARCHAR2, P_FILENAME_VEHICLE_JSON         VARCHAR2,
+                                P_FILENAME_NOMENCLATURE_JSON    VARCHAR2,
+                                P_FILENAME_VEHICLE_TXT          VARCHAR2,
+                                P_FILENAME_NOMENCLATURE_TXT     VARCHAR2) RETURN NUMBER IS
+		
+		V_RET NUMBER := 0;                     /* erreur = 0 ou 1 */
+
+	  V_INSERTS   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+		V_UPDATES   NUMBER := 0;			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+		V_ERROR   VARCHAR2(255);  			/* DECLARATION DU PARAMETRE DE LA FONCTION D'ALIMENTAITON*/
+
+		V_ERR   NUMBER := 0;      
+
+
+        BEGIN	
+
+
+		---------------01			
+			V_ERR     := MAIN_ALIM_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+
+		---------------02			
+			V_ERR     := MAIN_ALIM_VU( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+			IF V_ERR = 1 THEN
+				V_RET := 1;
+				RETURN V_RET;
+			END IF;
+      
+    --------------03
+    V_ERR     := MKTREF.MKTQA_CALCUL_CAP_UK.MAIN_PRINCIPAL (NOMLOG, P_DATE_TRAI, P_PATH,
+                                P_FILENAME_VEHICLE_JSON,
+                                P_FILENAME_NOMENCLATURE_JSON,
+                                P_FILENAME_VEHICLE_TXT,
+                                P_FILENAME_NOMENCLATURE_TXT,
+                                V_INSERTS,
+                                V_UPDATES,
+                                V_Error);
+
+			
+			RETURN V_RET;
+
+		/* AJOUTER APRES end; */
+		
+	END MAIN_PRINCIPAL;
+
+
+
+END MKTQA_CAP_UK;
