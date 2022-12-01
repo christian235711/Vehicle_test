@@ -3569,7 +3569,6 @@ END EXPORT_PROFIL_MILES_JSON;
 
 
 
-
 FUNCTION EXPORT_AGREEMENT_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_AGREEMENT VARCHAR2) return number IS
     V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
@@ -3587,8 +3586,14 @@ FUNCTION EXPORT_AGREEMENT_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH V
     V_NB_CONTRACT  NUMBER(10) := 0;  
     V_NB_CONTRACT_TRAITE NUMBER(10) := 0;
     
-    V_NB_FEES  NUMBER(10) := 0;  
-    V_NB_FEES_TRAITE NUMBER(10) := 0;
+    
+    V_NB_VEHICLE  NUMBER(10) := 0;  
+    V_NB_VEHICLE_TRAITE NUMBER(10) := 0;  
+    V_NB_STK  NUMBER(10) := 0;  
+    V_NB_STK_TRAITE NUMBER(10) := 0;
+
+    --V_NB_FEES  NUMBER(10) := 0;  
+    --V_NB_FEES_TRAITE NUMBER(10) := 0;
 
 
 
@@ -3681,29 +3686,11 @@ SELECT DISTINCT
 CONTRACTREF AS CONTRACTREF,
 BACKOFFICEORIGIN AS BACKOFFICEORIGIN,
 PRODUCTCATEGORYCODE AS PRODUCTCATEGORYCODE,
-REALDATEENDCONTRACT AS REALDATEENDCONTRACT,
+REALDATEENDCONTRACT AS REALDATEENDCONTRACT
 
 FROM MKTOV.MKTQT_AGREEMENT_CONTRACT
 WHERE TECH_ID = P_TECH_ID
 ;
-
-/*
-CURSOR C_MKTQT_FEES (P_TECH_ID VARCHAR2) IS
-SELECT DISTINCT
-FEETYPE AS FEETYPE,
-FEELABEL AS FEELABEL,
-FEECODE AS FEECODE,
-(CASE WHEN SUBSTR(TO_CHAR(INVOICINGAMOUNT),1,1) = ',' THEN  REPLACE(REPLACE(TO_CHAR(INVOICINGAMOUNT),',','0,'),',','.') ELSE REPLACE(TO_CHAR(INVOICINGAMOUNT),',','.') END)  AS INVOICINGAMOUNT,
---REPLACE(INVOICINGAMOUNT,',','.') AS INVOICINGAMOUNT,--
-TRANSACTIONIDBACKOFFICE AS TRANSACTIONIDBACKOFFICE,
-TO_CHAR(LASTINVOICINGDATE,'YYYY-MM-DD') AS LASTINVOICINGDATE,
-SPREADFLAG AS SPREADFLAG
-
-FROM MKTOV.MKTQT_AGREEMENT_FEES
-WHERE TECH_ID = P_TECH_ID
-;
-
-*/
 
 
 
@@ -3731,13 +3718,16 @@ BEGIN
          V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
          V_NB_REQUEST_TRAITE  := 0;
          V_NB_CONTRACT_TRAITE  := 0;
-         V_NB_FEES_TRAITE  := 0;
+         --V_NB_FEES_TRAITE  := 0;
+
+         
          
          
               V_LIGNE := '{
-"tech_id":"' || S_MKTQT_AGREEMENT.TECH_ID  || '",
-"tech_dateExtraction":"' || S_MKTQT_AGREEMENT.TECH_DATEEXTRACTION  || '",
-"countryBranchCode":"' || S_MKTQT_AGREEMENT.COUNTRYBRANCHCODE  || '"';
+"tech_id":"' || S_MKTQT_AGREEMENT.TECH_ID || '",
+"tech_dateExtraction":"' || S_MKTQT_AGREEMENT.TECH_DATEEXTRACTION || '",
+"countryBranchCode":"' || S_MKTQT_AGREEMENT.COUNTRYBRANCHCODE || '",
+"isBuyBackMake":"' || S_MKTQT_AGREEMENT.ISBUYBACKMAKE || '"';
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
@@ -3761,11 +3751,138 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
        
        FOR S_MKTQT_REQUEST IN C_MKTQT_REQUEST (S_MKTQT_AGREEMENT.TECH_ID)LOOP
             V_NB_REQUEST_TRAITE := V_NB_REQUEST_TRAITE+1;   ---- 
-            
+            V_NB_VEHICLE_TRAITE  := 0;
+            V_NB_STK_TRAITE  := 0;
             
             V_LIGNE := '"request":{
-            "requestRef":"' || S_MKTQT_REQUEST.REQUESTREF	 || '"';                           
+                "tech_id":"' || S_MKTQT_REQUEST.TECH_ID || '",
+                "tech_dateExtraction":"' || S_MKTQT_REQUEST.TECH_DATEEXTRACTION || '",
+                "requestRef":"' || S_MKTQT_REQUEST.REQUESTREF || '",
+                "statusCode":"' || S_MKTQT_REQUEST.STATUSCODE || '",
+                "reservedContractRef":"' || S_MKTQT_REQUEST.RESERVEDCONTRACTREF || '",
+                "activationDate":"' || S_MKTQT_REQUEST.ACTIVATIONDATE || '",
+                "dateStartRequest":"' || S_MKTQT_REQUEST.DATESTARTREQUEST || '",
+                "liquidationDate":"' || S_MKTQT_REQUEST.LIQUIDATIONDATE || '",
+                "requestStatus":"' || S_MKTQT_REQUEST.REQUESTSTATUS || '",
+                "brandLabel":"' || S_MKTQT_REQUEST.BRANDLABEL || '",
+                "totalFinancedAmountET ":"' || S_MKTQT_REQUEST.TOTALFINANCEDAMOUNTET  || '",
+                "productCategoryCode":"' || S_MKTQT_REQUEST.PRODUCTCATEGORYCODE || '",
+                "commercialProductLabel":"' || S_MKTQT_REQUEST.COMMERCIALPRODUCTLABEL || '",
+                "sellerAgency":"' || S_MKTQT_REQUEST.SELLERAGENCY || '",
+                "salesmanCode":"' || S_MKTQT_REQUEST.SALESMANCODE || '",
+                "salesmanName":"' || S_MKTQT_REQUEST.SALESMANNAME || '",
+                "employeeSalesmanId":"' || S_MKTQT_REQUEST.EMPLOYEESALESMANID || '",
+                "offerStatus":"' || S_MKTQT_REQUEST.OFFERSTATUS || '",
+                "creationDate":"' || S_MKTQT_REQUEST.CREATIONDATE || '",
+                "updateDate":"' || S_MKTQT_REQUEST.UPDATEDATE || '"';                           
                
+               
+                                  --------------------- VEHICLE DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_VEHICLE
+         FROM  MKTOV.MKTQT_AGREEMENT_VEH
+         WHERE TECH_ID = S_MKTQT_REQUEST.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_VEHICLE := NULL;
+    END;
+
+    IF NVL(V_NB_VEHICLE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"account": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_VEHICLE IN C_MKTQT_VEHICLE (S_MKTQT_AGREEMENT.TECH_ID)LOOP
+            V_NB_VEHICLE_TRAITE := V_NB_VEHICLE_TRAITE+1;   ---- 
+
+            
+            V_LIGNE := '"vehicle":{
+                                "tech_dateExtraction":"' || S_MKTQT_VEHICLE.TECH_DATEEXTRACTION || '",
+                                "requestRef":"' || S_MKTQT_VEHICLE.REQUESTREF || '",
+                                "vehicleRef":"' || S_MKTQT_VEHICLE.VEHICLEREF || '",
+                                "serialNumber":"' || S_MKTQT_VEHICLE.SERIALNUMBER || '",
+                                "registrationNumber":"' || S_MKTQT_VEHICLE.REGISTRATIONNUMBER || '",
+                                "deliveryDate":"' || S_MKTQT_VEHICLE.DELIVERYDATE || '",
+                                "initialContactualMileage":"' || S_MKTQT_VEHICLE.INITIALCONTACTUALMILEAGE || '",
+                                "contactualMileage":"' || S_MKTQT_VEHICLE.CONTACTUALMILEAGE || '",
+                                "startContractMileage":"' || S_MKTQT_VEHICLE.STARTCONTRACTMILEAGE || '",
+                                "expectedReturnDate":"' || S_MKTQT_VEHICLE.EXPECTEDRETURNDATE || '",
+                                "repurchaseVehicleAmountET":"' || S_MKTQT_VEHICLE.REPURCHASEVEHICLEAMOUNTET || '",
+                                "kindCode":"' || S_MKTQT_VEHICLE.KINDCODE || '",
+                                "energyCode":"' || S_MKTQT_VEHICLE.ENERGYCODE || '"';                           
+               
+
+                if V_NB_VEHICLE_TRAITE = V_NB_VEHICLE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '}';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- VEHICLE FIN----------------------
+
+
+                                             --------------------- STAKEHOLDERS DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_STK
+         FROM  MKTOV.MKTQT_AGREEMENT_STK
+         WHERE TECH_ID = S_MKTQT_REQUEST.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_STK := NULL;
+    END;
+
+    IF NVL(V_NB_STK, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"account": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_STK IN C_MKTQT_STK (S_MKTQT_AGREEMENT.TECH_ID)LOOP
+            V_NB_STK_TRAITE := V_NB_STK_TRAITE+1;   ---- 
+
+            
+            V_LIGNE := '"stakeholders":{
+                                "tech_id":"' || S_MKTQT_STK.TECH_ID || '",
+                                "requestRef":"' || S_MKTQT_STK.REQUESTREF || '",
+                                "usageName":"' || S_MKTQT_STK.USAGENAME || '",
+                                "firstName":"' || S_MKTQT_STK.FIRSTNAME || '",
+                                "email":"' || S_MKTQT_STK.EMAIL || '",
+                                "phoneNumber":"' || S_MKTQT_STK.PHONENUMBER || '",
+                                "companyName":"' || S_MKTQT_STK.COMPANYNAME || '",
+                                "businessName":"' || S_MKTQT_STK.BUSINESSNAME || '",
+                                "nationalIdentifier":"' || S_MKTQT_STK.NATIONALIDENTIFIER || '",
+                                "nationalIdentifierType":"' || S_MKTQT_STK.NATIONALIDENTIFIERTYPE || '",
+                                "customerTypeLabel":"' || S_MKTQT_STK.CUSTOMERTYPELABEL || '"';                           
+               
+
+                if V_NB_STK_TRAITE = V_NB_STK THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '}';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+                                --------------------- STAKEHOLDERS FIN----------------------    
+               
+        
 
                 if V_NB_REQUEST_TRAITE = V_NB_REQUEST THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '}';
@@ -3782,6 +3899,9 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
             --------------------- REQUEST FIN----------------------
+
+
+
 
 
                    --------------------- CONTRACT DEBUT----------------------
@@ -3806,8 +3926,10 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
             
             
             V_LIGNE := '"contract":{
-            "contractRef":"' || S_MKTQT_CONTRACT.CONTRACTREF	 || '",                           
-            "backOfficeOrigin":"' || S_MKTQT_CONTRACT.BACKOFFICEORIGIN	 || '"'; 
+                "contractRef":"' || S_MKTQT_CONTRACT.CONTRACTREF || '",
+                "backOfficeOrigin":"' || S_MKTQT_CONTRACT.BACKOFFICEORIGIN || '",
+                "productCategoryCode":"' || S_MKTQT_CONTRACT.PRODUCTCATEGORYCODE || '",
+                "realDateEndContract":"' || S_MKTQT_CONTRACT.REALDATEENDCONTRACT || '"'; 
 
                 if V_NB_CONTRACT_TRAITE = V_NB_CONTRACT THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '}';
@@ -3824,55 +3946,6 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
             --------------------- CONTRACT FIN----------------------
-
-                  --------------------- FEES DEBUT----------------------
-
-    BEGIN
-         SELECT COUNT(*)
-         INTO   V_NB_FEES
-         FROM  MKTOV.MKTQT_AGREEMENT_FEES
-         WHERE TECH_ID = S_MKTQT_AGREEMENT.TECH_ID;
-    EXCEPTION WHEN OTHERS THEN
-              V_NB_FEES := NULL;
-    END;
-
-    IF NVL(V_NB_FEES, 0) > 0 THEN
-       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
-    
-       V_LIGNE := '"fees": [';
-       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-       
-       FOR S_MKTQT_FEES IN C_MKTQT_FEES (S_MKTQT_AGREEMENT.TECH_ID)LOOP
-            V_NB_FEES_TRAITE := V_NB_FEES_TRAITE+1;   ---- 
-            
-            
-            V_LIGNE := '            {
-            "feeType":"' || S_MKTQT_FEES.FEETYPE || '",
-            "feelabel":"' || S_MKTQT_FEES.FEELABEL || '",
-            "feeCode":"' || S_MKTQT_FEES.FEECODE || '",
-            "invoicingAmount":' || S_MKTQT_FEES.INVOICINGAMOUNT || ',
-            "transactionIdBackOffice":"' || S_MKTQT_FEES.TRANSACTIONIDBACKOFFICE || '",
-            "lastInvoicingDate":"' || S_MKTQT_FEES.LASTINVOICINGDATE || '",
-            "spreadFlag":' || S_MKTQT_FEES.SPREADFLAG || '';                  
-               
-
-                if V_NB_FEES_TRAITE = V_NB_FEES THEN V_LIGNE := V_LIGNE || '}';
-                else V_LIGNE := V_LIGNE || '},';
-                end if;
-
-            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-            
-            
-       END LOOP;
-       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
-       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-    END IF;
-    V_LIGNE := '';  -------- null
-
-
-            --------------------- FEES FIN----------------------
-
-
 
 
 
@@ -3909,6 +3982,1524 @@ EXCEPTION WHEN OTHERS THEN COMMIT;
           --RETURN V_ERR;
           RETURN V_ERR;
 END EXPORT_AGREEMENT_MILES_JSON;
+
+
+
+
+
+FUNCTION EXPORT_CONTRACT_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_CONTRAT VARCHAR2) return number IS
+    V_ERR       number:=0;
+    N_SAUV      NUMBER := 0;
+    FILE_ID     UTL_FILE.FILE_TYPE;
+    FILE_ID_CVS UTL_FILE.FILE_TYPE;
+    V_LIGNE     VARCHAR2(4000);
+    RES         NUMBER := 0;
+    file_name   VARCHAR2(30);
+    V_NB_ENREG  NUMBER(10) := 0;  
+    V_NB_ENREG_TRAITE NUMBER(10) := 0;
+    V_NB_FINANCING  NUMBER(10) := 0;
+    V_NB_FINANCING_TRAITE  NUMBER(10) := 0;
+    V_NB_SECURITIZATION NUMBER(10) := 0;
+    V_NB_SECURITIZATION_TRAITE NUMBER(10) := 0;
+    V_NB_ACCOUNT NUMBER(10) := 0;
+    V_NB_ACCOUNT_TRAITE NUMBER(10) := 0;
+    V_NB_PAYMEANACTIF NUMBER(10) := 0;
+    V_NB_PAYMEANACTIF_TRAITE NUMBER(10) := 0;
+    V_NB_VEHICULE NUMBER(10) := 0;
+    V_NB_VEHICULE_TRAITE NUMBER(10) := 0;
+    
+    V_NB_AMOUNT NUMBER(10) := 0;
+    V_NB_AMOUNT_TRAITE NUMBER(10) := 0;
+    V_NB_ENDOFLIFE NUMBER(10) := 0;
+    V_NB_ENDOFLIFE_TRAITE NUMBER(10) := 0;
+    
+    V_NB_SERVICES NUMBER(10) := 0;
+    V_NB_SERVICES_TRAITE NUMBER(10) := 0;
+    
+    V_NB_SCHEDULES NUMBER(10) := 0;
+    V_NB_SCHEDULES_TRAITE NUMBER(10) := 0;  
+    
+    V_NB_STAKEHOLDERS NUMBER(10) := 0;
+    V_NB_STAKEHOLDERS_TRAITE NUMBER(10) := 0;
+    
+    V_NB_STAKEHOLDERS_ADRS NUMBER(10) := 0;
+    V_NB_STAKEHOLDERS_ADRS_TRAITE NUMBER(10) := 0;
+    
+    V_NB_AMENDMENT NUMBER(10) := 0;
+    V_NB_AMENDMENT_TRAITE NUMBER(10) := 0;
+        
+    V_NB_AMENDMENT_EXTEN NUMBER(10) := 0;
+    V_NB_AMENDMENT_EXTEN_TRAITE NUMBER(10) := 0;
+     
+    V_NB_SIGNATORY NUMBER(10) := 0;
+    V_NB_SIGNATORY_TRAITE NUMBER(10) := 0;  
+   
+   
+   
+    
+CURSOR C_MKTQT_CONTRACT IS
+SELECT 
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE,
+CONTRACTREF AS CONTRACTREF,
+BACKOFFICEORIGIN AS BACKOFFICEORIGIN,
+CONTRACTSTATUS AS CONTRACTSTATUS,
+ACCOUNTSTATUS AS ACCOUNTSTATUS,
+TO_CHAR(ACCOUNTSTATUSCHANGEDATE,'YYYY-MM-DD') AS ACCOUNTSTATUSCHANGEDATE,
+TO_CHAR(ACTIVATIONDATE,'YYYY-MM-DD') AS ACTIVATIONDATE,
+DURATIONCONTRACTINIT AS DURATIONCONTRACTINIT,
+DURATIONCONTRACT AS DURATIONCONTRACT,
+TO_CHAR(DATEENDCONTRACT,'YYYY-MM-DD') AS DATEENDCONTRACT,
+TO_CHAR(REALDATEENDCONTRACT,'YYYY-MM-DD') AS REALDATEENDCONTRACT,
+ENDCONTRACTCODE AS ENDCONTRACTCODE,
+PRODUCTCATEGORYLABEL AS PRODUCTCATEGORYLABEL,
+PRODUCTCATEGORYCODE AS PRODUCTCATEGORYCODE,
+SELLERAGENCY AS SELLERAGENCY,
+SALESMANFULLNAME AS SALESMANFULLNAME,
+SALESMANCODE AS SALESMANCODE,
+PRODUCTCODE AS PRODUCTCODE,
+PRODUCTSUBCODE AS PRODUCTSUBCODE,
+COMMERCIALPRODUCTCODE AS COMMERCIALPRODUCTCODE,
+FINANCIALPRODUCTLABEL AS FINANCIALPRODUCTLABEL,
+FINANCIALPRODUCTCODE AS FINANCIALPRODUCTCODE,
+OFFERREF AS OFFERREF,
+OFFERVERSION AS OFFERVERSION,
+STATECODE AS STATECODE,
+TO_CHAR(DATEENDCONTRACTWHENRETURNED,'YYYY-MM-DD') AS DATEENDCONTRACTWHENRETURNED,
+STATUSCODEOFCASEFINALIZED AS STATUSCODEOFCASEFINALIZED,
+EARLYSETTLEMENTPOSSIBLEFLAG AS EARLYSETTLEMENTPOSSIBLEFLAG,
+ISBUYBACKMAKE AS ISBUYBACKMAKE,
+BUYBACKTYPE AS BUYBACKTYPE,
+ISLEASCO AS ISLEASCO,
+ISFINCO AS ISFINCO
+FROM MKTOV.MKTQT_CONTRACT
+WHERE COUNTRYBRANCHCODE = P_CODE_PAYS
+;
+
+
+CURSOR C_FINANCING (P_TECH_ID VARCHAR2) IS 
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+TOTALFINANCEDAMOUNTET AS TOTALFINANCEDAMOUNTET,
+AMOUNTWITHDEPOSIT AS AMOUNTWITHDEPOSIT,
+INITIALTOTALFINANCEDAMOUNTET AS INITIALTOTALFINANCEDAMOUNTET,
+INITIALRESIDUALVALUEAMOUNTET AS INITIALRESIDUALVALUEAMOUNTET,
+RESIDUALVALUEAMOUNTET AS RESIDUALVALUEAMOUNTET,
+RESIDUALVALUEAMOUNTUNADJUSTED AS RESIDUALVALUEAMOUNTUNADJUSTED,
+TO_CHAR(DATESTARTCONTRACT, 'YYYY-MM-DD') AS DATESTARTCONTRACT,
+NUMBERUNPAID AS NUMBERUNPAID,
+AMOUNTREMAININGCAPITAL AS AMOUNTREMAININGCAPITAL,
+FLAGSECURITIZED AS FLAGSECURITIZED,
+TO_CHAR(STARTDATEOFDUEDATE, 'YYYY-MM-DD') AS STARTDATEOFDUEDATE,
+TO_CHAR(ENDDATEOFDUEDATE, 'YYYY-MM-DD') AS ENDDATEOFDUEDATE,
+NOMINALRATE AS NOMINALRATE,
+USURYEXCLUSIONFLAG AS USURYEXCLUSIONFLAG,
+(CASE WHEN SUBSTR(TO_CHAR(COSTADDITIONALMILEAGE),1,1) = ',' THEN  REPLACE(TO_CHAR(COSTADDITIONALMILEAGE),',','0,') ELSE TO_CHAR(COSTADDITIONALMILEAGE) END) AS COSTADDITIONALMILEAGE,
+FEESAPPLICATION AS FEESAPPLICATION,
+FIN_AMT_INIT_INTERST_OUTSERV AS FIN_AMT_INIT_INTERST_OUTSERV,
+RENEGOTIATIONDATE AS RENEGOTIATIONDATE
+
+FROM MKTOV.MKTQT_FINANCING
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+CURSOR C_ACCOUNT (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+TO_CHAR(NEXTDUEDATE,'YYYY-MM-DD') AS NEXTDUEDATE,
+NEXTRENTAMOUNTIT AS NEXTRENTAMOUNTIT,
+NEXTRENTAMOUNTET AS NEXTRENTAMOUNTET,
+NBPAYMENTNOTBILLED AS NBPAYMENTNOTBILLED,
+AMOUNTFINANCIALINITRENTET AS AMOUNTFINANCIALINITRENTET,
+AMOUNTFINANCIALINITRENTIT AS AMOUNTFINANCIALINITRENTIT,
+AMOUNTFINANCIALRENTET AS AMOUNTFINANCIALRENTET,
+AMOUNTFINANCIALRENTIT AS AMOUNTFINANCIALRENTIT,
+AMOUNTFINANCIALSERVET AS AMOUNTFINANCIALSERVET,
+AMOUNTFINANCIALSERVIT AS AMOUNTFINANCIALSERVIT,
+AMOUNTFINANCIALRENTWITHSERVET AS AMOUNTFINANCIALRENTWITHSERVET,
+AMOUNTFINANCIALRENTWITHSERVIT AS AMOUNTFINANCIALRENTWITHSERVIT,
+DAYOFPAYMENT AS DAYOFPAYMENT
+
+FROM MKTOV.MKTQT_ACCOUNT 
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_PAYMEANACTIF (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+BANKACCOUNTNUMBER AS BANKACCOUNTNUMBER
+
+FROM MKTOV.MKTQT_CPAYMEANACTIF 
+WHERE TECH_ID = P_TECH_ID
+;
+
+CURSOR C_VEHICULE (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+CONTRACTREF AS CONTRACTREF,
+SERIALNUMBER AS SERIALNUMBER,
+DELIVERYDATE AS DELIVERYDATE,
+INITIALCONTRACTUALMILEAGE AS INITIALCONTRACTUALMILEAGE,
+TO_CHAR(EXPECTEDRETURNDATE,'YYYY-MM-DD') AS EXPECTEDRETURNDATE,
+REPURCHASEVEHICLEAMOUNTET AS REPURCHASEVEHICLEAMOUNTET,
+STARTCONTRACTMILEAGE AS STARTCONTRACTMILEAGE,
+CONTACTUALMILEAGE AS CONTACTUALMILEAGE
+
+FROM MKTOV.MKTQT_CVEHICULE
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+
+CURSOR C_SERVICES (P_TECH_ID VARCHAR2)   IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+SERVICEREF AS SERVICEREF,
+LABELSERVICE AS LABELSERVICE,
+TO_CHAR(DATESTARTSERVICE, 'YYYY-MM-DD') AS DATESTARTSERVICE,
+TO_CHAR(DATEENDSERVICE, 'YYYY-MM-DD') AS DATEENDSERVICE,
+NEXTPAYMENTAMOUNTIT AS NEXTPAYMENTAMOUNTIT,
+NEXTPAYMENTAMOUNTET AS NEXTPAYMENTAMOUNTET,
+TOTALTAMOUNTIT AS TOTALTAMOUNTIT,
+TOTALTAMOUNTET AS TOTALTAMOUNTET,
+REASONOFENDSERVICE AS REASONOFENDSERVICE
+
+FROM MKTOV.MKTQT_SERVICES
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_SCHEDULES (P_TECH_ID VARCHAR2)   IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+SCHEDULENUMBER AS SCHEDULENUMBER,
+TO_CHAR(STARTDUEDATE, 'YYYY-MM-DD') AS STARTDUEDATE,
+TO_CHAR(DATESTARTOFPERIODPAYMENT, 'YYYY-MM-DD') AS DATESTARTOFPERIODPAYMENT,
+TO_CHAR(DATEENDOFPERIODPAYMENT, 'YYYY-MM-DD') AS DATEENDOFPERIODPAYMENT,
+DURATION AS DURATION,
+INTERESTAMOUNT AS INTERESTAMOUNT,
+CHARGEAMOUNT AS CHARGEAMOUNT,
+AMOUNTWITHOUTSERVICEET AS AMOUNTWITHOUTSERVICEET,
+AMOUNTWITHOUTSERVICEIT AS AMOUNTWITHOUTSERVICEIT,
+AMOUNTWITHSERVICEET AS AMOUNTWITHSERVICEET,
+AMOUNTWITHSERVICEIT AS AMOUNTWITHSERVICEIT,
+RATE AS RATE,
+RESIDUALVALUEAMOUNTET AS RESIDUALVALUEAMOUNTET
+
+FROM MKTOV.MKTQT_SCHEDULES
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_STAKEHOLDERS (P_TECH_ID VARCHAR2)   IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+CONTRACTREF AS CONTRACTREF,
+STAKEHOLDERROLE AS STAKEHOLDERROLE,
+SRCPARTYID AS SRCPARTYID,
+SRCJVCODE AS SRCJVCODE,
+SRCAPPCODE AS SRCAPPCODE,
+DEALERSHIPREF AS DEALERSHIPREF
+
+FROM MKTOV.MKTQT_STAKEHOLDERS
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+CURSOR C_SIGNATORY (P_TECH_ID VARCHAR2)   IS
+SELECT DISTINCT
+NAME AS NAME,
+EMAIL AS EMAIL
+FROM MKTOV.MKTQT_SIGNATORY
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+BEGIN
+  file_name := P_FILENAME_CONTRAT;
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_CONTRACT_MILES_JSON', ' ## EXPORT CONTRACT JSON' ||  ' ##');
+  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
+
+
+  BEGIN 
+       SELECT COUNT(*)
+       INTO   V_NB_ENREG
+       FROM   MKTOV.MKTQT_CONTRACT
+       WHERE  COUNTRYBRANCHCODE = P_CODE_PAYS;
+  EXCEPTION WHEN OTHERS THEN
+       V_NB_ENREG := 0;
+  END;
+
+      V_LIGNE := '[';
+      res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+      
+      FOR S_MKTQT_CONTRACT IN C_MKTQT_CONTRACT LOOP
+       
+      BEGIN
+         V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
+        V_NB_FINANCING_TRAITE   := 0;
+        --V_NB_SECURITIZATION_TRAITE  := 0;
+        V_NB_ACCOUNT_TRAITE  := 0; 
+        V_NB_PAYMEANACTIF_TRAITE  := 0;
+        V_NB_VEHICULE_TRAITE  := 0;
+        --V_NB_AMOUNT_TRAITE  := 0;
+        --V_NB_ENDOFLIFE_TRAITE  := 0;
+        V_NB_SERVICES_TRAITE  := 0;
+        V_NB_SCHEDULES_TRAITE  := 0;  
+        V_NB_STAKEHOLDERS_TRAITE  := 0;  
+        --V_NB_STAKEHOLDERS_ADRS_TRAITE  := 0;    
+        --V_NB_AMENDMENT_TRAITE  := 0;  
+        --V_NB_AMENDMENT_EXTEN_TRAITE  := 0;
+        V_NB_SIGNATORY_TRAITE  := 0;  
+                
+         
+              V_LIGNE := '{
+"tech_id":"' || S_MKTQT_CONTRACT.TECH_ID || '",
+"tech_dateExtraction":"' || S_MKTQT_CONTRACT.TECH_DATEEXTRACTION || '",
+"countryBranchCode":"' || S_MKTQT_CONTRACT.COUNTRYBRANCHCODE || '",
+"contractRef":"' || S_MKTQT_CONTRACT.CONTRACTREF || '",
+"backOfficeOrigin":"' || S_MKTQT_CONTRACT.BACKOFFICEORIGIN || '",
+"contractStatus":"' || S_MKTQT_CONTRACT.CONTRACTSTATUS || '",
+"accountStatus":"' || S_MKTQT_CONTRACT.ACCOUNTSTATUS || '",
+"accountStatusChangeDate":"' || S_MKTQT_CONTRACT.ACCOUNTSTATUSCHANGEDATE || '",
+"activationDate":"' || S_MKTQT_CONTRACT.ACTIVATIONDATE || '",
+"durationContractInit":"' || S_MKTQT_CONTRACT.DURATIONCONTRACTINIT || '",
+"durationContract":"' || S_MKTQT_CONTRACT.DURATIONCONTRACT || '",
+"dateEndContract":"' || S_MKTQT_CONTRACT.DATEENDCONTRACT || '",
+"realDateEndContract":"' || S_MKTQT_CONTRACT.REALDATEENDCONTRACT || '",
+"endContractCode":"' || S_MKTQT_CONTRACT.ENDCONTRACTCODE || '",
+"productCategoryLabel":"' || S_MKTQT_CONTRACT.PRODUCTCATEGORYLABEL || '",
+"productCategoryCode":"' || S_MKTQT_CONTRACT.PRODUCTCATEGORYCODE || '",
+"sellerAgency":"' || S_MKTQT_CONTRACT.SELLERAGENCY || '",
+"salesmanFullName":"' || S_MKTQT_CONTRACT.SALESMANFULLNAME || '",
+"salesmanCode":"' || S_MKTQT_CONTRACT.SALESMANCODE || '",
+"productCode":"' || S_MKTQT_CONTRACT.PRODUCTCODE || '",
+"productSubCode":"' || S_MKTQT_CONTRACT.PRODUCTSUBCODE || '",
+"commercialProductCode":"' || S_MKTQT_CONTRACT.COMMERCIALPRODUCTCODE || '",
+"financialProductLabel":"' || S_MKTQT_CONTRACT.FINANCIALPRODUCTLABEL || '",
+"financialProductCode":"' || S_MKTQT_CONTRACT.FINANCIALPRODUCTCODE || '",
+"offerRef":"' || S_MKTQT_CONTRACT.OFFERREF || '",
+"offerVersion":"' || S_MKTQT_CONTRACT.OFFERVERSION || '",
+"stateCode":"' || S_MKTQT_CONTRACT.STATECODE || '",
+"dateEndContractWhenReturned":"' || S_MKTQT_CONTRACT.DATEENDCONTRACTWHENRETURNED || '",
+"statusCodeOfCaseFinalized":"' || S_MKTQT_CONTRACT.STATUSCODEOFCASEFINALIZED || '",
+"earlySettlementPossibleFlag":"' || S_MKTQT_CONTRACT.EARLYSETTLEMENTPOSSIBLEFLAG || '",
+"isBuyBackMake":"' || S_MKTQT_CONTRACT.ISBUYBACKMAKE || '",
+"buyBackType":"' || S_MKTQT_CONTRACT.BUYBACKTYPE || '",
+"isLeasco":"' || S_MKTQT_CONTRACT.ISLEASCO || '",
+"isFinco":"' || S_MKTQT_CONTRACT.ISFINCO || '",';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+    -----------------------------------FINANCING-----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO V_NB_FINANCING
+         FROM MKTOV.MKTQT_FINANCING
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_FINANCING := NULL;
+    END;
+
+     FOR S_FINANCING IN C_FINANCING (S_MKTQT_CONTRACT.TECH_ID) LOOP
+            V_NB_FINANCING_TRAITE := V_NB_FINANCING_TRAITE+1;   ---- A REVOIR 
+            
+            
+            V_LIGNE := '"financing":{
+                "tech_id":"' || S_FINANCING.TECH_ID || '",
+                "contractRef":"' || S_FINANCING.CONTRACTREF || '",
+                "totalFinancedAmountET":"' || S_FINANCING.TOTALFINANCEDAMOUNTET || '",
+                "amountWithDeposit":"' || S_FINANCING.AMOUNTWITHDEPOSIT || '",
+                "initialTotalFinancedAmountET":"' || S_FINANCING.INITIALTOTALFINANCEDAMOUNTET || '",
+                "InitialResidualValueAmountET":"' || S_FINANCING.INITIALRESIDUALVALUEAMOUNTET || '",
+                "residualValueAmountET":"' || S_FINANCING.RESIDUALVALUEAMOUNTET || '",
+                "residualValueAmountUnadjusted":"' || S_FINANCING.RESIDUALVALUEAMOUNTUNADJUSTED || '",
+                "dateStartContract":"' || S_FINANCING.DATESTARTCONTRACT || '",
+                "numberUnpaid":"' || S_FINANCING.NUMBERUNPAID || '",
+                "amountRemainingCapital":"' || S_FINANCING.AMOUNTREMAININGCAPITAL || '",
+                "flagSecuritized":"' || S_FINANCING.FLAGSECURITIZED || '",
+                "startDateOfDueDate":"' || S_FINANCING.STARTDATEOFDUEDATE || '",
+                "endDateOfDueDate":"' || S_FINANCING.ENDDATEOFDUEDATE || '",
+                "nominalRate":"' || S_FINANCING.NOMINALRATE || '",
+                "usuryExclusionFlag":"' || S_FINANCING.USURYEXCLUSIONFLAG || '",
+                "costAdditionalMileage":"' || S_FINANCING.COSTADDITIONALMILEAGE || '",
+                "feesApplication":"' || S_FINANCING.FEESAPPLICATION || '",
+                "financedAmountInitWithInterestWithoutService":"' || S_FINANCING.FIN_AMT_INIT_INTERST_OUTSERV || '",
+                "renegotiationDate":"' || S_FINANCING.RENEGOTIATIONDATE || '"';
+   
+                if V_NB_FINANCING_TRAITE = V_NB_FINANCING THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+         
+       END LOOP;
+    V_LIGNE := '';  -------- null
+
+ 
+    
+ -----------------------------------ACCOUNT -----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_ACCOUNT 
+         FROM  MKTOV.MKTQT_ACCOUNT 
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_ACCOUNT  := NULL;
+    END;
+
+    IF NVL(V_NB_ACCOUNT, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"account": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_ACCOUNT IN C_ACCOUNT (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_ACCOUNT_TRAITE := V_NB_ACCOUNT_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '"account":{
+                "tech_id":"' || S_ACCOUNT.TECH_ID || '",
+                "contractRef":"' || S_ACCOUNT.CONTRACTREF || '",
+                "nextDueDate":"' || S_ACCOUNT.NEXTDUEDATE || '",
+                "nextRentAmountIT":"' || S_ACCOUNT.NEXTRENTAMOUNTIT || '",
+                "nextRentAmountET":"' || S_ACCOUNT.NEXTRENTAMOUNTET || '",
+                "nbPaymentNotBilled":"' || S_ACCOUNT.NBPAYMENTNOTBILLED || '",
+                "amountFinancialInitRentET":"' || S_ACCOUNT.AMOUNTFINANCIALINITRENTET || '",
+                "amountFinancialInitRentIT":"' || S_ACCOUNT.AMOUNTFINANCIALINITRENTIT || '",
+                "amountFinancialRentET":"' || S_ACCOUNT.AMOUNTFINANCIALRENTET || '",
+                "amountFinancialRentIT":"' || S_ACCOUNT.AMOUNTFINANCIALRENTIT || '",
+                "amountFinancialServET":"' || S_ACCOUNT.AMOUNTFINANCIALSERVET || '",
+                "amountFinancialServIT":"' || S_ACCOUNT.AMOUNTFINANCIALSERVIT || '",
+                "amountFinancialRentWithServET":"' || S_ACCOUNT.AMOUNTFINANCIALRENTWITHSERVET || '",
+                "amountFinancialRentWithServIT":"' || S_ACCOUNT.AMOUNTFINANCIALRENTWITHSERVIT || '",
+                "dayOfPayment":"' || S_ACCOUNT.DAYOFPAYMENT || '"';
+
+                if V_NB_ACCOUNT_TRAITE = V_NB_ACCOUNT THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+ -----------------------------------PAYMEANACTIF -----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_PAYMEANACTIF 
+         FROM  MKTOV.MKTQT_CPAYMEANACTIF
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_PAYMEANACTIF  := NULL;
+    END;
+
+    IF NVL(V_NB_PAYMEANACTIF, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"account": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_PAYMEANACTIF IN C_PAYMEANACTIF (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_PAYMEANACTIF_TRAITE := V_NB_PAYMEANACTIF_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '"payMeanActif":{
+                "tech_id":"' || S_PAYMEANACTIF.TECH_ID || '",
+                "contractRef":"' || S_PAYMEANACTIF.CONTRACTREF || '",
+                "bankAccountNumber":"' || S_PAYMEANACTIF.BANKACCOUNTNUMBER || '"';
+
+
+                if V_NB_PAYMEANACTIF_TRAITE = V_NB_PAYMEANACTIF THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+ -----------------------------------VEHICULE -----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_VEHICULE 
+         FROM  MKTOV.MKTQT_CVEHICULE
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_VEHICULE  := NULL;
+    END;
+
+    IF NVL(V_NB_VEHICULE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"vehicule": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_VEHICULE IN C_VEHICULE (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_VEHICULE_TRAITE := V_NB_VEHICULE_TRAITE+1;    
+               -- V_NB_AMOUNT_TRAITE  := 0;
+               --- V_NB_ENDOFLIFE_TRAITE  := 0;
+            
+            V_LIGNE := '"vehicule ":{
+                "tech_id":"' || S_VEHICULE.TECH_ID || '",
+                "tech_dateExtraction":"' || S_VEHICULE.TECH_DATEEXTRACTION || '",
+                "contractRef":"' || S_VEHICULE.CONTRACTREF || '",
+                "serialNumber":"' || S_VEHICULE.SERIALNUMBER || '",
+                "deliveryDate":"' || S_VEHICULE.DELIVERYDATE || '",
+                "initialContractualMileage":"' || S_VEHICULE.INITIALCONTRACTUALMILEAGE || '",
+                "expectedReturnDate":"' || S_VEHICULE.EXPECTEDRETURNDATE || '",
+                "repurchaseVehicleAmountET":"' || S_VEHICULE.REPURCHASEVEHICLEAMOUNTET || '",
+                "startContractMileage":"' || S_VEHICULE.STARTCONTRACTMILEAGE || '",
+                "contactualMileage":"' || S_VEHICULE.CONTACTUALMILEAGE || '"';
+              ---  res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                
+                if V_NB_VEHICULE_TRAITE = V_NB_VEHICULE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+
+
+
+ -----------------------------------SERVICES-----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_SERVICES
+         FROM  MKTOV.MKTQT_SERVICES
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_SERVICES  := NULL;
+    END;
+
+    IF NVL(V_NB_SERVICES, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"services": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_SERVICES IN C_SERVICES (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_SERVICES_TRAITE := V_NB_SERVICES_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_SERVICES.TECH_ID || '",
+                "contractRef":"' || S_SERVICES.CONTRACTREF || '",
+                "serviceRef":"' || S_SERVICES.SERVICEREF || '",
+                "labelService":"' || S_SERVICES.LABELSERVICE || '",
+                "dateStartService":"' || S_SERVICES.DATESTARTSERVICE || '",
+                "dateEndService":"' || S_SERVICES.DATEENDSERVICE || '",
+                "nextPaymentAmountIT":"' || S_SERVICES.NEXTPAYMENTAMOUNTIT || '",
+                "nextPaymentAmountET":"' || S_SERVICES.NEXTPAYMENTAMOUNTET || '",
+                "totaltAmountIT":"' || S_SERVICES.TOTALTAMOUNTIT || '",
+                "totaltAmountET":"' || S_SERVICES.TOTALTAMOUNTET || '",
+                "reasonOfEndService":"' || S_SERVICES.REASONOFENDSERVICE || '"';
+     
+        
+
+                if V_NB_SERVICES_TRAITE = V_NB_SERVICES THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+---------------------------------------
+
+
+
+ -----------------------------------SCHEDULES-----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_SCHEDULES
+         FROM  MKTOV.MKTQT_SCHEDULES
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_SCHEDULES  := NULL;
+    END;
+
+    IF NVL(V_NB_SCHEDULES, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"schedules": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       
+       FOR S_SCHEDULES IN C_SCHEDULES (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_SCHEDULES_TRAITE := V_NB_SCHEDULES_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_SCHEDULES.TECH_ID || '",
+                "contractRef":"' || S_SCHEDULES.CONTRACTREF || '",
+                "scheduleNumber":"' || S_SCHEDULES.SCHEDULENUMBER || '",
+                "startDueDate":"' || S_SCHEDULES.STARTDUEDATE || '",
+                "dateStartOfPeriodPayment":"' || S_SCHEDULES.DATESTARTOFPERIODPAYMENT || '",
+                "dateEndOfPeriodPayment":"' || S_SCHEDULES.DATEENDOFPERIODPAYMENT || '",
+                "duration":"' || S_SCHEDULES.DURATION || '",
+                "interestAmount":"' || S_SCHEDULES.INTERESTAMOUNT || '",
+                "chargeAmount":"' || S_SCHEDULES.CHARGEAMOUNT || '",
+                "amountWithoutServiceET":"' || S_SCHEDULES.AMOUNTWITHOUTSERVICEET || '",
+                "amountWithoutServiceIT":"' || S_SCHEDULES.AMOUNTWITHOUTSERVICEIT || '",
+                "amountWithServiceET":"' || S_SCHEDULES.AMOUNTWITHSERVICEET || '",
+                "amountWithServiceIT":"' || S_SCHEDULES.AMOUNTWITHSERVICEIT || '",
+                "rate":"' || S_SCHEDULES.RATE || '",
+                "residualValueAmountET":"' || S_SCHEDULES.RESIDUALVALUEAMOUNTET || '"';
+               
+
+
+                if V_NB_SCHEDULES_TRAITE = V_NB_SCHEDULES THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+    
+    
+-----------------------------------STAKEHOLDERS-----------------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_STAKEHOLDERS
+         FROM  MKTOV.MKTQT_STAKEHOLDERS
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_STAKEHOLDERS  := NULL;
+    END;
+
+    IF NVL(V_NB_STAKEHOLDERS, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"stakeholders": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_STAKEHOLDERS IN C_STAKEHOLDERS (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_STAKEHOLDERS_TRAITE := V_NB_STAKEHOLDERS_TRAITE+1;   ---- 
+            --V_NB_STAKEHOLDERS_ADRS_TRAITE  := 0; 
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_STAKEHOLDERS.TECH_ID || '",
+                "contractRef":"' || S_STAKEHOLDERS.CONTRACTREF || '",
+                "stakeholderRole":"' || S_STAKEHOLDERS.STAKEHOLDERROLE || '",
+                "srcPartyId":"' || S_STAKEHOLDERS.SRCPARTYID || '",
+                "srcJvCode":"' || S_STAKEHOLDERS.SRCJVCODE || '",
+                "srcAppCode":"' || S_STAKEHOLDERS.SRCAPPCODE || '",
+                "dealershipRef":"' || S_STAKEHOLDERS.DEALERSHIPREF || '"';
+    
+                if V_NB_STAKEHOLDERS_TRAITE = V_NB_STAKEHOLDERS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- STAKEHOLDERS FIN----------------------  
+    
+    
+    
+                   --------------------- SIGNATORY DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_SIGNATORY
+         FROM  MKTOV.MKTQT_SIGNATORY
+         WHERE TECH_ID = S_MKTQT_CONTRACT.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_SIGNATORY := NULL;
+    END;
+
+    IF NVL(V_NB_SIGNATORY, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+      --- V_LIGNE := '"account": [';
+      --- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_SIGNATORY IN C_SIGNATORY (S_MKTQT_CONTRACT.TECH_ID)LOOP
+            V_NB_SIGNATORY_TRAITE := V_NB_SIGNATORY_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '"signatory":{
+                        "name":"' || S_SIGNATORY.NAME	 || '",
+                        "email":"' || S_SIGNATORY.EMAIL	 || '"';
+                           
+               
+
+                if V_NB_SIGNATORY_TRAITE = V_NB_SIGNATORY THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       ---V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- SIGNATORY FIN----------------------
+
+
+    if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   
+    else V_LIGNE := V_LIGNE || '},';    ------------------------------ ajout fin balise
+    end if;  
+    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+    N_SAUV := N_SAUV +1;
+           
+    EXCEPTION WHEN OTHERS THEN COMMIT;
+                V_ERR  := 1;
+                RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'EXPORT_CONTRACT_MILES_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_CONTRACT.TECH_ID);
+                --RETURN V_ERR;
+                RETURN V_ERR;
+    END;
+  END LOOP;
+   V_LIGNE := ']';
+   res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+   UTL_FILE.FCLOSE(file_id_cvs);
+  res := MKT.MKTQAUT.F_WRITE(file_id,
+                               'EXPORT_CONTRACT_MILES_JSON',
+                               'Nombre de sauvegarde :' || N_SAUV);
+    res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
+    UTL_FILE.FCLOSE(file_id);
+
+  --RETURN V_ERR;
+  RETURN V_ERR;
+EXCEPTION WHEN OTHERS THEN COMMIT;
+          V_ERR  := 1;
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'EXPORT_CONTRACT_MILES_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          --RETURN V_ERR;
+          RETURN V_ERR;
+END EXPORT_CONTRACT_MILES_JSON;
+
+
+
+
+
+
+FUNCTION EXPORT_ASSET_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_ASSET VARCHAR2) return number IS
+    V_ERR       number:=0;
+    N_SAUV      NUMBER := 0;
+    FILE_ID     UTL_FILE.FILE_TYPE;
+    FILE_ID_CVS UTL_FILE.FILE_TYPE;
+    V_LIGNE     VARCHAR2(4000);
+    RES         NUMBER := 0;
+    file_name   VARCHAR2(30);
+    V_NB_ENREG  NUMBER(10) := 0;  
+    V_NB_ENREG_TRAITE NUMBER(10) := 0;
+
+    V_NB_VEHICLE  NUMBER(10) := 0;  
+    V_NB_VEHICLE_TRAITE NUMBER(10) := 0;
+    V_NB_LABELS  NUMBER(10) := 0;  
+    V_NB_LABELS_TRAITE NUMBER(10) := 0;
+    V_NB_PRICING  NUMBER(10) := 0;  
+    V_NB_PRICING_TRAITE NUMBER(10) := 0;
+
+    V_NB_BASEPRICE  NUMBER(10) := 0;  
+    V_NB_BASEPRICE_TRAITE NUMBER(10) := 0;
+    V_NB_DISCOUNTS  NUMBER(10) := 0;  
+    V_NB_DISCOUNTS_TRAITE NUMBER(10) := 0;
+    
+    V_NB_LIFECYCLE  NUMBER(10) := 0;  
+    V_NB_LIFECYCLE_TRAITE NUMBER(10) := 0;
+    
+    V_NB_DOMAINREFS  NUMBER(10) := 0;  
+    V_NB_DOMAINREFS_TRAITE NUMBER(10) := 0;
+    
+    V_NB_CROSSREF NUMBER(10) := 0;    
+    V_NB_CROSSREF_TRAITE NUMBER(10) := 0;
+    V_NB_OPTION NUMBER(10) := 0;    
+    V_NB_OPTION_TRAITE NUMBER(10) := 0;
+    V_NB_ENDOFLIFE NUMBER(10) := 0;    
+    V_NB_ENDOFLIFE_TRAITE NUMBER(10) := 0;    
+    
+    
+    
+
+CURSOR C_MKTQT_ASSET IS
+SELECT 
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE
+FROM MKTOV.MKTQT_ASSET
+WHERE  COUNTRYBRANCHCODE = P_CODE_PAYS
+;
+
+CURSOR C_MKTQT_VEHICLE (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID ,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION ,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE ,
+SERIALNUMBER AS SERIALNUMBER ,
+BRANDLABEL AS BRANDLABEL ,
+DELIVERYDATE AS DELIVERYDATE ,
+REGISTRATIONNUMBER AS REGISTRATIONNUMBER ,
+FIRSTCIRCULATIONDATE AS FIRSTCIRCULATIONDATE ,
+INITIALMILEAGE AS INITIALMILEAGE ,
+CO2EMISSIONNEDC AS CO2EMISSIONNEDC ,
+CO2CLASSCODE AS CO2CLASSCODE ,
+REPLACE(FISCALHORSEPOWER,',','.') AS FISCALHORSEPOWER ,
+KINDCODE AS KINDCODE ,
+ENERGYCODE AS ENERGYCODE ,
+CUBICCAPACITY AS CUBICCAPACITY ,
+MAXIMUMPOWERKW AS MAXIMUMPOWERKW ,
+MAXLADENWEIGHT AS MAXLADENWEIGHT ,
+KERBWEIGHT AS KERBWEIGHT ,
+ISLEASCO AS ISLEASCO ,
+ISFINCO AS ISFINCO ,
+CONTRACTREF AS CONTRACTREF 
+
+FROM MKTOV.MKTQT_ASSET_VEHICULE
+WHERE TECH_ID = P_TECH_ID
+;
+
+CURSOR C_MKTQT_LABELS (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+LANGUAGECODE AS LANGUAGECODE,
+VERSIONLABELSHORT AS VERSIONLABELSHORT,
+VERSIONLABELLONG AS VERSIONLABELLONG
+
+FROM MKTOV.MKTQT_ASSET_VEHICULE_LABELS
+WHERE TECH_ID = P_TECH_ID
+;
+
+CURSOR C_MKTQT_CROSSREF (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TECH_LASTUPDATEDATE AS TECH_LASTUPDATEDATE,
+IDENTIFIER AS IDENTIFIER,
+IDENTIFIERTYPE AS IDENTIFIERTYPE
+
+FROM MKTOV.MKTQT_ASSET_VEHICULE_CROSSREF
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+
+
+CURSOR C_MKTQT_PRICING (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TECH_DATEEXTRACTION AS TECH_DATEEXTRACTION,
+VEHICLEREF AS VEHICLEREF,
+OPTIONSTOTALAMOUNTET AS OPTIONSTOTALAMOUNTET,
+ACCESSORIESTOTALAMOUNTET AS ACCESSORIESTOTALAMOUNTET,
+ENVIRONMENTALBONUS AS ENVIRONMENTALBONUS
+
+FROM MKTOV.MKTQT_VEHICULE_PRICING
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_MKTQT_BASEPRICE (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+REPLACE(AMOUNTET,',','.') AS AMOUNTET
+
+FROM MKTOV.MKTQT_VEHICULE_BASEPRICE
+WHERE TECH_ID = P_TECH_ID
+;
+
+CURSOR C_MKTQT_DISCOUNTS (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+REPLACE(AMOUNTET,',','.') AS AMOUNTET
+
+FROM MKTOV.MKTQT_VEHICULE_PRICE_DISCOUNT
+WHERE TECH_ID = P_TECH_ID
+;
+
+CURSOR C_MKTQT_OPTION (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE,
+VEHICLEREF AS VEHICLEREF,
+LABELSHORT AS LABELSHORT
+
+FROM MKTOV.MKTQT_VEHICULE_OPTION
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_MKTQT_LIFECYCLE (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE,
+VEHICLEREF AS VEHICLEREF,
+SERIALNUMBER AS SERIALNUMBER,
+REGISTRATIONNUMBER AS REGISTRATIONNUMBER,
+DATEREGISTRATION AS DATEREGISTRATION
+
+FROM MKTOV.MKTQT_VEHICULE_LIFECYCLE
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_MKTQT_ENDOFLIFE (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+CONTACTENDOFLIFEDATE AS CONTACTENDOFLIFEDATE,
+EARLYTERMINATIONFLAG AS EARLYTERMINATIONFLAG,
+DEALERRETURNDATE AS DEALERRETURNDATE,
+CHOICECUSTOMERRETURNDATE AS CHOICECUSTOMERRETURNDATE,
+REALRETURNDATE AS REALRETURNDATE,
+BUYERDEALERNAME AS BUYERDEALERNAME,
+BUYERDEALERREF AS BUYERDEALERREF,
+BUYERDEALERZIPCODE AS BUYERDEALERZIPCODE,
+BUYERDEALERCITY AS BUYERDEALERCITY
+
+FROM MKTOV.MKTQT_VEHICULE_ENDOFLIFE
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+CURSOR C_MKTQT_DOMAINREFS (P_TECH_ID VARCHAR2) IS
+SELECT DISTINCT
+TECH_ID AS TECH_ID,
+TO_CHAR(TECH_DATEEXTRACTION,'YYYY-MM-DD') AS TECH_DATEEXTRACTION,
+COUNTRYBRANCHCODE AS COUNTRYBRANCHCODE,
+VEHICLEREF AS VEHICLEREF,
+SERIALNUMBER AS SERIALNUMBER,
+CONTRACTREF AS CONTRACTREF,
+ACCOUNTSTATUS AS ACCOUNTSTATUS,
+SRCPARTYID AS SRCPARTYID,
+NATIONALID AS NATIONALID
+
+FROM MKTOV.MKTQT_VEHICULE_DOMAINREFS
+WHERE TECH_ID = P_TECH_ID
+;
+
+
+
+BEGIN
+  file_name := P_FILENAME_ASSET;
+  FILE_ID := MKT.MKTQAUT.F_OPEN(NOMLOG);
+  RES := MKT.MKTQAUT.F_WRITE(FILE_ID, 'EXPORT_ASSET_MILES_JSON', ' ##  EXPORT ASSET JSON' ||  ' ##');
+  file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS_UTF8(p_path,file_name);
+
+
+  BEGIN 
+       SELECT COUNT(*)
+       INTO   V_NB_ENREG
+       FROM   MKTOV.MKTQT_ASSET
+       WHERE  COUNTRYBRANCHCODE = P_CODE_PAYS;
+  EXCEPTION WHEN OTHERS THEN
+       V_NB_ENREG := 0;
+  END;
+
+      V_LIGNE := '[';
+      res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+      
+      FOR S_MKTQT_ASSET IN C_MKTQT_ASSET LOOP
+      BEGIN
+         V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
+         V_NB_VEHICLE_TRAITE := 0;
+         
+         
+              V_LIGNE := '{
+"tech_id":"' || S_MKTQT_ASSET.TECH_ID  || '",
+"tech_dateExtraction":"' || S_MKTQT_ASSET.TECH_DATEEXTRACTION  || '",
+"countryBranchCode":"' || S_MKTQT_ASSET.COUNTRYBRANCHCODE  || '"';
+
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+
+                  --------------------- VEHICLE DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_VEHICLE
+         FROM  MKTOV.MKTQT_ASSET_VEHICULE
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_VEHICLE := NULL;
+    END;
+
+    IF NVL(V_NB_VEHICLE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       --V_LIGNE := '"vehicle":[';
+       ---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_VEHICLE IN C_MKTQT_VEHICLE (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_VEHICLE_TRAITE := V_NB_VEHICLE_TRAITE+1;   ---- 
+            V_NB_LABELS_TRAITE := 0;
+            V_NB_PRICING_TRAITE := 0;
+            V_NB_LIFECYCLE_TRAITE :=0;
+            V_NB_DOMAINREFS_TRAITE :=0;
+            
+            V_NB_CROSSREF_TRAITE :=0;
+            V_NB_OPTION_TRAITE := 0;
+            V_NB_ENDOFLIFE_TRAITE :=0;
+            
+            
+            
+            V_LIGNE := '"vehicle":{
+"tech_id":"' || S_MKTQT_VEHICLE.TECH_ID || '",
+"tech_dateExtraction":"' || S_MKTQT_VEHICLE.TECH_DATEEXTRACTION || '",
+"countryBranchCode":"' || S_MKTQT_VEHICLE.COUNTRYBRANCHCODE || '",
+"serialNumber":"' || S_MKTQT_VEHICLE.SERIALNUMBER || '",
+"brandLabel":"' || S_MKTQT_VEHICLE.BRANDLABEL || '",
+"deliveryDate":"' || S_MKTQT_VEHICLE.DELIVERYDATE || '",
+"registrationNumber":"' || S_MKTQT_VEHICLE.REGISTRATIONNUMBER || '",
+"firstCirculationDate":"' || S_MKTQT_VEHICLE.FIRSTCIRCULATIONDATE || '",
+"initialMileage":"' || S_MKTQT_VEHICLE.INITIALMILEAGE || '",
+"co2EmissionNEDC":"' || S_MKTQT_VEHICLE.CO2EMISSIONNEDC || '",
+"co2ClassCode":"' || S_MKTQT_VEHICLE.CO2CLASSCODE || '",
+"fiscalHorsePower":"' || S_MKTQT_VEHICLE.FISCALHORSEPOWER || '",
+"kindCode":"' || S_MKTQT_VEHICLE.KINDCODE || '",
+"energyCode":"' || S_MKTQT_VEHICLE.ENERGYCODE || '",
+"cubicCapacity":"' || S_MKTQT_VEHICLE.CUBICCAPACITY || '",
+"maximumPowerKW":"' || S_MKTQT_VEHICLE.MAXIMUMPOWERKW || '",
+"maxLadenWeight":"' || S_MKTQT_VEHICLE.MAXLADENWEIGHT || '",
+"kerbWeight":"' || S_MKTQT_VEHICLE.KERBWEIGHT || '",
+"isLeasco":"' || S_MKTQT_VEHICLE.ISLEASCO || '",
+"isFinco":"' || S_MKTQT_VEHICLE.ISFINCO || '",
+"contractRef":"' || S_MKTQT_VEHICLE.CONTRACTREF || '"';
+res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); 
+
+          
+
+                  --------------------- LABELS DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_LABELS
+         FROM  MKTOV.MKTQT_ASSET_VEHICULE_LABELS
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_LABELS := NULL;
+    END;
+
+    IF NVL(V_NB_LABELS, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"labels": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_LABELS IN C_MKTQT_LABELS (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_LABELS_TRAITE := V_NB_LABELS_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '            {
+            "languageCode":"' || S_MKTQT_LABELS.LANGUAGECODE || '",
+            "versionLabelShort":"' || S_MKTQT_LABELS.VERSIONLABELSHORT || '",
+            "versionLabelLong":"' || S_MKTQT_LABELS.VERSIONLABELLONG || '"';                  
+               
+
+                if V_NB_LABELS_TRAITE = V_NB_LABELS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- LABELS FIN----------------------
+
+
+                  --------------------- CROSSREF DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_CROSSREF
+         FROM  MKTOV.MKTQT_ASSET_VEHICULE_CROSSREF
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_CROSSREF := NULL;
+    END;
+
+    IF NVL(V_NB_CROSSREF, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"crossRefs": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_CROSSREF IN C_MKTQT_CROSSREF (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_CROSSREF_TRAITE := V_NB_CROSSREF_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '            {
+            "tech_id":"' || S_MKTQT_CROSSREF.TECH_ID || '",
+            "tech_lastUpdateDate":"' || S_MKTQT_CROSSREF.TECH_LASTUPDATEDATE || '",
+            "identifier":"' || S_MKTQT_CROSSREF.IDENTIFIER || '",
+            "identifierType":"' || S_MKTQT_CROSSREF.IDENTIFIERTYPE || '"';                  
+               
+
+                if V_NB_CROSSREF_TRAITE = V_NB_CROSSREF THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- CROSSREF FIN----------------------
+
+
+                  --------------------- PRICING DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_PRICING
+         FROM  MKTOV.MKTQT_VEHICULE_PRICING
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_PRICING := NULL;
+    END;
+
+    IF NVL(V_NB_PRICING, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       --V_LIGNE := '"labels": [';
+       --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_PRICING IN C_MKTQT_PRICING (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_PRICING_TRAITE := V_NB_PRICING_TRAITE+1;   ---- 
+            V_NB_BASEPRICE_TRAITE := 0;
+            V_NB_DISCOUNTS_TRAITE := 0;
+            
+            
+            V_LIGNE := '            "pricing":{
+                        "tech_id":"' || S_MKTQT_PRICING.TECH_ID || '",
+                        "tech_dateExtraction":"' || S_MKTQT_PRICING.TECH_DATEEXTRACTION || '",
+                        "vehicleRef":"' || S_MKTQT_PRICING.VEHICLEREF || '",
+                        "optionsTotalAmountET":"' || S_MKTQT_PRICING.OPTIONSTOTALAMOUNTET || '",
+                        "accessoriesTotalAmountET":"' || S_MKTQT_PRICING.ACCESSORIESTOTALAMOUNTET || '",
+                        "environmentalBonus":"' || S_MKTQT_PRICING.ENVIRONMENTALBONUS || '"';                  
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+              
+                                ---------------------  PRICING: BASEPRICE  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_BASEPRICE
+         FROM  MKTOV.MKTQT_VEHICULE_BASEPRICE
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_BASEPRICE := NULL;
+    END;
+
+    IF NVL(V_NB_BASEPRICE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       --V_LIGNE := '"basePrice": [';
+       --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_BASEPRICE IN C_MKTQT_BASEPRICE (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_BASEPRICE_TRAITE := V_NB_BASEPRICE_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '            "basePrice":{
+                        "amountET":' || S_MKTQT_BASEPRICE.AMOUNTET || '';
+   
+
+                if V_NB_BASEPRICE_TRAITE = V_NB_BASEPRICE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '}';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       --V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- PRICING: BASEPRICE  FIN----------------------
+              
+                                ---------------------  PRICING: DISCOUNT  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_DISCOUNTS
+         FROM  MKTOV.MKTQT_VEHICULE_PRICE_DISCOUNT
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_DISCOUNTS := NULL;
+    END;
+
+    IF NVL(V_NB_DISCOUNTS, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '                "discounts": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_DISCOUNTS IN C_MKTQT_DISCOUNTS (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_DISCOUNTS_TRAITE := V_NB_DISCOUNTS_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                    "amountET":' || S_MKTQT_DISCOUNTS.AMOUNTET || '';
+                 
+               
+
+                if V_NB_DISCOUNTS_TRAITE = V_NB_DISCOUNTS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            ---------------------  PRICING:  DISCOUNT  FIN----------------------              
+           
+
+                if V_NB_PRICING_TRAITE = V_NB_PRICING THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '}';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       --V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- PRICING FIN----------------------
+
+
+
+
+                                --------------------- OPTION  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_OPTION
+         FROM  MKTOV.MKTQT_VEHICULE_OPTION
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_OPTION := NULL;
+    END;
+
+    IF NVL(V_NB_OPTION, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"options": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_OPTION IN C_MKTQT_OPTION (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_OPTION_TRAITE := V_NB_OPTION_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_MKTQT_OPTION.TECH_ID || '",
+                "tech_dateExtraction":"' || S_MKTQT_OPTION.TECH_DATEEXTRACTION || '",
+                "countryBranchCode":"' || S_MKTQT_OPTION.COUNTRYBRANCHCODE || '",
+                "vehicleRef":"' || S_MKTQT_OPTION.VEHICLEREF || '",
+                "labelShort":"' || S_MKTQT_OPTION.LABELSHORT || '"';
+                 
+               
+
+                if V_NB_OPTION_TRAITE = V_NB_OPTION THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- OPTION FIN----------------------              
+              
+
+              --------------------- LIFECYCLE  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_LIFECYCLE
+         FROM  MKTOV.MKTQT_VEHICULE_LIFECYCLE
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_LIFECYCLE := NULL;
+    END;
+
+    IF NVL(V_NB_LIFECYCLE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"lifecycle": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_LIFECYCLE IN C_MKTQT_LIFECYCLE (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_LIFECYCLE_TRAITE := V_NB_LIFECYCLE_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_MKTQT_LIFECYCLE.TECH_ID || '",
+                "tech_dateExtraction":"' || S_MKTQT_LIFECYCLE.TECH_DATEEXTRACTION || '",
+                "countryBranchCode":"' || S_MKTQT_LIFECYCLE.COUNTRYBRANCHCODE || '",
+                "vehicleRef":"' || S_MKTQT_LIFECYCLE.VEHICLEREF || '",
+                "serialNumber":"' || S_MKTQT_LIFECYCLE.SERIALNUMBER || '",
+                "registrationNumber":"' || S_MKTQT_LIFECYCLE.REGISTRATIONNUMBER || '",
+                "dateRegistration":"' || S_MKTQT_LIFECYCLE.DATEREGISTRATION || '"';
+                 
+               
+
+                if V_NB_LIFECYCLE_TRAITE = V_NB_LIFECYCLE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- LIFECYCLE FIN----------------------              
+              
+
+              --------------------- ENDOFLIFE  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_ENDOFLIFE
+         FROM  MKTOV.MKTQT_VEHICULE_ENDOFLIFE
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_ENDOFLIFE := NULL;
+    END;
+
+    IF NVL(V_NB_ENDOFLIFE, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"endOfLife": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_ENDOFLIFE IN C_MKTQT_ENDOFLIFE (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_ENDOFLIFE_TRAITE := V_NB_ENDOFLIFE_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "contactEndOfLifeDate":"' || S_MKTQT_ENDOFLIFE.CONTACTENDOFLIFEDATE || '",
+                "earlyTerminationFlag":"' || S_MKTQT_ENDOFLIFE.EARLYTERMINATIONFLAG || '",
+                "dealerReturnDate":"' || S_MKTQT_ENDOFLIFE.DEALERRETURNDATE || '",
+                "choiceCustomerReturnDate":"' || S_MKTQT_ENDOFLIFE.CHOICECUSTOMERRETURNDATE || '",
+                "realReturnDate":"' || S_MKTQT_ENDOFLIFE.REALRETURNDATE || '",
+                "buyerDealerName":"' || S_MKTQT_ENDOFLIFE.BUYERDEALERNAME || '",
+                "buyerDealerRef":"' || S_MKTQT_ENDOFLIFE.BUYERDEALERREF || '",
+                "buyerDealerZipCode":"' || S_MKTQT_ENDOFLIFE.BUYERDEALERZIPCODE || '",
+                "buyerDealerCity":"' || S_MKTQT_ENDOFLIFE.BUYERDEALERCITY || '"';
+                 
+               
+
+                if V_NB_ENDOFLIFE_TRAITE = V_NB_ENDOFLIFE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- ENDOFLIFE FIN----------------------              
+              
+
+                
+                              --------------------- DOMAINREFS  DEBUT----------------------
+
+    BEGIN
+         SELECT COUNT(*)
+         INTO   V_NB_DOMAINREFS
+         FROM  MKTOV.MKTQT_VEHICULE_DOMAINREFS
+         WHERE TECH_ID = S_MKTQT_ASSET.TECH_ID;
+    EXCEPTION WHEN OTHERS THEN
+              V_NB_DOMAINREFS := NULL;
+    END;
+
+    IF NVL(V_NB_DOMAINREFS, 0) > 0 THEN
+       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee
+    
+       V_LIGNE := '"domainRefs": [';
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       
+       FOR S_MKTQT_DOMAINREFS IN C_MKTQT_DOMAINREFS (S_MKTQT_ASSET.TECH_ID)LOOP
+            V_NB_DOMAINREFS_TRAITE := V_NB_DOMAINREFS_TRAITE+1;   ---- 
+            
+            
+            V_LIGNE := '                {
+                "tech_id":"' || S_MKTQT_DOMAINREFS.TECH_ID || '",
+                "tech_dateExtraction":"' || S_MKTQT_DOMAINREFS.TECH_DATEEXTRACTION || '",
+                "countryBranchCode":"' || S_MKTQT_DOMAINREFS.COUNTRYBRANCHCODE || '",
+                "vehicleRef":"' || S_MKTQT_DOMAINREFS.VEHICLEREF || '",
+                "serialNumber":"' || S_MKTQT_DOMAINREFS.SERIALNUMBER || '",
+                "contractRef":"' || S_MKTQT_DOMAINREFS.CONTRACTREF || '",
+                "accountStatus":"' || S_MKTQT_DOMAINREFS.ACCOUNTSTATUS || '",
+                "srcPartyId":"' || S_MKTQT_DOMAINREFS.SRCPARTYID || '",
+                "nationalId":"' || S_MKTQT_DOMAINREFS.NATIONALID || '"';
+                 
+               
+
+                if V_NB_DOMAINREFS_TRAITE = V_NB_DOMAINREFS THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '},';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- DOMAINREFS FIN----------------------            
+         
+         
+         
+         
+               
+               
+
+                if V_NB_VEHICLE_TRAITE = V_NB_VEHICLE THEN V_LIGNE := V_LIGNE || '}';
+                else V_LIGNE := V_LIGNE || '}';
+                end if;
+
+            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            
+            
+       END LOOP;
+       --V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       -- res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    END IF;
+    V_LIGNE := '';  -------- null
+
+
+            --------------------- VEHICLE FIN----------------------
+
+
+
+
+
+
+V_LIGNE:='';
+    if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   
+    else V_LIGNE := V_LIGNE || '},';    ------------------------------ ajout fin balise
+    end if;  
+    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+
+    N_SAUV := N_SAUV +1;
+           
+    EXCEPTION WHEN OTHERS THEN COMMIT;
+                V_ERR  := 1;
+                RES   := MKT.MKTQAUT.F_WRITE(FILE_ID,'EXPORT_ASSET_MILES_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM || S_MKTQT_ASSET.TECH_ID);
+                --RETURN V_ERR;
+                RETURN V_ERR;
+    END;
+  END LOOP;
+   V_LIGNE := ']';
+   res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+   UTL_FILE.FCLOSE(file_id_cvs);
+  res := MKT.MKTQAUT.F_WRITE(file_id,
+                               'EXPORT_ASSET_MILES_JSON',
+                               'Nombre de sauvegarde :' || N_SAUV);
+    res := MKT.MKTQAUT.F_WRITE(file_id, '', '');
+    UTL_FILE.FCLOSE(file_id);
+
+  --RETURN V_ERR;
+  RETURN V_ERR;
+EXCEPTION WHEN OTHERS THEN COMMIT;
+          V_ERR  := 1;
+          RES     := MKT.MKTQAUT.F_WRITE(FILE_ID,'EXPORT_ASSET_MILES_JSON ','MESSAGE ERREUR PL/SQL : ' ||SQLERRM);
+          --RETURN V_ERR;
+          RETURN V_ERR;
+          
+END EXPORT_ASSET_MILES_JSON;
+
 
 
 
