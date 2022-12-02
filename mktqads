@@ -1,6 +1,5 @@
 create or replace package body mktqads as
 
-
 FUNCTION EXPORT_CONTRACT_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_CONTRAT VARCHAR2) return number IS
     V_ERR       number:=0;
     N_SAUV      NUMBER := 0;
