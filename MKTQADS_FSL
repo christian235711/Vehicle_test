@@ -1,0 +1,220 @@
+create or replace package mktqads3 as 
+
+--------------------------------------------------------------------------------------------------
+----------------------------------MILES-----------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+--                  Contracts 
+---------------------------------------------------------------------------------------------------
+
+function ALIM_CONTRACT (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+                            
+function ALIM_CTT_FINANCING (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+                        
+function ALIM_CTT_ACCOUNT (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+
+                                                  
+function ALIM_CTT_PAYMEANACTIF (NOMLOG      varchar2,
+                            P_DATE_TRAI date, 
+                            P_CODE_PAYS varchar2) Return Number;
+                            
+                            
+Function ALIM_CTT_VEHICULE (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+
+Function ALIM_CTT_SERVICES (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;                            
+
+Function ALIM_CTT_SCHEDULES (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;  
+
+Function ALIM_CTT_STAKEHOLDERS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;                         
+
+Function ALIM_CTT_SIGNATORY (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;  
+
+--------------------------------------------------------------------------------------------------
+--                  Asset Vehicule 
+---------------------------------------------------------------------------------------------------
+
+Function ALIM_ASS_VEH_ASSET (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+                        
+                      
+Function ALIM_ASS_VEH_VEHICULE (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+
+  
+Function ALIM_ASS_VEH_LABELS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;                         
+
+
+Function ALIM_ASS_VEH_CROSSREFS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+
+                       
+Function ALIM_ASS_VEH_PRINCING (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;                         
+
+
+
+Function ALIM_ASS_VEH_BASEPRICE (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+
+
+                       
+Function ALIM_ASS_VEH_DISCOUNTS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+
+                        
+Function ALIM_ASS_VEH_OPTIONS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+
+
+                          
+Function ALIM_ASS_VEH_LIFECYCLE (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+
+
+Function ALIM_ASS_VEH_ENDOFLIFE (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number; 
+                     
+Function ALIM_ASS_VEH_DOMAINREFS (NOMLOG      varchar2,
+                        P_DATE_TRAI date, 
+                        P_CODE_PAYS varchar2) Return Number;
+             
+             
+
+---------------------------------------------------------------------------------------------------
+--                              Customer 
+--------------------------------------------------------------------------------------------------- 
+Function ALIM_MKTQAFSL_CUSTOMER( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number; 
+                            
+Function ALIM_MKTQAFSL_CUS_ACTIVITY( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;                              
+                                                     
+Function ALIM_MKTQAFSL_CUS_PERS_CONTACT( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number; 
+
+Function ALIM_MKTQAFSL_CUS_ROLEBANKINGS( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;    
+                            
+Function ALIM_MKTQAFSL_CUS_NATIONALID( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;                             
+                            
+Function ALIM_MKTQAFSL_CUS_CONTACTMEAN( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;  
+                            
+Function ALIM_MKTQAFSL_CUS_CTMEAN_ADRS( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;          
+                            
+Function ALIM_MKTQAFSL_CUS_CTMEAN_PHONE( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;                             
+                            
+Function ALIM_MKTQAFSL_CUS_CTMEAN_EMAIL( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number; 
+ 
+Function ALIM_MKTQAFSL_CUS_CTMEAN_BKINF( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number; 
+                            
+Function ALIM_MKTQAFSL_CUS_CTMEAN_CRREF( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;                              
+                            
+Function ALIM_MKTQAFSL_CUS_CTMEAN_EXREF( Nomlog      Varchar2,
+                            P_DATE_TRAI date,
+                            P_CODE_PAYS varchar2) return number;                              
+                            
+---------------------------------------------------------------------------------------------------
+--                              CustomerProfile 
+---------------------------------------------------------------------------------------------------  
+
+Function ALIM_MKTQAFSL_CUSTOMER_PROFILE( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number;                         
+
+Function ALIM_MKTQAFSL_CUSTOMER_PRF_CTT( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number; 
+   
+---------------------------------------------------------------------------------------------------
+--                              Agreement 
+---------------------------------------------------------------------------------------------------   
+
+Function ALIM_MKTQAFSL_AGREEMENT ( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number; 
+
+Function ALIM_MKTQAFSL_AGREEMENT_REQEST( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number; 
+                            
+Function ALIM_MKTQAFSL_AGREEMENT_VEH( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number; 
+      
+   
+Function ALIM_MKTQAFSL_AGREEMENT_STK( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number;    
+
+   
+   
+   
+Function ALIM_MKTQAFSL_AGREEMENT_CONTRA( Nomlog      Varchar2,
+                            P_DATE_TRAI DATE,
+                            P_CODE_PAYS varchar2) Return Number;                                                        
+                     
+
+---------------------------------------------------------------------------------------------------
+--                              EXPORT MILES 
+---------------------------------------------------------------------------------------------------   
+
+FUNCTION EXPORT_CUSTOMER_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_CUSTOMER VARCHAR2)RETURN NUMBER;   
+
+FUNCTION EXPORT_PROFIL_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_PROFIL VARCHAR2)RETURN NUMBER;    
+
+FUNCTION EXPORT_AGREEMENT_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_AGREEMENT VARCHAR2)RETURN NUMBER;    
+
+FUNCTION EXPORT_CONTRACT_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_CONTRAT VARCHAR2)RETURN NUMBER;    
+
+FUNCTION EXPORT_ASSET_MILES_JSON (NOMLOG varchar2,P_DATE_TRAI date, P_PATH VARCHAR2, P_CODE_PAYS VARCHAR2, P_FILENAME_ASSET VARCHAR2)RETURN NUMBER;    
+             
+             
+             
+     
+             
+                       
+end mktqads3;
