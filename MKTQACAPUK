@@ -3140,7 +3140,7 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 
-V_LIGNE := '"hasTelematicBox":"' ||  UPPER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || '",';
+V_LIGNE := '"hasTelematicBox":' ||  LOWER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || ',';
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
@@ -3296,8 +3296,8 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
             V_LIGNE := '        {        
                 "code":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.code, '"','')) || '",
                 "typeCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.typeCode, '"','')) || '",
-                "isPack":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || '",
-                "isAgregated":' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isAgregated, '"','')) || ',';
+                "isPack":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || ',
+                "isAgregated":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isAgregated, '"','')) || ',';
 
                 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);    --- A REVOIR
                       
@@ -3560,12 +3560,16 @@ parent as parent,
 parent_details_entity as parent_details_entity,
 parent_details_code as parent_details_code,
 description_language as description_language,		
-(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(description_label) ELSE description_label END) as description_label,
+(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN 
+UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description_label, '\', '\\'), '"', '\"'), CHR(9), ''), CHR(13), ''), CHR(29), ''))
+ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description_label, '\', '\\'), '"', '\"'), CHR(9), ''), CHR(13), ''), CHR(29), '') END) as description_label,
 crossref_typecode as crossref_typecode,
 crossref_country	 as crossref_country,
 (CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(crossref_code) ELSE crossref_code END)	as crossref_code,
 translation_language as translation_language,
-(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN UPPER(translation_label) ELSE translation_label END) as translation_label,
+(CASE WHEN entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN
+UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(translation_label, '\', '\\'), '"', '\"'), CHR(9), ''), CHR(13), ''), CHR(29), '')) 
+ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(translation_label, '\', '\\'), '"', '\"'), CHR(9), ''), CHR(13), ''), CHR(29), '') END) as translation_label,
 (CASE WHEN bomAttribut != ' ' THEN bomAttribut ELSE NULL END) as bomAttribut,
 countryScope as countryScope
 from MKTREF.MKTQT_nomenclature
