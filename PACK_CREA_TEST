@@ -1,7 +1,6 @@
-CREATE OR REPLACE
-PACKAGE BODY PACK_CREA_TEST AS
+create or replace PACKAGE BODY PACK_CREA_TEST AS
 
-  FUNCTION CREATION_FICHIER_SQL(NOMLOG VARCHAR2, P_DATE_TRAIT DATE, NOM_CREATEUR VARCHAR2, NOM_SCHEMA VARCHAR2, DEBUT_NOM_INDEX VARCHAR2, DEBUT_NOM_TABLE VARCHAR2, NOM_UNIVERS VARCHAR2) RETURN NUMBER AS
+  FUNCTION CREATION_FICHIER_SQL(NOMLOG VARCHAR2, P_DATE_TRAIT DATE, P_PATH VARCHAR2, FICHIER_PARAM VARCHAR2, NOM_CREATEUR VARCHAR2, NOM_SCHEMA VARCHAR2, DEBUT_NOM_INDEX VARCHAR2, DEBUT_NOM_TABLE VARCHAR2, NOM_UNIVERS VARCHAR2) RETURN NUMBER AS
   
   --BEGIN 
   
@@ -57,16 +56,17 @@ MKTQT_AGREEMENT_VEH,
 MKTQT_AGREEMENT_STK,';
   
     FILE_ID UTL_FILE.FILE_TYPE;
+    FILE_ID_CVS UTL_FILE.FILE_TYPE;
     RES     NUMBER := 0;
     V_ERR     NUMBER := 0;
     NOMBRE_FICHIER  NUMBER := 0;
     V_STR VARCHAR2(34) ;
     NB_1 NUMBER := 0;
-    NB_2 NUMBER := 0;
     V_TEMP  NUMBER := 0;
     V_ITER NUMBER := 0;
     V_LIGNE VARCHAR2(6000) ;
     V_KEYS VARCHAR2(100);
+    V_FIRST VARCHAR2(1);
   
     CURSOR CUR (V_STR VARCHAR2 ) IS
     SELECT COLUMN_NAME,
@@ -94,12 +94,13 @@ MKTQT_AGREEMENT_STK,';
     for elem in 1..46 loop   
         begin
         
-            ---NB_1 := INSTR(liste_tables,',') ;
-            NB_2 := INSTR(liste_tables,',') ;
-            V_STR := SUBSTR(liste_tables,0,NB_2-1);
-            liste_tables := SUBSTR(liste_tables,NB_2 +1); -- fin
+            NB_1 := INSTR(liste_tables,',') ;
+            V_STR := SUBSTR(liste_tables,0,NB_1-1);
+            liste_tables := SUBSTR(liste_tables,NB_1 +1); 
                   
             Res := Mkt.Mktqaut.F_Write(File_Id, 'FICHIER ' || TO_CHAR(elem) , TO_CHAR(V_STR) );
+            
+            file_id_cvs:= MKT.MKTQAUT.F_OPEN_CVS(p_path, V_STR || '.sql'); 
             
             
 V_LIGNE := '/**
@@ -119,7 +120,8 @@ SET TERMOUT ON
 SET ECHO ON
 SET FEED ON
 SET HEAD ON
-@@mktfctbs.sql
+@@' || FICHIER_PARAM ||
+'
 -- -------------------------------------------------------------------------
 -- LOG
 -- -------------------------------------------------------------------------
@@ -128,14 +130,14 @@ SET HEAD ON
 -- TABLE
 -- -------------------------------------------------------------------------
 ';
-utl_file.put_line(File_Id,V_LIGNE);      
-utl_file.fflush(File_Id);          
+utl_file.put_line(file_id_cvs,V_LIGNE);      
+utl_file.fflush(file_id_cvs);          
             
 V_LIGNE := 'DROP TABLE ' || NOM_SCHEMA || '.' || V_STR ||  ' CASCADE CONSTRAINTS;' || 
 ' 
 
 CREATE TABLE ' || NOM_SCHEMA || '.' || V_STR || ' (';
-utl_file.put_line(File_Id,V_LIGNE);                
+utl_file.put_line(file_id_cvs,V_LIGNE);                
             
             
             BEGIN
@@ -147,30 +149,42 @@ utl_file.put_line(File_Id,V_LIGNE);
         
             V_ITER := 0;
             V_KEYS := '(';
+            V_FIRST := 'N';
             for cur_elem in cur(V_STR) loop
                 begin
                     V_ITER := V_ITER+ 1;
-                                   
+                       
+                    IF cur_elem.NULLABLE = 'N' AND V_FIRST = 'Y' THEN
+                        V_KEYS := V_KEYS || ',' || cur_elem.COLUMN_NAME;    
+                    END IF;    
+                       
+                    IF cur_elem.NULLABLE = 'N' AND V_FIRST = 'N' THEN
+                        V_KEYS := V_KEYS || cur_elem.COLUMN_NAME;
+                        V_FIRST :='Y';   
+                    END IF;
+                    
+
+                       
+                       /*            
                     IF cur_elem.NULLABLE = 'N' AND V_ITER = 1  THEN 
-                        V_KEYS := cur_elem.COLUMN_NAME;    
+                        V_KEYS := V_KEYS || cur_elem.COLUMN_NAME;    
                     END IF;
                     
                     IF cur_elem.NULLABLE = 'N' AND V_ITER > 1  THEN 
                         V_KEYS := V_KEYS || ',' || cur_elem.COLUMN_NAME;    
-                    END IF;                   
+                    END IF;        
+                    
+                    */
                                    
                     IF V_ITER = V_TEMP THEN
-                        utl_file.put_line(File_Id, cur_elem.COLUMN_NAME || '    ' || LPAD(' ', cur_elem.MAX_LENGTH-cur_elem.LENGTH_DATA, ' ') || '   ' || cur_elem.DATA_TYPE);
+                        utl_file.put_line(file_id_cvs, cur_elem.COLUMN_NAME || '    ' || LPAD(' ', cur_elem.MAX_LENGTH-cur_elem.LENGTH_DATA, ' ') || '   ' || cur_elem.DATA_TYPE);
                     ELSE
-                        utl_file.put_line(File_Id, cur_elem.COLUMN_NAME || '    ' || LPAD(' ', cur_elem.MAX_LENGTH-cur_elem.LENGTH_DATA, ' ') || '   ' || cur_elem.DATA_TYPE ||  ','  );
+                        utl_file.put_line(file_id_cvs, cur_elem.COLUMN_NAME || '    ' || LPAD(' ', cur_elem.MAX_LENGTH-cur_elem.LENGTH_DATA, ' ') || '   ' || cur_elem.DATA_TYPE ||  ','  );
                     END IF;               
                     
-                    utl_file.fflush(File_Id);
+                    utl_file.fflush(file_id_cvs);
                     --Res := Mkt.Mktqaut.F_Write(File_Id, cur_elem.COLUMN_NAME,'');
-                    
-                    
-
-                    
+               
                 end;
             end loop;
              
@@ -243,14 +257,14 @@ SHOW ERRORS
 SPOOL OFF
 exit;
 ';        
- utl_file.put_line(File_Id, V_LIGNE)   ;    
+ utl_file.put_line(file_id_cvs, V_LIGNE)   ;    
         
         
-        
+    UTL_FILE.FCLOSE(file_id_cvs);
     end loop;
     commit;
     
-  
+    
     UTL_FILE.FCLOSE(FILE_ID);
     
     return V_ERR;
