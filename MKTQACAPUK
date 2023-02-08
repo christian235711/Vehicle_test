@@ -1,4 +1,4 @@
-create or replace PACKAGE BODY                 "MKTQA_CALCUL_CAP_UK" AS
+create or replace PACKAGE BODY                                                                                "MKTQA_CALCUL_CAP_UK" AS
 
 
 
@@ -3019,7 +3019,8 @@ and year_trimester is not null
 */
 ---and DIMENSIONS != '  ' 
 ---and  rownum <= 500;   ---------
---where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' )  ;
+--where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' ) 
+--WHERE TECH_ID = '74606';
 -----------------------------------CROSSREFS-----------------------------
 CURSOR C_MKTQT_VEHICLE_CROSSREFS (P_itemDirectoryVehicleRef  VARCHAR2) IS
 SELECT * FROM MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
@@ -3137,7 +3138,7 @@ BEGIN
       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
       FOR S_mktqt_vehicle IN C_mktqt_vehicle LOOP
       
-      ---IF  MOD(V_NB_ENREG_TRAITE,1000) = 0 THEN  res := MKT.MKTQAUT.F_WRITE(FILE_ID, 'V_NB_ENREG_TRAITE :=', TO_CHAR(V_NB_ENREG_TRAITE)); END IF;
+      IF  MOD(V_NB_ENREG_TRAITE,1000) = 0 THEN  res := MKT.MKTQAUT.F_WRITE(FILE_ID, 'V_NB_ENREG_TRAITE :=', TO_CHAR(V_NB_ENREG_TRAITE)); END IF;
       
       IF  V_NB_ENREG_TRAITE > 0 THEN  V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); END IF; ---ajout a la fin de la boucle apres le 1 element
       
@@ -3150,94 +3151,94 @@ BEGIN
               V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE+1;
               V_LIGNE := '{
 "tech_id":"' || UPPER(REPLACE(S_mktqt_vehicle.tech_id, '"','')) || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 --"tech_dateExtraction":"' || S_mktqt_vehicle.tech_dateExtraction || '", 
 --"tech_dateInsertion":"' || S_mktqt_vehicle.tech_dateInsertion || '", 
 
-V_LIGNE := '"countryCode":"' || UPPER(REPLACE(S_mktqt_vehicle.countryCode, '"','')) || '", 
-"itemDirectoryVehicleRef":"' || UPPER(REPLACE(S_mktqt_vehicle.itemDirectoryVehicleRef, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"countryCode":"' || UPPER(REPLACE(S_mktqt_vehicle.countryCode, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"itemDirectoryVehicleRef":"' || UPPER(REPLACE(S_mktqt_vehicle.itemDirectoryVehicleRef, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
 -----"versionState":"' || UPPER(REPLACE(S_mktqt_vehicle.versionState, '"','')) || '", 
 
-V_LIGNE := '"validityStartDate":"' || S_mktqt_vehicle.validityStartDate || '", 
-"validityEndDate":"' || S_mktqt_vehicle.validityEndDate || '", ';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"validityStartDate":"' || S_mktqt_vehicle.validityStartDate || '",';
+V_LIGNE := V_LIGNE || '"validityEndDate":"' || S_mktqt_vehicle.validityEndDate || '", ';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
 ----"corporateGroupCode":"' || UPPER(REPLACE(S_mktqt_vehicle.corporateGroupCode, '"','')) || '", 
 IF S_mktqt_vehicle.corporateGroupLabel != ' ' THEN
-V_LIGNE := '"corporateGroupLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.corporateGroupLabel, '"','')) || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"corporateGroupLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.corporateGroupLabel, '"','')) || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
-V_LIGNE := '"brandCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandCode, '"','')) || '", 
-"brandLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandLabel, '"','')) || '", 
-"familyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyCode, '"','')) || '",
-"familyLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyLabel, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"brandCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandCode, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"brandLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.brandLabel, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"familyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyCode, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"familyLabel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.familyLabel, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 IF S_mktqt_vehicle.generation is not null THEN
-V_LIGNE := '"generation":"' || S_mktqt_vehicle.generation || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"generation":"' || S_mktqt_vehicle.generation || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
-V_LIGNE := '"versionYear":"' || S_mktqt_vehicle.versionYear || '", 
-"versionTrimester":"' || S_mktqt_vehicle.versionTrimester || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"versionYear":"' || S_mktqt_vehicle.versionYear || '",';
+V_LIGNE := V_LIGNE || '"versionTrimester":"' || S_mktqt_vehicle.versionTrimester || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 IF S_mktqt_vehicle.segmentMarketingCode is not null THEN
-V_LIGNE := '"segmentMarketingCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.segmentMarketingCode, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"segmentMarketingCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.segmentMarketingCode, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.faceLiftGeneration is not null THEN
-V_LIGNE := '"faceLiftGeneration":"' || S_mktqt_vehicle.faceLiftGeneration || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"faceLiftGeneration":"' || S_mktqt_vehicle.faceLiftGeneration || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
-V_LIGNE := '"kindCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.kindCode, '"','')) || '", 
-"bodyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.bodyCode, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"kindCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.kindCode, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"bodyCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.bodyCode, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
 
 IF S_mktqt_vehicle.height is not null THEN
-V_LIGNE := '"height":"' || S_mktqt_vehicle.height || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"height":"' || S_mktqt_vehicle.height || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.length is not null THEN
-V_LIGNE := '"length":"' || S_mktqt_vehicle.length || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"length":"' || S_mktqt_vehicle.length || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 ----"sportinessFlag":"' ||  UPPER(REPLACE(S_mktqt_vehicle.sportinessFlag, '"','')) || '", 
 -----"co2EmissionNEDC":"' || S_mktqt_vehicle.co2EmissionNEDC || '",
 
 IF S_mktqt_vehicle.co2EmissionWLTP is not null THEN
-V_LIGNE := '"co2EmissionWLTP":"' || S_mktqt_vehicle.co2EmissionWLTP || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"co2EmissionWLTP":"' || S_mktqt_vehicle.co2EmissionWLTP || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 --"co2ClassCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.co2ClassCode, '"','')) || '", 
 ---"fiscalHorsePower":"' || S_mktqt_vehicle.fiscalHorsePower || '", 
 
 IF S_mktqt_vehicle.maximumPowerDin is not null THEN
-V_LIGNE := '"maximumPowerDin":"' || S_mktqt_vehicle.maximumPowerDin || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"maximumPowerDin":"' || S_mktqt_vehicle.maximumPowerDin || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.maximumPowerKW is not null THEN
-V_LIGNE := '"maximumPowerKW":"' || S_mktqt_vehicle.maximumPowerKW || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"maximumPowerKW":"' || S_mktqt_vehicle.maximumPowerKW || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.energy1Code is not null THEN
-V_LIGNE := '"energy1Code":"' || UPPER(REPLACE(S_mktqt_vehicle.energy1Code, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"energy1Code":"' || UPPER(REPLACE(S_mktqt_vehicle.energy1Code, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 
@@ -3245,46 +3246,46 @@ END IF;
 ----"energy2Code":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2Code, '"','')) || '", 
 ----"energy2DetailCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energy2DetailCode, '"','')) || '",
 
-V_LIGNE := '"energyCombCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energyCombCode, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"energyCombCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.energyCombCode, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
 ----"motorisation":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisation, '"','')) || '", 
 ----"motorisationComb":"' ||  UPPER(REPLACE(S_mktqt_vehicle.motorisationComb, '"','')) || '", 
 IF S_mktqt_vehicle.cubicCapacity is not null THEN
-V_LIGNE := '"cubicCapacity":"' || S_mktqt_vehicle.cubicCapacity || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"cubicCapacity":"' || S_mktqt_vehicle.cubicCapacity || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.transmissionTypeCode is not null THEN
-V_LIGNE := '"transmissionTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.transmissionTypeCode, '"','')) || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"transmissionTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.transmissionTypeCode, '"','')) || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
-V_LIGNE := '"gearBoxTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.gearBoxTypeCode, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"gearBoxTypeCode":"' ||  UPPER(REPLACE(S_mktqt_vehicle.gearBoxTypeCode, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 IF S_mktqt_vehicle.nbRapports is not null THEN
-V_LIGNE := '"nbRapports":"' || S_mktqt_vehicle.nbRapports || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"nbRapports":"' || S_mktqt_vehicle.nbRapports || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 -----------"typeVariantVersion":"' ||  UPPER(REPLACE(S_mktqt_vehicle.typeVariantVersion, '"','')) || '",
 
 
 IF S_mktqt_vehicle.trimLevel is not null THEN
-V_LIGNE := '"trimLevel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.trimLevel, '"','')) || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"trimLevel":"' ||  UPPER(REPLACE(S_mktqt_vehicle.trimLevel, '"','')) || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.seatNumber is not null THEN
-V_LIGNE := '"seatNumber":"' || S_mktqt_vehicle.seatNumber || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"seatNumber":"' || S_mktqt_vehicle.seatNumber || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.doorNumber is not null THEN
-V_LIGNE := '"doorNumber":"' || S_mktqt_vehicle.doorNumber || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"doorNumber":"' || S_mktqt_vehicle.doorNumber || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 ----"nedcCombineFuelConsumption":"' || S_mktqt_vehicle.nedcCombineFuelConsumption || '", 
@@ -3292,64 +3293,64 @@ END IF;
 ---"nedcUrbanFuelConsumption":"' || S_mktqt_vehicle.nedcUrbanFuelConsumption || '", 
 
 IF S_mktqt_vehicle.wltpLowFuelConsumption is not null THEN
-V_LIGNE := '"wltpLowFuelConsumption":"' || S_mktqt_vehicle.wltpLowFuelConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpLowFuelConsumption":"' || S_mktqt_vehicle.wltpLowFuelConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpMediumFuelConsumption is not null THEN
-V_LIGNE := '"wltpMediumFuelConsumption":"' || S_mktqt_vehicle.wltpMediumFuelConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpMediumFuelConsumption":"' || S_mktqt_vehicle.wltpMediumFuelConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpHighFuelConsumption is not null THEN
-V_LIGNE := '"wltpHighFuelConsumption":"' || S_mktqt_vehicle.wltpHighFuelConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpHighFuelConsumption":"' || S_mktqt_vehicle.wltpHighFuelConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpExtraHighConsumption is not null THEN
-V_LIGNE := '"wltpExtraHighConsumption":"' || S_mktqt_vehicle.wltpExtraHighConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpExtraHighConsumption":"' || S_mktqt_vehicle.wltpExtraHighConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpCombinedFuelConsumption is not null THEN
-V_LIGNE := '"wltpCombinedFuelConsumption":"' || S_mktqt_vehicle.wltpCombinedFuelConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpCombinedFuelConsumption":"' || S_mktqt_vehicle.wltpCombinedFuelConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpElectricConsumption is not null THEN
-V_LIGNE := '"wltpElectricConsumption":"' || S_mktqt_vehicle.wltpElectricConsumption || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpElectricConsumption":"' || S_mktqt_vehicle.wltpElectricConsumption || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.wltpElectricRange is not null THEN
-V_LIGNE := '"wltpElectricRange":"' || S_mktqt_vehicle.wltpElectricRange || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"wltpElectricRange":"' || S_mktqt_vehicle.wltpElectricRange || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.batteryCapacity is not null THEN
-V_LIGNE := '"batteryCapacity":"' || S_mktqt_vehicle.batteryCapacity || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"batteryCapacity":"' || S_mktqt_vehicle.batteryCapacity || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.maxLadenWeight is not null THEN
-V_LIGNE := '"maxLadenWeight":"' || S_mktqt_vehicle.maxLadenWeight || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"maxLadenWeight":"' || S_mktqt_vehicle.maxLadenWeight || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 IF S_mktqt_vehicle.kerbWeight is not null THEN
-V_LIGNE := '"kerbWeight":"' || S_mktqt_vehicle.kerbWeight || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"kerbWeight":"' || S_mktqt_vehicle.kerbWeight || '",';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 
 IF S_mktqt_vehicle.payLoad is not null THEN
-V_LIGNE := '"payLoad":"' || S_mktqt_vehicle.payLoad || '",'; 
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"payLoad":"' || S_mktqt_vehicle.payLoad || '",'; 
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
 
-V_LIGNE := '"hasTelematicBox":' ||  LOWER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || ',';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+V_LIGNE := V_LIGNE || '"hasTelematicBox":' ||  LOWER(REPLACE(S_mktqt_vehicle.hasTelematicBox, '"','')) || ',';
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
 
@@ -3367,8 +3368,8 @@ res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 ---"versionLabelGlobalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelGlobalShort, '"','')) || '", 
 ---"versionLabelGlobalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelGlobalLong, '"','')) || '",
 
-V_LIGNE := '"versionLabelLocalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalShort, '"','')) || '", 
-"versionLabelLocalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalLong, '"',''))  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
+V_LIGNE := V_LIGNE || '"versionLabelLocalShort":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalShort, '"','')) || '",';
+V_LIGNE := V_LIGNE || '"versionLabelLocalLong":"' ||  UPPER(REPLACE(S_mktqt_vehicle.versionLabelLocalLong, '"',''))  || '"';    --------- virgule absente a la fin car on va l'ajouter apres si on rentre dans la boucle crossrefs
 
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
@@ -3391,29 +3392,28 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
     END;
 
     IF NVL(V_NB_CROSSREFS, 0) > 0 THEN
-       V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour vehicle
+       --V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour vehicle
     
-       V_LIGNE := '"crossRefs": [';
-       res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+       V_LIGNE := ', "crossRefs": [';
+       --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
        
        
        FOR S_MKTQT_VEHICLE_CROSSREFS IN C_MKTQT_VEHICLE_CROSSREFS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_CROSSREFS_TRAITE := V_NB_CROSSREFS_TRAITE+1;   ---- A REVOIR 
             
             IF S_MKTQT_VEHICLE_CROSSREFS.identifier is not NULL THEN   ------  if constr vide alors on affiche rien
-            V_LIGNE := '        {
-                "identifierType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifierType, '"',''))  || '",
-                "identifier":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifier, '"',''))  || '"';
+            V_LIGNE := V_LIGNE || '{"identifierType":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifierType, '"',''))  || '",';
+                V_LIGNE := V_LIGNE || '"identifier":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_CROSSREFS.identifier, '"',''))  || '"';
 
                 if V_NB_CROSSREFS_TRAITE = V_NB_CROSSREFS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
                 end if;
 
-            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
             
             END IF;
        END LOOP;
-       V_LIGNE := '    ]';      ---------   virgule ajoutee dans la boucle suivant 
+       V_LIGNE := V_LIGNE || ']';      ---------   virgule ajoutee dans la boucle suivant 
        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;
     V_LIGNE := '';  -------- null
@@ -3429,24 +3429,23 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
     END;
     
     IF NVL(V_NB_PRICINGS, 0) > 0 THEN
-        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour crossrefs
+        --V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour crossrefs
         
-        V_LIGNE := '"pricings": [';
-        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        V_LIGNE := ', "pricings": [';
+        --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
         FOR S_MKTQT_VEHICLE_PRICINGS IN C_MKTQT_VEHICLE_PRICINGS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
             V_NB_PRICINGS_TRAITE := V_NB_PRICINGS_TRAITE+1;   ---- A REVOIR 
-            V_LIGNE := '        {
-                "priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",';
-                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            V_LIGNE := V_LIGNE || '{"priceStartDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceStartDate || '",';
+                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 
                 IF S_MKTQT_VEHICLE_PRICINGS.priceEndDate is not null THEN
-                V_LIGNE := '                "priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",';
-                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                V_LIGNE := V_LIGNE || '"priceEndDate":"' || S_MKTQT_VEHICLE_PRICINGS.priceEndDate || '",';
+                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 END IF;
                 
-                V_LIGNE := '                "priceET":' || REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceET,',','.') || ',';
-                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                V_LIGNE := V_LIGNE || '"priceET":' || REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceET,',','.') || ',';
+                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                 /*
                 IF S_MKTQT_VEHICLE_PRICINGS.priceIT is null THEN    ----- uniquement pour priceIT
                 V_LIGNE := '                "priceIT":"' || S_MKTQT_VEHICLE_PRICINGS.priceET || '",'; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
@@ -3455,17 +3454,17 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                 END IF;
                 */
                 
-                V_LIGNE := '                "currency":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.currency, '"','')) || '", 
-                "priceWithoutOtrCostIT":' || REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT,',','.') || '';
+                V_LIGNE := V_LIGNE || '"currency":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_PRICINGS.currency, '"','')) || '",';
+                V_LIGNE := V_LIGNE || '"priceWithoutOtrCostIT":' || REPLACE(S_MKTQT_VEHICLE_PRICINGS.priceWithoutOtrCostIT,',','.') || '';
 
                 
                 if V_NB_PRICINGS_TRAITE = V_NB_PRICINGS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
                 end if;
 
-            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         END LOOP;
-        V_LIGNE := '	    ]'; ---------   virgule ajoutee dans la boucle suivant 
+        V_LIGNE := V_LIGNE || ']'; ---------   virgule ajoutee dans la boucle suivant 
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
     END IF;                
@@ -3482,9 +3481,9 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
     END;                
    -------------RES := MKT.MKTQAUT.F_WRITE(FILE_ID, to_char(V_NB_OPTIONS), '  AVANT IF options '); ----EFFACERR
     IF NVL(V_NB_OPTIONS, 0) > 0 THEN
-        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);--------- virgule ajoutee pour pricings
+        --V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);--------- virgule ajoutee pour pricings
        
-        V_LIGNE := '"options": [';
+        V_LIGNE := ', "options": [';
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         
         
@@ -3495,19 +3494,18 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
             V_NB_OPTIONSPRICINGS_TRAITE := 0;-------- POUR LA BOUCLE OPTIONSPRICINGS
         
             
-            V_LIGNE := '        {        
-                "code":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.code, '"','')) || '",
-                "typeCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.typeCode, '"','')) || '",
-                "isPack":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || ',
-                "isAgregated":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isAgregated, '"','')) || ',
-                "startDate":"' ||  S_MKTQT_VEHICLE_OPTIONS.startDate || '",';
+            V_LIGNE := '{"code":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.code, '"','')) || '",';
+            V_LIGNE := V_LIGNE || '"typeCode":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.typeCode, '"','')) || '",';
+            V_LIGNE := V_LIGNE || '"isPack":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isPack, '"','')) || ',';
+            V_LIGNE := V_LIGNE || '"startDate":"' ||  S_MKTQT_VEHICLE_OPTIONS.startDate || '",';
               
-              res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);   
+              --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);   
               
               IF S_MKTQT_VEHICLE_OPTIONS.endDate is not NULL THEN
-                V_LIGNE := '                "endDate":"' ||  S_MKTQT_VEHICLE_OPTIONS.endDate || '",';
-                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);   
+                V_LIGNE := V_LIGNE || '"endDate":"' ||  S_MKTQT_VEHICLE_OPTIONS.endDate || '",';   
               END IF;
+            V_LIGNE := V_LIGNE || '"isAgregated":' ||  LOWER(REPLACE(S_MKTQT_VEHICLE_OPTIONS.isAgregated, '"','')) || ',';
+            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 
 
                 ---------------------------------------------------------------------------------------------------------------
@@ -3526,25 +3524,24 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                     END;
                 
                     IF NVL(V_NB_OPTIONSLABELS, 0) > 0 THEN
-                        V_LIGNE := '    "labels": [';
-                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_LIGNE := V_LIGNE || '"labels": [';
+                        --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                         
        
                         FOR S_MKTQT_OPTIONSLABELS IN C_MKTQT_OPTIONSLABELS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
                             V_NB_OPTIONSLABELS_TRAITE := V_NB_OPTIONSLABELS_TRAITE+1;   ---- A REVOIR 
-                            V_LIGNE := '        {
-                                "language":"' ||  REPLACE(S_MKTQT_OPTIONSLABELS.language, '"','') || '",
-                                "labelShort":"' ||  UPPER(S_MKTQT_OPTIONSLABELS.labelShort) || '",
-                                "labelLong":"' ||  UPPER(S_MKTQT_OPTIONSLABELS.labelLong) || '"';
+                            V_LIGNE := V_LIGNE || '{"language":"' ||  REPLACE(S_MKTQT_OPTIONSLABELS.language, '"','') || '",';
+                            V_LIGNE := V_LIGNE || '"labelShort":"' ||  UPPER(S_MKTQT_OPTIONSLABELS.labelShort) || '",';
+                            V_LIGNE := V_LIGNE || '"labelLong":"' ||  UPPER(S_MKTQT_OPTIONSLABELS.labelLong) || '"';
 
                             if V_NB_OPTIONSLABELS_TRAITE = V_NB_OPTIONSLABELS THEN V_LIGNE := V_LIGNE || '}';
                             else V_LIGNE := V_LIGNE || '},';
                             end if;
 
-                            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                         END LOOP;
-                        V_LIGNE := '    ],';
-                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_LIGNE := V_LIGNE || '],';
+                        --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     END IF;
                     
                     ---------  ---------- --------  ---------   ---------   ---------   ---------  ---------   ---------  ---------  ---------  
@@ -3564,26 +3561,25 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                     END;
                 
                     IF NVL(V_NB_OPTIONSPRICINGS, 0) > 0 THEN
-                        V_LIGNE := '    "pricings": [';
-                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_LIGNE := V_LIGNE || '"pricings": [';
+                        --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                         
        
                         FOR S_MKTQT_OPTIONSPRICINGS IN C_MKTQT_OPTIONSPRICINGS (S_MKTQT_VEHICLE_OPTIONS.code , S_mktqt_vehicle.itemDirectoryVehicleRef, S_MKTQT_VEHICLE_OPTIONS.OptionStartDate) LOOP  --- ajout 16 01 2023 S_MKTQT_VEHICLE_OPTIONS.startDate
                             V_NB_OPTIONSPRICINGS_TRAITE := V_NB_OPTIONSPRICINGS_TRAITE+1;   ---- A REVOIR 
-                            V_LIGNE := '        {
-                                "pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",';
-                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                            V_LIGNE := V_LIGNE || '{"pricebookStartDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookStartDate || '",';
+                                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                                 
                                 IF S_MKTQT_OPTIONSPRICINGS.pricebookEndDate is not NULL THEN
-                                V_LIGNE := '                                "pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",';
-                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                V_LIGNE := V_LIGNE || '"pricebookEndDate":"' || S_MKTQT_OPTIONSPRICINGS.pricebookEndDate || '",';
+                                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                                 END IF;
                                 
-                                V_LIGNE := '                                "currency":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.currency, '"','')) || '",';
-                                res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                                V_LIGNE := V_LIGNE || '"currency":"' ||  UPPER(REPLACE(S_MKTQT_OPTIONSPRICINGS.currency, '"','')) || '",';
+                                --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                                 
                                 
-                                V_LIGNE := '                                "priceET":' || REPLACE(S_MKTQT_OPTIONSPRICINGS.priceET,',','.') || '';
+                                V_LIGNE := V_LIGNE || '"priceET":' || REPLACE(S_MKTQT_OPTIONSPRICINGS.priceET,',','.') || '';
                                 
                                 
                                 
@@ -3604,15 +3600,15 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
                             else V_LIGNE := V_LIGNE || '},';
                             end if;
 
-                            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                         END LOOP;
-                        V_LIGNE := '    ]'; ----------MOI  AJOUT JEUDI   --- sans virgule a la fin
-                        res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                        V_LIGNE := V_LIGNE || ']'; ----------MOI  AJOUT JEUDI   --- sans virgule a la fin
+                        --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
                     END IF;
 
           ----------------------------------------------------------------------------------------------------------------
           ----------------------------------------------------------------------------------------------------------------
-            V_LIGNE := ''; ----------MOI  AJOUT JEUDI
+            --V_LIGNE := ''; ----------MOI  AJOUT JEUDI
             if V_NB_OPTIONS_TRAITE = V_NB_OPTIONS THEN V_LIGNE := V_LIGNE || '}';
             else V_LIGNE := V_LIGNE || '},';
             end if;
@@ -3621,7 +3617,7 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
 
 
         END LOOP;
-        V_LIGNE := '	    ]';---------   virgule ajoutee dans la boucle suivant 
+        V_LIGNE := ']';---------   virgule ajoutee dans la boucle suivant 
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
     END IF;         
     V_LIGNE := '';  -------- null 
@@ -3640,26 +3636,29 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
      END;
  
      IF NVL(V_NB_AGGREGATEDOPT, 0) > 0 THEN
-         V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-         V_LIGNE := '    "aggregatedOptions": [';
+         --V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+         V_LIGNE := ', "aggregatedOptions": [';
          res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-         
+         V_LIGNE := '';
        
          FOR S_MKTQT_VEHICLE_AGGREGATEDOPT IN C_MKTQT_VEHICLE_AGGREGATEDOPT (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
-             V_NB_AGGREGATEDOPT_TRAITE := V_NB_AGGREGATEDOPT_TRAITE+1;   ---- A REVOIR 
-             V_LIGNE := '        {
-                 "code":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.code || '",
-                 "categoryCode":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.categoryCode || '",
-                 "currency":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.currency || '",
-                 "priceET":' || REPLACE(S_MKTQT_VEHICLE_AGGREGATEDOPT.priceET,',','.') || '';
+             IF MOD(V_NB_AGGREGATEDOPT_TRAITE, 4) = 0 AND V_NB_AGGREGATEDOPT_TRAITE <> 0 THEN
+                 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                 V_LIGNE := '';
+             END IF;
+             V_NB_AGGREGATEDOPT_TRAITE := V_NB_AGGREGATEDOPT_TRAITE+1;   ---- A REVOIR
+             V_LIGNE := V_LIGNE || '{"code":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.code || '",';
+             V_LIGNE := V_LIGNE || '"categoryCode":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.categoryCode || '",';
+             V_LIGNE := V_LIGNE || '"currency":"' || S_MKTQT_VEHICLE_AGGREGATEDOPT.currency || '",';
+             V_LIGNE := V_LIGNE || '"priceET":' || REPLACE(S_MKTQT_VEHICLE_AGGREGATEDOPT.priceET,',','.') || '';
 
              if V_NB_AGGREGATEDOPT_TRAITE = V_NB_AGGREGATEDOPT THEN V_LIGNE := V_LIGNE || '}';
              else V_LIGNE := V_LIGNE || '},';
              end if;
 
-             res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+             --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
          END LOOP;
-         V_LIGNE := '    ]';
+         V_LIGNE := V_LIGNE || ']';
          res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
      END IF;
         
@@ -3675,25 +3674,29 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
     END;
     
     IF NVL(V_NB_BASEEQUIPMENTS, 0) > 0 THEN
-        V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour options (optionslabels et optionspricings et options sont dans la meme table)
+        --V_LIGNE := ',' ; res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); --------- virgule ajoutee pour options (optionslabels et optionspricings et options sont dans la meme table)
         
-        V_LIGNE := '"baseEquipments": [';
+        V_LIGNE := ', "baseEquipments": [';
         res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+        V_LIGNE := '';
         
         FOR S_MKTQT_VEHICLE_BASEEQUIPMENTS IN C_MKTQT_VEHICLE_BASEEQUIPMENTS (S_mktqt_vehicle.itemDirectoryVehicleRef) LOOP
+            IF MOD(V_NB_BASEEQUIPMENTS_TRAITE, 4) = 0 AND V_NB_BASEEQUIPMENTS_TRAITE <> 0 THEN
+                 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+                 V_LIGNE := '';
+             END IF;
             V_NB_BASEEQUIPMENTS_TRAITE := V_NB_BASEEQUIPMENTS_TRAITE+1;   ---- A REVOIR 
-            V_LIGNE := '        {
-                "externalRef":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef, '"','')) || '",
-                "language":"' ||  REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.language, '"','') || '",
-                "label":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.label, '"','')) || '"';
+            V_LIGNE := V_LIGNE || '{"externalRef":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.externalRef, '"','')) || '",';
+            V_LIGNE := V_LIGNE || '"language":"' ||  REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.language, '"','') || '",';
+            V_LIGNE := V_LIGNE || '"label":"' ||  UPPER(REPLACE(S_MKTQT_VEHICLE_BASEEQUIPMENTS.label, '"','')) || '"';
                 
                 if V_NB_BASEEQUIPMENTS_TRAITE = V_NB_BASEEQUIPMENTS THEN V_LIGNE := V_LIGNE || '}';
                 else V_LIGNE := V_LIGNE || '},';
                 end if;
 
-            res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+            --res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
         END LOOP;
-        V_LIGNE := '	    ]';    ------------ MOI PAS DE VIRGULE A LA FIN
+        V_LIGNE := V_LIGNE || ']';    ------------ MOI PAS DE VIRGULE A LA FIN
         --if V_NB_ENREG_TRAITE = V_NB_ENREG THEN V_LIGNE := V_LIGNE || '}';   --------------------------------------- A REVOIR
         --else V_LIGNE := V_LIGNE || '},';    -------------------------------------------------------------------- A REVOIR
         --end if;  -------------------------------------------------------------------- A REVOIR
