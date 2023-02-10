@@ -1,4 +1,4 @@
-create or replace PACKAGE BODY                                                                                "MKTQA_CALCUL_CAP_UK" AS
+create or replace PACKAGE BODY                                                                                                            "MKTQA_CALCUL_CAP_UK" AS
 
 
 
@@ -27,11 +27,11 @@ BEGIN
   Cursor C_crossRefs_VP Is
 select 
 veh.itemDirectoryVehicleRef AS itemDirectoryVehicleRef,
-cap.titre AS titre
+REPLACE(REPLACE(LTRIM(RTRIM(cap.titre)), CHR(9),''),CHR(34),'')AS titre  ----cap.titre AS titre
 from MKTREF.MKTQT_vehicle veh, MKTREF.MKTQT_CodeConstr_VP cap
 where  substr(veh.itemDirectoryVehicleRef, 1, length(veh.itemDirectoryVehicleRef) -8) = 'P' || cap.CAP_ID  || substr(cap.LATEST_MODEL_YEAR, 0,4)  ||  (( cap.LATEST_MODEL_YEAR - floor(cap.LATEST_MODEL_YEAR) )*4+1) 
 and  veh.vehicule_type = 'VP'
- ORDER BY CAP_ID, LATEST_MODEL_YEAR, EFFECTIVE_DATE, TITRE DESC;
+ ORDER BY CAP_ID, LATEST_MODEL_YEAR, EFFECTIVE_DATE, TITRE ;
           
 
  
@@ -115,11 +115,11 @@ BEGIN
   Cursor C_crossRefs_VU Is
 select 
 veh.itemDirectoryVehicleRef AS itemDirectoryVehicleRef,
-cap.titre AS titre
+REPLACE(REPLACE(LTRIM(RTRIM(cap.titre)), CHR(9),''),CHR(34),'')AS titre  ---cap.titre AS titre
 from MKTREF.MKTQT_vehicle veh, MKTREF.MKTQT_CodeConstr_VU cap
 where  substr(veh.itemDirectoryVehicleRef, 1, length(veh.itemDirectoryVehicleRef)-8) = 'C' || cap.CAP_ID  || substr(cap.LATEST_MODEL_YEAR, 0,4)  ||  (( cap.LATEST_MODEL_YEAR - floor(cap.LATEST_MODEL_YEAR) )*4+1) 
 and  veh.vehicule_type = 'VU'
- ORDER BY CAP_ID, LATEST_MODEL_YEAR, EFFECTIVE_DATE, TITRE DESC;
+ ORDER BY CAP_ID, LATEST_MODEL_YEAR, EFFECTIVE_DATE, TITRE ;
           
 
  
@@ -3020,11 +3020,12 @@ and year_trimester is not null
 ---and DIMENSIONS != '  ' 
 ---and  rownum <= 500;   ---------
 --where itemDirectoryVehicleRef in ('P7460520160401','P746419930101','P824919930901', 'P4402020090629', 'P4413420100601','L1044320070901' ) 
---WHERE TECH_ID = '74606';
+--WHERE TECH_ID = '92556';
 -----------------------------------CROSSREFS-----------------------------
 CURSOR C_MKTQT_VEHICLE_CROSSREFS (P_itemDirectoryVehicleRef  VARCHAR2) IS
 SELECT * FROM MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS
 WHERE CROSSREFS.itemDirectoryVehicleRef = P_itemDirectoryVehicleRef 
+AND    CROSSREFS.IDENTIFIER IS NOT NULL
 ;
 
 /*
@@ -3386,7 +3387,8 @@ and CROSSREFS.itemDirectoryVehicleRef=P_itemDirectoryVehicleRef;
          SELECT COUNT(*)
          INTO   V_NB_CROSSREFS
          FROM   MKTREF.MKTQT_VEHICLE_CROSSREFS CROSSREFS 
-         WHERE  CROSSREFS.itemDirectoryVehicleRef = S_mktqt_vehicle.itemDirectoryVehicleRef;
+         WHERE  CROSSREFS.itemDirectoryVehicleRef = S_mktqt_vehicle.itemDirectoryVehicleRef
+         AND    CROSSREFS.IDENTIFIER IS NOT NULL;
     EXCEPTION WHEN OTHERS THEN
               V_NB_CROSSREFS := NULL;
     END;
@@ -3812,84 +3814,66 @@ BEGIN
       BEGIN
          V_NB_ENREG_TRAITE := V_NB_ENREG_TRAITE +1;
               V_LIGNE := '{
-"entity":"' ||  S_MKTQT_nomenclature.entity || '",
-"code":"' ||  S_MKTQT_nomenclature.code || '",
-"startValidityDate":"' || S_MKTQT_nomenclature.startValidityDate || '",
-"endValidityDate":"' || S_MKTQT_nomenclature.endValidityDate || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
+"entity":"' ||  S_MKTQT_nomenclature.entity || '","code":"' ||  S_MKTQT_nomenclature.code || '","startValidityDate":"' || S_MKTQT_nomenclature.startValidityDate || '","endValidityDate":"' || S_MKTQT_nomenclature.endValidityDate || '",';
+----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
 
 IF S_MKTQT_nomenclature.bomAttribut is not null then
-    V_LIGNE := '"bomAttributs": ["' || S_MKTQT_nomenclature.bomAttribut  || '"],';
-    res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+    V_LIGNE := V_LIGNE || '"bomAttributs": ["' || S_MKTQT_nomenclature.bomAttribut  || '"],';
+    ----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
 END IF;
 
-V_LIGNE := '"countryCode":"' || S_MKTQT_nomenclature.countryCode || '",
-"countryScope":"' ||  S_MKTQT_nomenclature.countryScope || '",';
-
+V_LIGNE := V_LIGNE || '"countryCode":"' || S_MKTQT_nomenclature.countryCode || '","countryScope":"' ||  S_MKTQT_nomenclature.countryScope || '"';  ---''|| '",
 res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
 
 IF S_MKTQT_nomenclature.parent != ' ' THEN
-V_LIGNE :='"parent":"' ||  S_MKTQT_nomenclature.parent || '",';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+V_LIGNE := V_LIGNE || ',"parent":"' ||  S_MKTQT_nomenclature.parent || '"';
+---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 END IF;
 
 
 
 IF S_MKTQT_nomenclature.entity in ('model_gen','trim','motorisationBLVD','dimensions') THEN
-V_LIGNE := '"parentDetails": [{"entity":"brand","code":"' ||  SUBSTR(S_MKTQT_nomenclature.parent,1,2) || '"}],';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+V_LIGNE := V_LIGNE || ',"parentDetails": [{"entity":"brand","code":"' ||  SUBSTR(S_MKTQT_nomenclature.parent,1,2) || '"}]';
+----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 END IF;
 
 
-V_LIGNE:='"descriptions":
-[{';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+---V_LIGNE:='"descriptions":[{';
+---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 
 
-IF S_MKTQT_nomenclature.description_language = ' ' THEN
-    V_LIGNE :='"label":"' ||  S_MKTQT_nomenclature.description_label || '"' ;
-ELSE V_LIGNE := '"language":"' ||  S_MKTQT_nomenclature.description_language || '",
-"label":"' ||  S_MKTQT_nomenclature.description_label || '"';
+IF S_MKTQT_nomenclature.description_language = ' ' AND S_MKTQT_nomenclature.description_label != ' '  THEN
+    V_LIGNE := V_LIGNE || ',"descriptions":[{"label":"' ||  S_MKTQT_nomenclature.description_label || '"}]' ;
+---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 END IF;
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+
+IF S_MKTQT_nomenclature.description_language != ' ' AND S_MKTQT_nomenclature.description_label != ' ' THEN
+V_LIGNE := V_LIGNE || ',"descriptions":[{"language":"' ||  S_MKTQT_nomenclature.description_language || '","label":"' ||  S_MKTQT_nomenclature.description_label || '"}]';
+----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
+END IF;
+----res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE := '';
 
 
 IF S_MKTQT_nomenclature.Entity in ('transmission','kind') THEN
-V_LIGNE :='}],
-"crossrefs":
-[{
-"typeCode":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_typecode,' ','') || '",
-"code":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_code,' ','') || '"
-}],
-"translations":
-[{';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
-
-
+V_LIGNE := V_LIGNE || ',"crossrefs":[{"typeCode":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_typecode,' ','') || '","code":"' ||  REPLACE(S_MKTQT_nomenclature.crossref_code,' ','') || '"}]';
+---"translations":[{';
+---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
 ELSE
-
-V_LIGNE :='}],
-"crossrefs":
-[{
-"typeCode":"' ||  S_MKTQT_nomenclature.crossref_typecode || '",
-"code":"' ||  S_MKTQT_nomenclature.crossref_code || '"
-}],
-"translations":
-[{';
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
-
+V_LIGNE := V_LIGNE || ',"crossrefs":[{"typeCode":"' ||  S_MKTQT_nomenclature.crossref_typecode || '","code":"' ||  S_MKTQT_nomenclature.crossref_code || '"}]';
+---"translations":[{';
+---res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE); V_LIGNE:='';
 END IF;
 
 
 
-IF S_MKTQT_nomenclature.translation_language = ' ' THEN
-    V_LIGNE :='"label":"' || S_MKTQT_nomenclature.translation_label || '"' ;
-ELSE V_LIGNE := '"language":"' ||  S_MKTQT_nomenclature.translation_language || '",
-"label":"' ||  S_MKTQT_nomenclature.translation_label || '"';
+IF S_MKTQT_nomenclature.translation_language = ' ' and S_MKTQT_nomenclature.translation_label != ' '  THEN
+    V_LIGNE := V_LIGNE || ',"translations":[{"label":"' || S_MKTQT_nomenclature.translation_label || '"}]' ;
 END IF;
-res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
-
-V_LIGNE:='}]';
+IF S_MKTQT_nomenclature.translation_language != ' ' and S_MKTQT_nomenclature.translation_label != ' '  THEN
+V_LIGNE := V_LIGNE || ',"translations":[{"language":"' ||  S_MKTQT_nomenclature.translation_language || '","label":"' ||  S_MKTQT_nomenclature.translation_label || '"}]';
+END IF;
+--res := MKT.MKTQAUT.F_WRITE_CVS_UTF8(file_id_cvs, V_LIGNE);
+---V_LIGNE:='}]';
 
 ---------}';
 
@@ -8984,7 +8968,7 @@ countryScope
               (  
 'model_gen'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent	, --- MAPPING : parent_details_code = parent
 'brandCode'	, --parent_details_entity
@@ -9013,7 +8997,7 @@ REC_transco.TRANSLATION_LABEL	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label
         
       where  entity = 'model_gen'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'brandCode'
       and description_language = 'en_GB'
@@ -9163,7 +9147,7 @@ countryScope
               (  
 'trim'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent	
 'brandCode'	, --parent_details_entity
@@ -9190,7 +9174,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label
 
       where  entity = 'trim'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'brandCode'
       and description_language = 'en_GB'
@@ -9267,7 +9251,7 @@ countryScope
               (  
 'trim'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent	
 'model_gen'	, --parent_details_entity
@@ -9295,7 +9279,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label
 
       where  entity = 'trim'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'model_gen'
       and description_language = 'en_GB'
@@ -9444,7 +9428,7 @@ countryScope
               (  
 'motorisationBLVD'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent	,
 'brandCode'	, --parent_details_entity
@@ -9472,7 +9456,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label  
         
       where  entity = 'motorisationBLVD'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'brandCode'
       and description_language = 'en_GB'
@@ -9548,7 +9532,7 @@ countryScope
               (  
 'motorisationBLVD'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent	,
 'model_gen'	, --parent_details_entity
@@ -9576,7 +9560,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label  
         
       where  entity = 'motorisationBLVD'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'model_gen'
       and description_language = 'en_GB'
@@ -9731,7 +9715,7 @@ countryScope
               (  
 'dimensions'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent
 'brandCode'	, --parent_details_entity
@@ -9759,7 +9743,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label
       
       where  entity = 'dimensions'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'brandCode'
       and description_language = 'en_GB'
@@ -9839,7 +9823,7 @@ countryScope
               (  
 'dimensions'			, --Entity
 REC_transco.code			, --code
-to_date('07/01/2022', 'MM/DD/YYYY')	, --startValidityDate
+to_date('01/01/2010', 'MM/DD/YYYY')	, --startValidityDate
 to_date('12/31/2999', 'MM/DD/YYYY')  , --endValidityDate
 REC_transco.parent, --REC_transco.parent
 'model_gen'	, --parent_details_entity
@@ -9867,7 +9851,7 @@ REC_transco.description_label	, --- MAPPING : translation_label = description_la
       description_label = REC_transco.description_label
       
       where  entity = 'dimensions'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'model_gen'
       and description_language = 'en_GB'
@@ -10055,7 +10039,7 @@ REC_transco.countryScope
       description_label = REC_transco.description_label
         
       where  entity = 'model'
-      and startValidityDate = to_date('07/01/2022', 'MM/DD/YYYY')
+      and startValidityDate = to_date('01/01/2010', 'MM/DD/YYYY')
       and endValidityDate = to_date('12/31/2999', 'MM/DD/YYYY')
       and parent_details_entity = 'brandCode'
       and description_language = 'en_GB'
@@ -10199,7 +10183,7 @@ REC_transco.countryScope
 
         BEGIN	
      ---------------01			
-      /*V_ERR     := ALIM_MODEL_GEN( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
+      V_ERR     := ALIM_MODEL_GEN( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
@@ -10231,7 +10215,7 @@ REC_transco.countryScope
 			IF V_ERR = 1 THEN
 				V_RET := 1;
 				RETURN V_RET;
-			END IF;*/
+			END IF;
       
       ---------------VP		JIRA 26  non
 			V_ERR     := UPDATE_vehicle_crossRefs_VP( NOMLOG , P_DATE_TRAI , V_INSERTS , V_UPDATES , V_ERROR );  
